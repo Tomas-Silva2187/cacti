@@ -19,17 +19,17 @@ contract SATPWrapperTest is Test{
     address public user2 = makeAddr("user2");
 
     string[] lockInteractions;
-    VarType[][] lockVariables;
+    AssetParameterIdentifier[][] lockVariables;
     string[] unlockInteractions;
-    VarType[][] unlockVariables;
+    AssetParameterIdentifier[][] unlockVariables;
     string[] mintInteractions;
-    VarType[][] mintVariables;
+    AssetParameterIdentifier[][] mintVariables;
     string[] burnInteractions;
-    VarType[][] burnVariables;
+    AssetParameterIdentifier[][] burnVariables;
     string[] assignInteractions;
-    VarType[][] assignVariables;
+    AssetParameterIdentifier[][] assignVariables;
     string[] checkPermissionInteractions;
-    VarType[][] checkPermissionVariables;
+    AssetParameterIdentifier[][] checkPermissionVariables;
 
     function setUp() public {
         // Remix does not offer a set of methods that can change the msg.sender so every contract owner is the same
@@ -39,41 +39,41 @@ contract SATPWrapperTest is Test{
         contract1 = new SATPTokenContract(address(wrapperContract));
 
         lockInteractions.push("bridgeTransferFrom(address,address,uint256)");
-    
-        lockVariables.push([VarType.OWNER, VarType.BRIDGE, VarType.AMOUNT]);
+
+        lockVariables.push([AssetParameterIdentifier.OWNER, AssetParameterIdentifier.BRIDGE, AssetParameterIdentifier.AMOUNT]);
         InteractionSignature memory lock = InteractionSignature(InteractionType.LOCK,lockInteractions,lockVariables, true);
         signatures.push(lock);
         
         unlockInteractions.push("lock(address,address,uint256)");
-        
-        unlockVariables.push([VarType.BRIDGE, VarType.OWNER, VarType.AMOUNT]);
+
+        unlockVariables.push([AssetParameterIdentifier.BRIDGE, AssetParameterIdentifier.OWNER, AssetParameterIdentifier.AMOUNT]);
         InteractionSignature memory unlock = InteractionSignature(InteractionType.UNLOCK,unlockInteractions,unlockVariables, true);
         signatures.push(unlock);
 
         
         mintInteractions.push("mint(address,uint256)");
-        
-        mintVariables.push([VarType.BRIDGE, VarType.AMOUNT]);
+
+        mintVariables.push([AssetParameterIdentifier.BRIDGE, AssetParameterIdentifier.AMOUNT]);
         InteractionSignature memory mint = InteractionSignature(InteractionType.MINT,mintInteractions,mintVariables, true);
         signatures.push(mint);
 
         
         burnInteractions.push("burn(address,uint256)");
         
-        burnVariables.push([VarType.BRIDGE, VarType.AMOUNT]);
+        burnVariables.push([AssetParameterIdentifier.BRIDGE, AssetParameterIdentifier.AMOUNT]);
         InteractionSignature memory burn = InteractionSignature(InteractionType.BURN,burnInteractions,burnVariables, true);
         signatures.push(burn);
 
         
         assignInteractions.push("assign(address,address,uint256)");
-        
-        assignVariables.push([VarType.BRIDGE, VarType.RECEIVER, VarType.AMOUNT]);
+
+        assignVariables.push([AssetParameterIdentifier.BRIDGE, AssetParameterIdentifier.RECEIVER, AssetParameterIdentifier.AMOUNT]);
         InteractionSignature memory assign = InteractionSignature(InteractionType.ASSIGN,assignInteractions,assignVariables, true);
         signatures.push(assign);
 
         checkPermissionInteractions.push("hasPermission(address)");
-        
-        checkPermissionVariables.push([VarType.BRIDGE]);
+
+        checkPermissionVariables.push([AssetParameterIdentifier.BRIDGE]);
         InteractionSignature memory checkPermition = InteractionSignature(InteractionType.CHECKPERMITION,checkPermissionInteractions,checkPermissionVariables, true);
         signatures.push(checkPermition);
     }

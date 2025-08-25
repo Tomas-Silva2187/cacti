@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "./ITraceableContract.sol";
 import { console } from "forge-std/console.sol";
@@ -13,7 +14,7 @@ error noPermission(address adr);
 /**
  * @title SATPTokenContract
  * The SATPTokenContract is an example of a custom ERC721 token contract.
- * This is a simple contract, meaning it uses functions that assume everything is correct.
+ * It uses safe versions of critical ERC721 functions, which require the address performing calls to tokens to have some form of pre approval.
  */
 contract SATPNFTokenContract is AccessControl, ERC721 {
 
@@ -32,7 +33,7 @@ contract SATPNFTokenContract is AccessControl, ERC721 {
      * @return success A boolean indicating the success of the minting operation.
      */
     function mint(address account, uint256 uniqueDescriptor) external onlyRole(BRIDGE_ROLE) returns (bool success) {
-        _mint(account, uniqueDescriptor);
+        _safeMint(account, uniqueDescriptor);
         return true;
     }
 
@@ -42,7 +43,10 @@ contract SATPNFTokenContract is AccessControl, ERC721 {
      * @return success A boolean indicating the success of the burn operation.
      */
     function burn(uint256 uniqueDescriptor) external onlyRole(BRIDGE_ROLE) returns (bool success) {
-        _burn(uniqueDescriptor);
+        address caller = msg.sender;
+        address approvedCaller = getApproved(uniqueDescriptor);
+        require(caller == approvedCaller || caller == ownerOf(uniqueDescriptor), "Caller is not approved to operate on this token");
+        _burn(uniqueDescriptor);        
         return true;
     }
 
@@ -64,7 +68,7 @@ contract SATPNFTokenContract is AccessControl, ERC721 {
      * @return success A boolean indicating if the operation was successful.
      */
     function lock(address from, address to, uint256 uniqueDescriptor) external returns (bool success) {
-        _transfer(from, to, uniqueDescriptor);
+        safeTransferFrom(from, to, uniqueDescriptor);
         return true;
     }
 
@@ -75,7 +79,7 @@ contract SATPNFTokenContract is AccessControl, ERC721 {
      * @return success A boolean indicating if the operation was successful.
      */
     function assign(address to, uint256 uniqueDescriptor) external returns (bool success) {
-        _transfer(ownerOf(uniqueDescriptor), to, uniqueDescriptor);
+        safeTransferFrom(ownerOf(uniqueDescriptor), to, uniqueDescriptor);
         return true;
     }
 
@@ -87,7 +91,7 @@ contract SATPNFTokenContract is AccessControl, ERC721 {
      * @return success A boolean indicating if the operation was successful.
      */
     function unlock(address from, address to, uint256 uniqueDescriptor) external returns (bool success) {
-        _transfer(from, to, uniqueDescriptor);
+        safeTransferFrom(from, to, uniqueDescriptor);
         return true;
     }
 
@@ -95,10 +99,14 @@ contract SATPNFTokenContract is AccessControl, ERC721 {
      * @notice REQUIRED by OpenZeppelin: Supports the use of safe functions for ERC721 tokens.
      * @return success A boolean indicating if the account has the bridge role.
      */
-    function onERC721Received(address, uint256, bytes calldata) external pure returns (bytes4) {
-        return IERC721Receiver.onERC721Received.selector;
-    }
-
+    function onERC721Received(
+    address,
+    address,
+    uint256,
+    bytes calldata
+) external pure returns (bytes4) {
+    return this.onERC721Received.selector;
+}
     /**
      * @notice Checks if the given account has permission to perform an action on a token.
      * @param account The account to check for permission.
@@ -112,11 +120,22 @@ contract SATPNFTokenContract is AccessControl, ERC721 {
     }
 
     /**
+     * @notice For test usage, allows the bridge to check if a certain address is the one currently approved to deal with an asset.
+     * @param account The account to check for approval.
+     * @param uniqueDescriptor The unique identifier of the token.
+     * @return success A boolean indicating if the account is approved.
+     */
+    function isApproved(address account, uint256 uniqueDescriptor) external view onlyRole(BRIDGE_ROLE) returns (bool success) {
+        address approvedCaller = getApproved(uniqueDescriptor);
+        return (account == approvedCaller || account == ownerOf(uniqueDescriptor));
+    }
+
+    /**
      * @notice REQUIRED by OpenZeppelin: Returns true if this contract implements a certain interface represented by an interfaceId.
      * @return success A boolean indicating if the interface is supported.
      */
     function supportsInterface(bytes4) public pure override(AccessControl, ERC721) returns (bool success) {
-        return true;
+        return false;
     }
 
     /**

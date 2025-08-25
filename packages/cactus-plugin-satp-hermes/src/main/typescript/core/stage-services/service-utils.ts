@@ -29,49 +29,7 @@ export function assetToProto(asset: Asset, networkId: NetworkId): ProtoAsset {
 
   switch (networkId.ledgerType) {
     case LedgerType.Besu1X:
-      switch (asset.type) {
-        case TokenType.ERC20:
-        case TokenType.NONSTANDARD_FUNGIBLE:
-          protoAsset.amount = BigInt((asset as EvmFungibleAsset).amount);
-          protoAsset.contractAddress = (
-            asset as EvmFungibleAsset
-          ).contractAddress;
-          break;
-        case TokenType.ERC721:
-        case TokenType.NONSTANDARD_NONFUNGIBLE:
-          protoAsset.amount = BigInt(
-            (asset as EvmNonFungibleAsset).uniqueDescriptor,
-          );
-          protoAsset.contractAddress = (
-            asset as EvmNonFungibleAsset
-          ).contractAddress;
-          break;
-        default:
-          throw new Error(`Unsupported asset type ${asset.type}`);
-      }
-      break;
     case LedgerType.Besu2X:
-      switch (asset.type) {
-        case TokenType.ERC20:
-        case TokenType.NONSTANDARD_FUNGIBLE:
-          protoAsset.amount = BigInt((asset as EvmFungibleAsset).amount);
-          protoAsset.contractAddress = (
-            asset as EvmFungibleAsset
-          ).contractAddress;
-          break;
-        case TokenType.ERC721:
-        case TokenType.NONSTANDARD_NONFUNGIBLE:
-          protoAsset.amount = BigInt(
-            (asset as EvmNonFungibleAsset).uniqueDescriptor,
-          );
-          protoAsset.contractAddress = (
-            asset as EvmNonFungibleAsset
-          ).contractAddress;
-          break;
-        default:
-          throw new Error(`Unsupported asset type ${asset.type}`);
-      }
-      break;
     case LedgerType.Ethereum:
       switch (asset.type) {
         case TokenType.ERC20:

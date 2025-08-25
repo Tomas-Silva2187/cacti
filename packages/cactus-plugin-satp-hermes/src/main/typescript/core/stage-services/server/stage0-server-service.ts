@@ -7,7 +7,6 @@ import {
 import {
   ClaimFormat,
   MessageType,
-  TokenType,
   WrapAssertionClaimSchema,
 } from "../../../generated/proto/cacti/satp/v02/common/message_pb";
 import {
@@ -22,7 +21,6 @@ import {
 import { stringify as safeStableStringify } from "safe-stable-stringify";
 
 import {
-  AmountMissingError,
   AssetMissing,
   LedgerAssetError,
   MessageTypeError,
@@ -32,8 +30,6 @@ import {
   SessionIdError,
   SignatureMissingError,
   SignatureVerificationError,
-  TokenIdMissingError,
-  UniqueTokenDescriptorMissingError,
 } from "../../errors/satp-service-errors";
 import { SATPSession } from "../../satp-session";
 import {
@@ -44,18 +40,13 @@ import {
   SessionType,
   TimestampType,
 } from "../../session-utils";
-import {
-  createAssetId,
-  type FungibleAsset,
-  type NonFungibleAsset,
-} from "../../../cross-chain-mechanisms/bridge/ontology/assets/asset";
+import { createAssetId } from "../../../cross-chain-mechanisms/bridge/ontology/assets/asset";
 import {
   SATPService,
   SATPServiceType,
   type ISATPServerServiceOptions,
   type ISATPServiceOptions,
 } from "../satp-service";
-import { protoToAsset } from "../service-utils";
 import {
   FailedToProcessError,
   SessionNotFoundError,
@@ -63,9 +54,9 @@ import {
 import type { SATPInternalError } from "../../errors/satp-errors";
 import { create } from "@bufbuild/protobuf";
 import { type BridgeManagerClientInterface } from "../../../cross-chain-mechanisms/bridge/interfaces/bridge-manager-client-interface";
-import { LedgerType } from "@hyperledger/cactus-core-api";
 import { NetworkId } from "../../../public-api";
 import { context, SpanStatusCode } from "@opentelemetry/api";
+import { buildAndCheckAsset, SessionSide } from "../../satp-utils";
 export class Stage0ServerService extends SATPService {
   public static readonly SATP_STAGE = "0";
   public static readonly SERVICE_TYPE = SATPServiceType.Server;
@@ -659,64 +650,16 @@ export class Stage0ServerService extends SATPService {
           });
           this.Log.info(`${fnTag}, Wrapping Asset...`);
 
-          if (sessionData.receiverAsset == undefined) {
-            throw new LedgerAssetError(fnTag);
-          }
-
-          const networkId = {
-            id: sessionData.receiverAsset.networkId?.id,
-            ledgerType: sessionData.receiverAsset.networkId?.type as LedgerType,
-          } as NetworkId;
-
-          let token: FungibleAsset | NonFungibleAsset;
-
-          switch (sessionData.receiverAsset.tokenType) {
-            case TokenType.ERC20:
-            case TokenType.NONSTANDARD_FUNGIBLE:
-              this.Log.debug(`${fnTag}, Receiver Asset is a fungible token`);
-              token = protoToAsset(
-                sessionData.receiverAsset,
-                networkId,
-              ) as FungibleAsset;
-              if (token.id == undefined) {
-                throw new TokenIdMissingError(fnTag);
-              }
-              if (token.amount == undefined) {
-                throw new AmountMissingError(fnTag);
-              }
-
-              this.Log.debug(`${fnTag}, Wrap: ${safeStableStringify(token)}`);
-              this.Log.debug(
-                `${fnTag}, Wrap Asset ID: ${token.id} amount: ${(token as FungibleAsset).amount.toString()}`,
-              );
-              break;
-            case TokenType.ERC721:
-            case TokenType.NONSTANDARD_NONFUNGIBLE:
-              this.Log.debug(
-                `${fnTag}, Receiver Asset is a non fungible token`,
-              );
-              token = protoToAsset(
-                sessionData.receiverAsset,
-                networkId,
-              ) as NonFungibleAsset;
-              if (token.id == undefined) {
-                throw new TokenIdMissingError(fnTag);
-              }
-              if (token.uniqueDescriptor == undefined) {
-                throw new UniqueTokenDescriptorMissingError(fnTag);
-              }
-
-              this.Log.debug(`${fnTag}, Wrap: ${safeStableStringify(token)}`);
-              this.Log.debug(
-                `${fnTag}, Wrap Asset ID: ${token.id} amount: ${String((token as NonFungibleAsset).uniqueDescriptor)}`,
-              );
-              break;
-            default:
-              throw new Error("Unsupported asset type");
-          }
+          const tokenBuildData = buildAndCheckAsset(
+            fnTag,
+            stepTag,
+            this.Log,
+            sessionData,
+            SessionSide.SERVER,
+          );
 
           const bridge = this.bridgeManager.getSATPExecutionLayer(
-            networkId,
+            tokenBuildData.networkId,
             this.claimFormat,
           );
 
@@ -725,7 +668,7 @@ export class Stage0ServerService extends SATPService {
             {},
           );
 
-          const res = await bridge.wrapAsset(token);
+          const res = await bridge.wrapAsset(tokenBuildData.token);
 
           sessionData.receiverWrapAssertionClaim.receipt = res.receipt;
 

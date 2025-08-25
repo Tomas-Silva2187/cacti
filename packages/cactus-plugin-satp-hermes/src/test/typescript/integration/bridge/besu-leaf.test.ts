@@ -458,6 +458,14 @@ describe("Besu Leaf Test with Non Fungible Tokens", () => {
     log.info(`Non Fungible Asset Token contract wrapped successfully`);
   });
 
+  it("Should Approve a token", async () => {
+    await besuEnv.approveAssets(
+      besuLeaf.getWrapperContract("NONFUNGIBLE"),
+      uniqueTokenId1,
+      TokenType.NONSTANDARD_NONFUNGIBLE,
+    );
+  });
+
   it("Should Lock a token", async () => {
     const response = await besuLeaf.lockAsset(
       nonFungibleAsset.id,
@@ -561,6 +569,11 @@ describe("Besu Leaf Test with Non Fungible Tokens", () => {
   });
 
   it("Should Burn a token", async () => {
+    await besuEnv.approveAssets(
+      besuLeaf.getWrapperContract("NONFUNGIBLE"),
+      uniqueTokenId1,
+      TokenType.NONSTANDARD_NONFUNGIBLE,
+    );
     const response = await besuLeaf.lockAsset(
       nonFungibleAsset.id,
       Number(uniqueTokenId1) as UniqueTokenID,

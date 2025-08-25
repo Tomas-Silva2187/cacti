@@ -472,6 +472,14 @@ describe("Ethereum Leaf Non Fungible Test", () => {
     log.info(`Non Fungible Asset Token contract wrapped successfully`);
   });
 
+  it("Should Approve a token", async () => {
+    await ethereumEnv.approveAssets(
+      ethereumLeaf.getWrapperContract("NONFUNGIBLE"),
+      "1001",
+      TokenType.NONSTANDARD_NONFUNGIBLE,
+    );
+  });
+
   it("Should Lock a token", async () => {
     const response = await ethereumLeaf.lockAsset(
       nonFungibleAsset.id,
@@ -577,6 +585,11 @@ describe("Ethereum Leaf Non Fungible Test", () => {
   });
 
   it("Should Burn a token", async () => {
+    await ethereumEnv.approveAssets(
+      ethereumLeaf.getWrapperContract("NONFUNGIBLE"),
+      uniqueTokenId1,
+      TokenType.NONSTANDARD_NONFUNGIBLE,
+    );
     const response = await ethereumLeaf.lockAsset(
       nonFungibleAsset.id,
       Number(uniqueTokenId1) as UniqueTokenID,

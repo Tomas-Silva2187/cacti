@@ -17,7 +17,6 @@ import {
   MessageType,
   MintAssertionClaimFormatSchema,
   MintAssertionClaimSchema,
-  TokenType,
 } from "../../../generated/proto/cacti/satp/v02/common/message_pb";
 import { bufArray2HexStr, getHash, sign } from "../../../gateway-utils";
 import {
@@ -39,16 +38,11 @@ import {
 import { SATPSession } from "../../../core/satp-session";
 import { commonBodyVerifier, signatureVerifier } from "../data-verifier";
 import {
-  AmountMissingError,
   AssignmentAssertionClaimError,
   BurnAssertionClaimError,
-  LedgerAssetError,
   MintAssertionClaimError,
   MissingBridgeManagerError,
-  MissingRecipientError,
   SessionError,
-  TokenIdMissingError,
-  UniqueTokenDescriptorMissingError,
 } from "../../errors/satp-service-errors";
 import {
   FailedToProcessError,
@@ -58,14 +52,8 @@ import { SATPInternalError } from "../../errors/satp-errors";
 import { State } from "../../../generated/proto/cacti/satp/v02/session/session_pb";
 import { create } from "@bufbuild/protobuf";
 import { type BridgeManagerClientInterface } from "../../../cross-chain-mechanisms/bridge/interfaces/bridge-manager-client-interface";
-import { LedgerType } from "@hyperledger/cactus-core-api";
-import { protoToAsset } from "../service-utils";
-import {
-  type FungibleAsset,
-  type NonFungibleAsset,
-} from "../../../cross-chain-mechanisms/bridge/ontology/assets/asset";
-import { NetworkId } from "../../../public-api";
 import { context, SpanStatusCode } from "@opentelemetry/api";
+import { buildAndCheckAsset, SessionSide } from "../../satp-utils";
 
 export class Stage3ServerService extends SATPService {
   public static readonly SATP_STAGE = "3";
@@ -847,61 +835,22 @@ export class Stage3ServerService extends SATPService {
           });
           this.Log.info(`${fnTag}, Minting Asset...`);
 
-          if (sessionData.receiverAsset == undefined) {
-            throw new LedgerAssetError(fnTag);
-          }
-
-          const networkId = {
-            id: sessionData.receiverAsset.networkId?.id,
-            ledgerType: sessionData.receiverAsset.networkId?.type as LedgerType,
-          } as NetworkId;
-
-          let token: FungibleAsset | NonFungibleAsset;
-          switch (sessionData.receiverAsset.tokenType) {
-            case TokenType.ERC20:
-            case TokenType.NONSTANDARD_FUNGIBLE:
-              token = protoToAsset(
-                sessionData.receiverAsset,
-                networkId,
-              ) as FungibleAsset;
-              if (token.id == undefined) {
-                throw new TokenIdMissingError(fnTag);
-              }
-              if (token.amount == undefined) {
-                throw new AmountMissingError(fnTag);
-              }
-              this.logger.debug(
-                `${fnTag}, Mint Asset ID: ${token.id} amount: ${token.amount.toString()}`,
-              );
-              break;
-            case TokenType.ERC721:
-            case TokenType.NONSTANDARD_NONFUNGIBLE:
-              token = protoToAsset(
-                sessionData.receiverAsset,
-                networkId,
-              ) as NonFungibleAsset;
-              if (token.id == undefined) {
-                throw new TokenIdMissingError(fnTag);
-              }
-              if (token.uniqueDescriptor == undefined) {
-                throw new UniqueTokenDescriptorMissingError(fnTag);
-              }
-              this.logger.debug(
-                `${fnTag}, Mint Asset ID: ${token.id} Unique Descriptor: ${String(token.uniqueDescriptor)}`,
-              );
-              break;
-            default:
-              throw new Error("Unsupported Token Type");
-          }
+          const tokenBuildData = buildAndCheckAsset(
+            fnTag,
+            stepTag,
+            this.Log,
+            sessionData,
+            SessionSide.SERVER,
+          );
 
           const bridge = this.bridgeManager.getSATPExecutionLayer(
-            networkId,
+            tokenBuildData.networkId,
             this.claimFormat,
           );
 
           sessionData.mintAssertionClaim = create(MintAssertionClaimSchema, {});
 
-          const res = await bridge.mintAsset(token);
+          const res = await bridge.mintAsset(tokenBuildData.token);
 
           sessionData.mintAssertionClaim.receipt = res.receipt;
 
@@ -979,62 +928,16 @@ export class Stage3ServerService extends SATPService {
             sequenceNumber: Number(sessionData.lastSequenceNumber),
           });
 
-          if (sessionData.receiverAsset == undefined) {
-            throw new LedgerAssetError(fnTag);
-          }
-
-          const networkId = {
-            id: sessionData.receiverAsset.networkId?.id,
-            ledgerType: sessionData.receiverAsset.networkId?.type as LedgerType,
-          } as NetworkId;
-
-          let token: FungibleAsset | NonFungibleAsset;
-
-          switch (sessionData.receiverAsset.tokenType) {
-            case TokenType.ERC20:
-            case TokenType.NONSTANDARD_FUNGIBLE:
-              token = protoToAsset(
-                sessionData.receiverAsset,
-                networkId,
-              ) as FungibleAsset;
-              if (token.owner == undefined) {
-                throw new MissingRecipientError(fnTag);
-              }
-              if (token.id == undefined) {
-                throw new TokenIdMissingError(fnTag);
-              }
-              if (token.amount == undefined) {
-                throw new AmountMissingError(fnTag);
-              }
-              this.logger.debug(
-                `${fnTag}, Assign Asset ID: ${token.id} amount: ${token.amount.toString()} recipient: ${token.owner}`,
-              );
-              break;
-            case TokenType.ERC721:
-            case TokenType.NONSTANDARD_NONFUNGIBLE:
-              token = protoToAsset(
-                sessionData.receiverAsset,
-                networkId,
-              ) as NonFungibleAsset;
-              if (token.owner == undefined) {
-                throw new MissingRecipientError(fnTag);
-              }
-              if (token.id == undefined) {
-                throw new TokenIdMissingError(fnTag);
-              }
-              if (token.uniqueDescriptor == undefined) {
-                throw new UniqueTokenDescriptorMissingError(fnTag);
-              }
-              this.logger.debug(
-                `${fnTag}, Assign Asset ID: ${token.id} Unique Descriptor: ${String(token.uniqueDescriptor)} recipient: ${token.owner}`,
-              );
-              break;
-            default:
-              throw new Error("Unsupported Token Type");
-          }
+          const tokenBuildData = buildAndCheckAsset(
+            fnTag,
+            stepTag,
+            this.Log,
+            sessionData,
+            SessionSide.SERVER,
+          );
 
           const bridge = this.bridgeManager.getSATPExecutionLayer(
-            networkId,
+            tokenBuildData.networkId,
             this.claimFormat,
           );
 
@@ -1043,7 +946,7 @@ export class Stage3ServerService extends SATPService {
             {},
           );
 
-          const res = await bridge.assignAsset(token);
+          const res = await bridge.assignAsset(tokenBuildData.token);
 
           sessionData.assignmentAssertionClaim.receipt = res.receipt;
 

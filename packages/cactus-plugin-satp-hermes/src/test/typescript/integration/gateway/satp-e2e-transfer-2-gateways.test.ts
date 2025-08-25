@@ -988,7 +988,6 @@ describe("2 SATPGateways sending a non fungible token from Besu to Ethereum", ()
 
     await besuEnv.giveRoleToBridge(reqApproveBesuAddress?.approveAddress);
 
-    /*TODO: Uncomment when approveAssets is implemented
     if (reqApproveBesuAddress?.approveAddress) {
       await besuEnv.approveAssets(
         reqApproveBesuAddress.approveAddress,
@@ -997,7 +996,7 @@ describe("2 SATPGateways sending a non fungible token from Besu to Ethereum", ()
       );
     } else {
       throw new Error("Approve address is undefined");
-    }*/
+    }
 
     const reqApproveEthereumAddress = await dispatcher2?.GetApproveAddress({
       networkId: ethereumEnv.network,
@@ -1070,7 +1069,7 @@ describe("2 SATPGateways sending a non fungible token from Besu to Ethereum", ()
   });
 });
 
-describe("2 SATPGateways sending a token from Ethereum to Besu", () => {
+describe("2 SATPGateways sending a non fungible token from Ethereum to Besu", () => {
   it("should realize a transfer to Besu", async () => {
     //setup satp gateway
     const factoryOptions: IPluginFactoryOptions = {
@@ -1222,7 +1221,6 @@ describe("2 SATPGateways sending a token from Ethereum to Besu", () => {
       throw new Error("Approve address is undefined");
     }
 
-    /*TODO: Uncomment when approveAssets is implemented
     if (reqApproveEthereumAddress?.approveAddress) {
       await ethereumEnv.approveAssets(
         reqApproveEthereumAddress.approveAddress,
@@ -1231,7 +1229,7 @@ describe("2 SATPGateways sending a token from Ethereum to Besu", () => {
       );
     } else {
       throw new Error("Approve address is undefined");
-    }*/
+    }
 
     await ethereumEnv.giveRoleToBridge(
       reqApproveEthereumAddress?.approveAddress,

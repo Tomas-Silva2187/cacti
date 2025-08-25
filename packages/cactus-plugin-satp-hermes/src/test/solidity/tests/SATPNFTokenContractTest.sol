@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity ^0.8.20;
 
 import { SATPNFTokenContract } from "../contracts/SATPNFTokenContract.sol";
 import "forge-std/Test.sol";
@@ -23,6 +23,16 @@ contract SATPNFTokenContractTest is Test {
         vm.stopPrank();
     }
 
+    function mintToUser(uint256 tokenId) internal {
+        vm.prank(bridge);
+        satpContract.mint(user, tokenId);
+    }
+
+    function approveAddressToToken(address to, uint256 tokenId) internal {
+        vm.prank(user);
+        satpContract.approve(to, tokenId);
+    }
+
     function testTokenNameAndSymbol() public {
         assertEq(satpContract.name(), "SATPNFToken");
         assertEq(satpContract.symbol(), "SATPNFT");
@@ -38,27 +48,27 @@ contract SATPNFTokenContractTest is Test {
         assertEq(satpContract.ownerOf(tokenId), user);
     }
 
-    /*function testApprove() public {
+    function testApprove() public {
         uint256 tokenId = 1001;
-        vm.prank(bridge);
-        satpContract.mint(user, tokenId);
-        vm.startPrank(user);
-        satpContract.approveAsset(bridge, tokenId);
-        vm.stopPrank();
+        mintToUser(tokenId);
+
+        vm.prank(user);
+        satpContract.approve(bridge, tokenId);
 
         vm.prank(bridge);
-        bool allowance = satpContract.checkAssignment(bridge, tokenId);
-        assertEq(allowance, true, "Approval allowance mismatch");
-    }*/
+        address approvedAddress = satpContract.getApproved(tokenId);
+        assertEq(approvedAddress, bridge, "Approval address mismatch");
+
+        vm.prank(bridge);
+        address tokenOwner = satpContract.ownerOf(tokenId);
+        assertEq(tokenOwner, user, "Owner address mismatch");
+    }
 
     function testLock() public {
         uint256 tokenId = 1001;
+        mintToUser(tokenId);
 
-        vm.prank(bridge);
-        satpContract.mint(user, tokenId);
-
-        //vm.prank(user);
-        //satpContract.approve(bridge, 1001);
+        approveAddressToToken(bridge, tokenId);
 
         vm.prank(bridge);
         satpContract.lock(user, bridge, 1001);
@@ -69,35 +79,27 @@ contract SATPNFTokenContractTest is Test {
 
     function testUnlock() public {
         uint256 tokenId = 1001;
+        mintToUser(tokenId);
 
-        vm.prank(bridge);
-        satpContract.mint(user, tokenId);
+        approveAddressToToken(bridge, tokenId);
 
-        //vm.prank(user);
-        //satpContract.approve(bridge, tokenId);
-
-        vm.prank(bridge);
+        vm.startPrank(bridge);
         satpContract.lock(user, bridge, tokenId);
-
-        vm.prank(bridge);
         satpContract.unlock(bridge, user, tokenId);
+        vm.stopPrank();
 
         assertEq(satpContract.balanceOf(user), 1);
         assertEq(satpContract.balanceOf(bridge), 0);
-
     }
 
     function testBurn() public {
         uint256 tokenId = 1001;
         uint256 tokenId2 = 1002;
-
-        vm.startPrank(bridge);
-        satpContract.mint(user, tokenId);
-        satpContract.mint(user, tokenId2);
+        mintToUser(tokenId);
+        mintToUser(tokenId2);
         assertEq(satpContract.balanceOf(user), 2);
-        vm.stopPrank();
-        //vm.prank(user);
-        //satpContract.approve(bridge, tokenId);
+        
+        approveAddressToToken(bridge, tokenId);
         vm.prank(bridge);
         satpContract.burn(tokenId);
 

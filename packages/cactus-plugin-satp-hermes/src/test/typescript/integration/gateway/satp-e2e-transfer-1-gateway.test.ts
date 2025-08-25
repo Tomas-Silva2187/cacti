@@ -748,7 +748,6 @@ describe("SATPGateway sending a non fungible token from Ethereum to Besu", () =>
       reqApproveEthereumAddress?.approveAddress,
     );
 
-    /* TODO: Uncomment when approveAssets is implemented for NFTs
     if (reqApproveEthereumAddress?.approveAddress) {
       await ethereumEnv.approveAssets(
         reqApproveEthereumAddress.approveAddress,
@@ -757,7 +756,7 @@ describe("SATPGateway sending a non fungible token from Ethereum to Besu", () =>
       );
     } else {
       throw new Error("Approve address is undefined");
-    }*/
+    }
 
     const req = getTransactRequest(
       "mockContext",
@@ -894,7 +893,7 @@ describe("SATPGateway sending a non fungible token from Besu back to Ethereum", 
     }
     await besuEnv.giveRoleToBridge(reqApproveBesuAddress?.approveAddress);
 
-    /*if (reqApproveBesuAddress?.approveAddress) {
+    if (reqApproveBesuAddress?.approveAddress) {
       await besuEnv.approveAssets(
         reqApproveBesuAddress.approveAddress,
         "1001",
@@ -902,7 +901,7 @@ describe("SATPGateway sending a non fungible token from Besu back to Ethereum", 
       );
     } else {
       throw new Error("Approve address is undefined");
-    }*/
+    }
 
     const reqApproveEthereumAddress = await dispatcher?.GetApproveAddress({
       networkId: ethereumEnv.network,

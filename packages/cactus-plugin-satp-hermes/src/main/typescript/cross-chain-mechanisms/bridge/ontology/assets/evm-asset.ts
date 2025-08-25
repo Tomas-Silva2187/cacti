@@ -14,7 +14,7 @@ export interface EvmAsset extends Asset {
 export interface EvmFungibleAsset extends EvmAsset, FungibleAsset {}
 export interface EvmNonFungibleAsset extends EvmAsset, NonFungibleAsset {}
 
-export enum VarType {
+export enum AssetParameterIdentifier {
   CONTRACTADDRESS = 0,
   TOKENTYPE = 1,
   TOKENID = 2,
@@ -22,11 +22,13 @@ export enum VarType {
   AMOUNT = 4,
   BRIDGE = 5,
   RECEIVER = 6,
-  UNIQUEDESCRIPTOR = 7,
+  UNIQUE_DESCRIPTOR = 7,
 }
 
-export function getVarTypes(stringType: string) {
-  return VarType[stringType.toUpperCase() as keyof typeof VarType];
+export function getAssetParameterIdentifier(stringType: string) {
+  return AssetParameterIdentifier[
+    stringType.toUpperCase() as keyof typeof AssetParameterIdentifier
+  ];
 }
 
 export function evmInteractionList(
@@ -51,7 +53,7 @@ export function evmInteractionList(
       const vars: string | number[] = [];
 
       for (const variable of signature.variables) {
-        vars.push(getVarTypes(variable));
+        vars.push(getAssetParameterIdentifier(variable));
       }
       variables.push(vars);
     }

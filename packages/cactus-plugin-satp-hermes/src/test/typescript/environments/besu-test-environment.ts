@@ -41,6 +41,7 @@ export enum SupportedContractTypes {
   FUNGIBLE = "NONSTANDARD_FUNGIBLE",
   NONFUNGIBLE = "NONSTANDARD_NONFUNGIBLE",
   WRAPPER = "WRAPPER",
+  ORACLE = "ORACLE",
 }
 export interface tokenContractName {
   assetType: SupportedContractTypes;
@@ -199,6 +200,17 @@ export class BesuTestEnvironment {
       this.tokenContractCodes.set(
         SupportedContractTypes.NONFUNGIBLE,
         SATPNFTokenContract,
+      );
+    }
+
+    if (this.tokenContracts.has(SupportedContractTypes.ORACLE)) {
+      this.keychainPluginFungible.set(
+        this.tokenContracts.get(SupportedContractTypes.ORACLE) ?? "",
+        JSON.stringify(SATPTokenContract),
+      );
+      this.tokenContractCodes.set(
+        SupportedContractTypes.FUNGIBLE,
+        SATPTokenContract,
       );
     }
 
@@ -569,7 +581,7 @@ export class BesuTestEnvironment {
       keychainId: inUseContractKeyChainId,
       invocationType: BesuContractInvocationType.Send,
       methodName: "approve",
-      params: [wrapperAddress, assetAttribute],
+      params: [wrapperAddress, Number(assetAttribute)],
       signingCredential: {
         ethAccount: this.firstHighNetWorthAccount,
         secret: this.besuKeyPair.privateKey,
@@ -656,6 +668,7 @@ export class BesuTestEnvironment {
     expect(responseBalanceBridge.success).toBeTruthy();
     expect(responseBalanceBridge.callOutput).toBe(amount);
   }
+
   // Gets the default asset configuration for testing
   public get defaultAsset(): Asset {
     return {

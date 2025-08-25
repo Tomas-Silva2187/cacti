@@ -44,6 +44,7 @@ export enum SupportedContractTypes {
   FUNGIBLE = "NONSTANDARD_FUNGIBLE",
   NONFUNGIBLE = "NONSTANDARD_NONFUNGIBLE",
   WRAPPER = "WRAPPER",
+  ORACLE = "ORACLE",
 }
 export interface tokenContractName {
   assetType: SupportedContractTypes;
@@ -572,7 +573,7 @@ export class EthereumTestEnvironment {
       },
       invocationType: EthContractInvocationType.Send,
       methodName: "approve",
-      params: [wrapperAddress, assetAttribute],
+      params: [wrapperAddress, Number(assetAttribute)],
       web3SigningCredential: {
         ethAccount: WHALE_ACCOUNT_ADDRESS,
         secret: "",
@@ -613,6 +614,7 @@ export class EthereumTestEnvironment {
     expect(responseBalanceBridge.success).toBeTruthy();
     expect(responseBalanceBridge.callOutput.toString()).toBe(amount);
   }
+
   // Gets the default asset configuration for testing
   public get defaultAsset(): Asset {
     return {
@@ -649,6 +651,14 @@ export class EthereumTestEnvironment {
   // Returns the whale account address used for testing transactions
   get transactRequestPubKey(): string {
     return WHALE_ACCOUNT_ADDRESS;
+  }
+
+  get bridgeSigningCredentials(): Web3SigningCredential {
+    return {
+      ethAccount: WHALE_ACCOUNT_ADDRESS,
+      secret: "",
+      type: Web3SigningCredentialType.GethKeychainPassword,
+    };
   }
 
   // Stops and destroys the test ledger

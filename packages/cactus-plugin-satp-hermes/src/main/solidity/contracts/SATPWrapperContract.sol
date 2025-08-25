@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.20;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ITraceableContract.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 /**
  * @dev Enum for the supported token types.
@@ -12,11 +13,11 @@ enum TokenType { UNSPECIFIED, ERC20, ERC721, ERC1155, NONSTANDARD_FUNGIBLE, NONS
 /**
  * @dev Enum for the supported interaction types.
  */
-enum InteractionType { MINT, BURN, ASSIGN, CHECKPERMITION, LOCK, UNLOCK }
+enum InteractionType { MINT, BURN, ASSIGN, CHECKPERMITION, LOCK, UNLOCK, APPROVE }
 /**
  * @dev Enum representing the supported variable types used for contract-to-contract calls.
  */
-enum VarType {CONTRACTADDRESS, TOKENTYPE, TOKENID, OWNER, AMOUNT, BRIDGE, RECEIVER, UNIQUEDESCRIPTOR}
+enum AssetParameterIdentifier {CONTRACTADDRESS, TOKENTYPE, TOKENID, OWNER, AMOUNT, BRIDGE, RECEIVER, UNIQUE_DESCRIPTOR}
  
 
 /**
@@ -50,7 +51,7 @@ struct Token {
 struct InteractionSignature {
     InteractionType interactionType;
     string[] functionsSignature;
-    VarType[][] variables;
+    AssetParameterIdentifier[][] variables;
     bool available;
 }
 
@@ -66,7 +67,9 @@ error TokenNotUnlocked(string tokenId);
 
 error InsuficientAmountLocked(string tokenId, uint256 amount);
 
-error TokenTypeNotSupported(string tokenId);
+error TokenNotSupported(string tokenId);
+
+error TokenAlreadyLocked(string tokenId);
 
 
 /**
@@ -78,7 +81,7 @@ error TokenTypeNotSupported(string tokenId);
  *
  * @notice Ensure that the contract is deployed and configured correctly before interacting with it.
  */
-contract SATPWrapperContract is Ownable, ITraceableContract{
+contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
 
     /**
      * Maping of token IDs to Token structs.
@@ -105,6 +108,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract{
     event Mint(string indexed tokenId, uint256 amount);
     event Burn(string indexed tokenId, uint256 amount);
     event Assign(string indexed tokenId, address receiver_account, uint256 amount);
+    event Approve(string indexed tokenId, address spender, uint256 amount);
 
 
     /**
@@ -174,7 +178,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract{
             }
         }
         else {
-            revert TokenTypeNotSupported(tokenId);
+            revert TokenNotSupported(tokenId);
         }
         deleteFromArray(tokens[tokenId].tokenId);
         delete tokens[tokenId];
@@ -203,7 +207,13 @@ contract SATPWrapperContract is Ownable, ITraceableContract{
             }
             else if (tt == TokenType.ERC721 || tt == TokenType.NONSTANDARD_NONFUNGIBLE) {
                 // When dealing with non-fungible tokens, the "amount" is interpreted as the token unique descriptor.
+                if(tokens[tokenId].amount != 0) {
+                    revert TokenAlreadyLocked(tokenId);
+                }
                 tokens[tokenId].amount = assetAttribute;
+            }
+            else {
+                revert TokenNotSupported(tokenId);
             }
             emit Lock(tokenId, assetAttribute);
             return true;
@@ -239,9 +249,10 @@ contract SATPWrapperContract is Ownable, ITraceableContract{
             tokens[tokenId].amount = 0;
             emit Unlock(tokenId, assetAttribute);
             return true;
-        }     
-
-        revert TokenNotUnlocked(tokenId);
+        }
+        else {
+            revert TokenNotSupported(tokenId);
+        }
     } 
 
     /**
@@ -292,7 +303,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract{
             return true;
         }   
         else {
-            revert TokenTypeNotSupported(tokenId);
+            revert TokenNotSupported(tokenId);
         }
     }
 
@@ -325,9 +336,23 @@ contract SATPWrapperContract is Ownable, ITraceableContract{
             return true;
         }
         else {
-            revert TokenTypeNotSupported(tokenId);
+            revert TokenNotSupported(tokenId);
         }
-    }   
+    }
+
+    /**
+     * @notice REQUIRED by OpenZeppelin: Supports the use of safe functions for ERC721 tokens.
+     * @return success A boolean indicating if the account has the bridge role.
+     */
+    function onERC721Received(
+    address,
+    address,
+    uint256,
+    bytes calldata
+) external pure override returns (bytes4) {
+    return this.onERC721Received.selector;
+}
+
 
     /**
      * Gets all the token IDs.
@@ -407,7 +432,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract{
         for (uint i = 0; i < tokensInteractions[tokenId][interactionType].functionsSignature.length; i++) {
             bytes4 functionSelector = bytes4(keccak256(abi.encodePacked(tokensInteractions[tokenId][interactionType].functionsSignature[i])));
 
-            bytes memory encodedParams = encodeDynamicParams(functionSelector, encodeParams(tokensInteractions[tokenId][interactionType].variables[i], tokenId, receiver, assetAttribute));
+            bytes memory encodedParams = encodeDynamicParams(functionSelector, AssetParameterIdentifierEncoder(tokensInteractions[tokenId][interactionType].variables[i], tokenId, receiver, assetAttribute));
 
             (bool callSuccess, ) = tokens[tokenId].contractAddress.call(encodedParams);
             if (!callSuccess) {
@@ -438,22 +463,22 @@ contract SATPWrapperContract is Ownable, ITraceableContract{
      * @param receiver The address of the receiver account.
      * @param assetAttribute The asset attribute of tokens to be encoded.
      */
-    function encodeParams(VarType[] memory variables, string memory tokenId, address receiver, uint256 assetAttribute)  internal view returns (bytes[] memory){
+    function AssetParameterIdentifierEncoder(AssetParameterIdentifier[] memory variables, string memory tokenId, address receiver, uint256 assetAttribute)  internal view returns (bytes[] memory){
         bytes[] memory dynamicParams = new bytes[](variables.length);
         for (uint i = 0; i < variables.length; i++) {
-            if (variables[i] == VarType.BRIDGE) {
+            if (variables[i] == AssetParameterIdentifier.BRIDGE) {
                 dynamicParams[i] = abi.encode(address(this));
-            } else if (variables[i] == VarType.TOKENID) {
+            } else if (variables[i] == AssetParameterIdentifier.TOKENID) {
                 dynamicParams[i] = abi.encode(tokenId);
-            } else if (variables[i] == VarType.AMOUNT) {
+            } else if (variables[i] == AssetParameterIdentifier.AMOUNT) {
                 dynamicParams[i] = abi.encode(assetAttribute);
-            } else if (variables[i] == VarType.OWNER) {
+            } else if (variables[i] == AssetParameterIdentifier.OWNER) {
                 dynamicParams[i] = abi.encode(tokens[tokenId].owner);
-            } else if (variables[i] == VarType.CONTRACTADDRESS) {
+            } else if (variables[i] == AssetParameterIdentifier.CONTRACTADDRESS) {
                 dynamicParams[i] = abi.encode(tokens[tokenId].contractAddress);
-            } else if (variables[i] == VarType.RECEIVER) {
+            } else if (variables[i] == AssetParameterIdentifier.RECEIVER) {
                 dynamicParams[i] = abi.encode(receiver);
-            } else if (variables[i] == VarType.UNIQUEDESCRIPTOR) {
+            } else if (variables[i] == AssetParameterIdentifier.UNIQUE_DESCRIPTOR) {
                 dynamicParams[i] = abi.encode(assetAttribute);
             } else {
                 revert("Variable not supported");

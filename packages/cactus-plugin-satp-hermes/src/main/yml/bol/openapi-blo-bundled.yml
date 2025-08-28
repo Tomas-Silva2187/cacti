@@ -117,11 +117,8 @@ paths:
                     tokenType:
                       type: string
                       enum:
-                        - ERC20
-                        - ERC721
-                        - ERC1155
-                        - NONSTANDARD_FUNGIBLE
-                        - NONSTANDARD_NONFUNGIBLE
+                        - FUNGIBLE
+                        - NONFUNGIBLE
                       description: The type of token.
                     referenceId:
                       type: string
@@ -174,11 +171,8 @@ paths:
                     tokenType:
                       type: string
                       enum:
-                        - ERC20
-                        - ERC721
-                        - ERC1155
-                        - NONSTANDARD_FUNGIBLE
-                        - NONSTANDARD_NONFUNGIBLE
+                        - FUNGIBLE
+                        - NONFUNGIBLE
                       description: The type of token.
                     referenceId:
                       type: string
@@ -2009,11 +2003,8 @@ paths:
           schema:
             type: string
             enum:
-              - ERC20
-              - ERC721
-              - ERC1155
-              - NONSTANDARD_FUNGIBLE
-              - NONSTANDARD_NONFUNGIBLE
+              - FUNGIBLE
+              - NONFUNGIBLE
             description: The type of token.
           required: true
       responses:
@@ -3442,11 +3433,8 @@ components:
         tokenType:
           type: string
           enum:
-            - ERC20
-            - ERC721
-            - ERC1155
-            - NONSTANDARD_FUNGIBLE
-            - NONSTANDARD_NONFUNGIBLE
+            - FUNGIBLE
+            - NONFUNGIBLE
           description: The type of token.
         referenceId:
           type: string
@@ -3514,11 +3502,8 @@ components:
             tokenType:
               type: string
               enum:
-                - ERC20
-                - ERC721
-                - ERC1155
-                - NONSTANDARD_FUNGIBLE
-                - NONSTANDARD_NONFUNGIBLE
+                - FUNGIBLE
+                - NONFUNGIBLE
               description: The type of token.
             referenceId:
               type: string
@@ -3571,11 +3556,8 @@ components:
             tokenType:
               type: string
               enum:
-                - ERC20
-                - ERC721
-                - ERC1155
-                - NONSTANDARD_FUNGIBLE
-                - NONSTANDARD_NONFUNGIBLE
+                - FUNGIBLE
+                - NONFUNGIBLE
               description: The type of token.
             referenceId:
               type: string
@@ -6264,11 +6246,8 @@ components:
         tokenType:
           type: string
           enum:
-            - ERC20
-            - ERC721
-            - ERC1155
-            - NONSTANDARD_FUNGIBLE
-            - NONSTANDARD_NONFUNGIBLE
+            - FUNGIBLE
+            - NONFUNGIBLE
           description: The type of token.
       required:
         - networkId
@@ -7556,11 +7535,8 @@ components:
     TokenType:
       type: string
       enum:
-        - ERC20
-        - ERC721
-        - ERC1155
-        - NONSTANDARD_FUNGIBLE
-        - NONSTANDARD_NONFUNGIBLE
+        - FUNGIBLE
+        - NONFUNGIBLE
       description: The type of token.
     DraftVersions:
       type: object

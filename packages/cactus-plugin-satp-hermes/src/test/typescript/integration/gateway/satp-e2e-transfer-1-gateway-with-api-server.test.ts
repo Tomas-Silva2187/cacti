@@ -150,7 +150,7 @@ beforeAll(async () => {
 describe("SATPGateway sending a token from Besu to Fabric", () => {
   jest.setTimeout(TIMEOUT);
   it("should mint 100 tokens to the owner account", async () => {
-    await besuEnv.mintTokens("100", TokenTypeMain.NONSTANDARD_FUNGIBLE);
+    await besuEnv.mintTokens("100", TokenTypeMain.FUNGIBLE);
     await besuEnv.checkBalance(
       besuEnv.getTestFungibleContractName(),
       besuEnv.getTestFungibleContractAddress(),
@@ -251,7 +251,7 @@ describe("SATPGateway sending a token from Besu to Fabric", () => {
       await besuEnv.approveAssets(
         reqApproveBesuAddress.data.approveAddress,
         "100",
-        TokenTypeMain.NONSTANDARD_FUNGIBLE,
+        TokenTypeMain.FUNGIBLE,
       );
     } else {
       throw new Error("Approve address is undefined");
@@ -589,7 +589,7 @@ describe("SATPGateway sending a token from Besu to Ethereum", () => {
       await besuEnv.approveAssets(
         reqApproveBesuAddress.data.approveAddress,
         "100",
-        TokenTypeMain.NONSTANDARD_FUNGIBLE,
+        TokenTypeMain.FUNGIBLE,
       );
     }
 

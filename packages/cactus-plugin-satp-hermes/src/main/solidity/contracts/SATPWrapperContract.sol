@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 /**
  * @dev Enum for the supported token types.
  */
-enum TokenType { UNSPECIFIED, ERC20, ERC721, ERC1155, NONSTANDARD_FUNGIBLE, NONSTANDARD_NONFUNGIBLE } //TODO: FIX THIS ENUM TO BE THE SAME OF THE BRIDGE
+enum TokenType { UNSPECIFIED, FUNGIBLE, NONFUNGIBLE } //TODO: FIX THIS ENUM TO BE THE SAME OF THE BRIDGE
 /**
  * @dev Enum for the supported interaction types.
  */
@@ -167,12 +167,12 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
             revert TokenNotAvailable(tokenId);
         }
         TokenType tt = tokens[tokenId].tokenType;
-        if(tt == TokenType.NONSTANDARD_FUNGIBLE || tt == TokenType.ERC20) {
+        if(tt == TokenType.FUNGIBLE) {
             if(tokens[tokenId].amount > 0) {
                 revert TokenLocked(tokenId);
             } 
         }
-        else if(tt == TokenType.NONSTANDARD_NONFUNGIBLE || tt == TokenType.ERC721) {
+        else if(tt == TokenType.NONFUNGIBLE) {
             if(tokens[tokenId].amount != 0) {
                 revert TokenLocked(tokenId);
             }
@@ -201,11 +201,11 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
 
         if(lockSuccess) {
             TokenType tt = tokens[tokenId].tokenType;
-            if (tt == TokenType.ERC20 || tt == TokenType.NONSTANDARD_FUNGIBLE) {
+            if (tt == TokenType.FUNGIBLE) {
                 // The locked amount is added to the amount of the token struct
                 tokens[tokenId].amount += assetAttribute;
             }
-            else if (tt == TokenType.ERC721 || tt == TokenType.NONSTANDARD_NONFUNGIBLE) {
+            else if (tt == TokenType.NONFUNGIBLE) {
                 // When dealing with non-fungible tokens, the "amount" is interpreted as the token unique descriptor.
                 if(tokens[tokenId].amount != 0) {
                     revert TokenAlreadyLocked(tokenId);
@@ -232,7 +232,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
             revert TokenNotAvailable(tokenId);
         }
         TokenType tt = tokens[tokenId].tokenType;
-        if (tt == TokenType.ERC20 || tt == TokenType.NONSTANDARD_FUNGIBLE) {
+        if (tt == TokenType.FUNGIBLE) {
             if(tokens[tokenId].amount < assetAttribute) {
                 revert InsuficientAmountLocked(tokenId, assetAttribute);
             }
@@ -241,7 +241,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
             emit Unlock(tokenId, assetAttribute);
             return true;
         }
-        else if (tt == TokenType.ERC721 || tt == TokenType.NONSTANDARD_NONFUNGIBLE) {
+        else if (tt == TokenType.NONFUNGIBLE) {
             // The provided value to unlock should be equal to what is stored logically as the unique descriptor of the NFT. 
             require(tokens[tokenId].amount != 0, "Trying to Unlock an asset that is not locked");
             require(tokens[tokenId].amount == assetAttribute, "Unlocking NFT cannot be done due to wrong uniqueDescriptor");
@@ -280,7 +280,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
      */
     function burn(string memory tokenId, uint256 assetAttribute) external onlyOwner returns (bool success) {
         TokenType tt = tokens[tokenId].tokenType;
-        if (tt == TokenType.ERC20 || tt == TokenType.NONSTANDARD_FUNGIBLE) {
+        if (tt == TokenType.FUNGIBLE) {
             require(tokens[tokenId].amount >= assetAttribute, "burn asset asset is not locked");
 
             require(interact(tokenId, InteractionType.BURN, assetAttribute), "burn asset call failed");
@@ -290,7 +290,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
             emit Burn(tokenId, assetAttribute);
             return true;
         }
-        else if (tt == TokenType.ERC721 || tt == TokenType.NONSTANDARD_NONFUNGIBLE) {
+        else if (tt == TokenType.NONFUNGIBLE) {
             require(tokens[tokenId].amount != 0, "Burning unminted asset");
 
             require(tokens[tokenId].amount == assetAttribute, "Burning NFT failed due to wrong uniqueDescriptor");
@@ -315,7 +315,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
      */
     function assign(string memory tokenId, address receiver_account, uint256 assetAttribute) external onlyOwner returns (bool success) {
         TokenType tt = tokens[tokenId].tokenType;
-        if (tt == TokenType.ERC20 || tt == TokenType.NONSTANDARD_FUNGIBLE) {
+        if (tt == TokenType.FUNGIBLE) {
             require(tokens[tokenId].amount >= assetAttribute, "assign asset asset is not locked");
 
             require(interact(tokenId, InteractionType.ASSIGN, assetAttribute, receiver_account), "assign asset call failed");
@@ -325,7 +325,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
             emit Assign(tokenId, receiver_account, assetAttribute);
             return true;
         }
-        else if (tt == TokenType.ERC721 || tt == TokenType.NONSTANDARD_NONFUNGIBLE) {
+        else if (tt == TokenType.NONFUNGIBLE) {
             require(tokens[tokenId].amount == assetAttribute, "Assign nft - asset is not locked");
 
             require(interact(tokenId, InteractionType.ASSIGN, assetAttribute, receiver_account), "assign nft call failed");

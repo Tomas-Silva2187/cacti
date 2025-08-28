@@ -1017,7 +1017,7 @@ export class FabricTestEnvironment {
       mspId: this.userIdentity.mspId,
       channelName: this.fabricChannelName,
       networkId: this.network,
-      tokenType: AssetTokenTypeEnum.NonstandardFungible,
+      tokenType: AssetTokenTypeEnum.Fungible,
     };
   }
 
@@ -1030,7 +1030,7 @@ export class FabricTestEnvironment {
       mspId: this.userIdentity.mspId,
       channelName: this.fabricChannelName,
       networkId: this.network,
-      tokenType: AssetTokenTypeEnum.NonstandardNonfungible,
+      tokenType: AssetTokenTypeEnum.Nonfungible,
     };
   }
 

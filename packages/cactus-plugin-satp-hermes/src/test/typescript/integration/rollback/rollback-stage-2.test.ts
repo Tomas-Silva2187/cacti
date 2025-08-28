@@ -144,7 +144,7 @@ const createMockSession = (
     sessionData.senderAsset = create(AssetSchema, {
       tokenId: besuEnv.defaultAsset.id,
       referenceId: besuEnv.defaultAsset.referenceId,
-      tokenType: TokenType.NONSTANDARD_FUNGIBLE,
+      tokenType: TokenType.FUNGIBLE,
       amount: BigInt(100),
       owner: "MOCK_SENDER_ASSET_OWNER",
       contractName: "MOCK_SENDER_ASSET_CONTRACT_NAME",
@@ -155,7 +155,7 @@ const createMockSession = (
     sessionData.receiverAsset = create(AssetSchema, {
       tokenId: fabricEnv.defaultAsset.id,
       referenceId: fabricEnv.defaultAsset.referenceId,
-      tokenType: TokenType.NONSTANDARD_FUNGIBLE,
+      tokenType: TokenType.FUNGIBLE,
       amount: BigInt(100),
       owner: "MOCK_RECEIVER_ASSET_OWNER",
       contractName: "MOCK_RECEIVER_ASSET_CONTRACT_NAME",
@@ -274,7 +274,7 @@ describe.skip("Rollback Test stage 2", () => {
     const besuAsset: EvmFungibleAsset = {
       id: besuEnv.defaultAsset.id,
       referenceId: besuEnv.defaultAsset.referenceId,
-      type: TokenType.NONSTANDARD_FUNGIBLE,
+      type: TokenType.FUNGIBLE,
       amount: 100 as Amount,
       owner: besuEnv.firstHighNetWorthAccount,
       contractName: besuEnv.getTestFungibleContractName(),

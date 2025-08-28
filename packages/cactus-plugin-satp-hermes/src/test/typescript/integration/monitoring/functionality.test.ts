@@ -127,7 +127,7 @@ async function waitForMetric(metric: string, maxRetries = 5) {
 }
 
 async function executeTransfer() {
-  await besuEnv.mintTokens("100", TokenTypeMain.NONSTANDARD_FUNGIBLE);
+  await besuEnv.mintTokens("100", TokenTypeMain.FUNGIBLE);
   await besuEnv.checkBalance(
     besuEnv.getTestFungibleContractName(),
     besuEnv.getTestFungibleContractAddress(),
@@ -204,7 +204,7 @@ async function executeTransfer() {
   expect(dispatcher).toBeTruthy();
   const reqApproveBesuAddress = await dispatcher?.GetApproveAddress({
     networkId: besuEnv.network,
-    tokenType: TokenType.NonstandardFungible,
+    tokenType: TokenType.Fungible,
   });
 
   if (!reqApproveBesuAddress?.approveAddress) {
@@ -219,7 +219,7 @@ async function executeTransfer() {
     await besuEnv.approveAssets(
       reqApproveBesuAddress.approveAddress,
       "100",
-      TokenTypeMain.NONSTANDARD_FUNGIBLE,
+      TokenTypeMain.FUNGIBLE,
     );
   } else {
     throw new Error("Approve address is undefined");
@@ -229,7 +229,7 @@ async function executeTransfer() {
 
   const reqApproveEthereumAddress = await dispatcher?.GetApproveAddress({
     networkId: ethereumEnv.network,
-    tokenType: TokenType.NonstandardFungible,
+    tokenType: TokenType.Fungible,
   });
 
   expect(reqApproveEthereumAddress?.approveAddress).toBeDefined();

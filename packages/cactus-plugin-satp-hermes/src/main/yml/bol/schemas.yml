@@ -1199,11 +1199,8 @@ NetworkId:
 TokenType:
   type: string
   enum:
-    - ERC20
-    - ERC721
-    - ERC1155
-    - NONSTANDARD_FUNGIBLE
-    - NONSTANDARD_NONFUNGIBLE
+    - FUNGIBLE
+    - NONFUNGIBLE
   description: The type of token.
 DraftVersions:
   type: object

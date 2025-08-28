@@ -51,12 +51,9 @@ export class BesuTestEnvironment {
   public static readonly BESU_ASSET_ID: string = "BesuExampleAsset";
   public static readonly BESU_ASSET_ID2: string = "BesuExampleAsset2";
   public static readonly BESU_REFERENCE_ID: Record<TokenType, string> = {
-    [TokenType.ERC20]: ExampleOntologyERC20.id,
-    [TokenType.ERC721]: ExampleOntologyERC721.id,
-    [TokenType.NONSTANDARD_FUNGIBLE]: ExampleOntologyERC20.id,
-    [TokenType.NONSTANDARD_NONFUNGIBLE]: ExampleOntologyERC721.id,
+    [TokenType.FUNGIBLE]: ExampleOntologyERC20.id,
+    [TokenType.NONFUNGIBLE]: ExampleOntologyERC721.id,
     [TokenType.UNSPECIFIED]: "",
-    [TokenType.ERC1155]: "",
   };
   public static readonly BESU_NETWORK_ID: string = "BesuLedgerTestNetwork";
   public readonly network: NetworkId = {
@@ -462,15 +459,13 @@ export class BesuTestEnvironment {
     let inUseTokenAttribute: string;
     let inUseContractKeyChainId: string;
     switch (newTokenType) {
-      case TokenType.ERC20:
-      case TokenType.NONSTANDARD_FUNGIBLE:
+      case TokenType.FUNGIBLE:
         inUseContractName =
           this.tokenContracts.get(SupportedContractTypes.FUNGIBLE) ?? "";
         inUseTokenAttribute = "amount";
         inUseContractKeyChainId = this.keychainPluginFungible.getKeychainId();
         break;
-      case TokenType.ERC721:
-      case TokenType.NONSTANDARD_NONFUNGIBLE:
+      case TokenType.NONFUNGIBLE:
         inUseContractName =
           this.tokenContracts.get(SupportedContractTypes.NONFUNGIBLE) ?? "";
         inUseTokenAttribute = "tokenId";
@@ -556,15 +551,13 @@ export class BesuTestEnvironment {
     let inUseContractName: string;
     let inUseTokenAttribute: string;
     switch (inUseTokenType) {
-      case TokenType.ERC20:
-      case TokenType.NONSTANDARD_FUNGIBLE:
+      case TokenType.FUNGIBLE:
         inUseContractKeyChainId = this.keychainPluginFungible.getKeychainId();
         inUseContractName =
           this.tokenContracts.get(SupportedContractTypes.FUNGIBLE) ?? "";
         inUseTokenAttribute = "amount";
         break;
-      case TokenType.ERC721:
-      case TokenType.NONSTANDARD_NONFUNGIBLE:
+      case TokenType.NONFUNGIBLE:
         inUseContractKeyChainId =
           this.keychainPluginNonFungible.getKeychainId();
         inUseContractName =
@@ -673,24 +666,20 @@ export class BesuTestEnvironment {
   public get defaultAsset(): Asset {
     return {
       id: BesuTestEnvironment.BESU_ASSET_ID,
-      referenceId:
-        BesuTestEnvironment.BESU_REFERENCE_ID[TokenType.NONSTANDARD_FUNGIBLE],
+      referenceId: BesuTestEnvironment.BESU_REFERENCE_ID[TokenType.FUNGIBLE],
       owner: this.firstHighNetWorthAccount,
       contractName:
         this.tokenContracts.get(SupportedContractTypes.FUNGIBLE) ?? "",
       contractAddress:
         this.assetContractAddresses.get(SupportedContractTypes.FUNGIBLE) ?? "",
       networkId: this.network,
-      tokenType: AssetTokenTypeEnum.NonstandardFungible,
+      tokenType: AssetTokenTypeEnum.Fungible,
     };
   }
   public get nonFungibleDefaultAsset(): Asset {
     return {
       id: BesuTestEnvironment.BESU_ASSET_ID2,
-      referenceId:
-        BesuTestEnvironment.BESU_REFERENCE_ID[
-          TokenType.NONSTANDARD_NONFUNGIBLE
-        ],
+      referenceId: BesuTestEnvironment.BESU_REFERENCE_ID[TokenType.NONFUNGIBLE],
       owner: this.firstHighNetWorthAccount,
       contractName:
         this.tokenContracts.get(SupportedContractTypes.NONFUNGIBLE) ?? "",
@@ -698,7 +687,7 @@ export class BesuTestEnvironment {
         this.assetContractAddresses.get(SupportedContractTypes.NONFUNGIBLE) ??
         "",
       networkId: this.network,
-      tokenType: AssetTokenTypeEnum.NonstandardNonfungible,
+      tokenType: AssetTokenTypeEnum.Nonfungible,
     };
   }
 

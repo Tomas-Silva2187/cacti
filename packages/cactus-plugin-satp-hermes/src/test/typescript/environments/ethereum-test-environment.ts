@@ -55,12 +55,9 @@ export class EthereumTestEnvironment {
   public static readonly ETH_ASSET_ID: string = "EthereumExampleAsset";
   public static readonly ETH_NFT_ASSET_ID: string = "EthereumExampleNFT";
   public static readonly ETHREFERENCE_ID: Record<TokenType, string> = {
-    [TokenType.ERC20]: ExampleOntologyERC20.id,
-    [TokenType.ERC721]: ExampleOntologyERC721.id,
-    [TokenType.NONSTANDARD_FUNGIBLE]: ExampleOntologyERC20.id,
-    [TokenType.NONSTANDARD_NONFUNGIBLE]: ExampleOntologyERC721.id,
+    [TokenType.FUNGIBLE]: ExampleOntologyERC20.id,
+    [TokenType.NONFUNGIBLE]: ExampleOntologyERC721.id,
     [TokenType.UNSPECIFIED]: "",
-    [TokenType.ERC1155]: "",
   };
   public static readonly ETH_NETWORK_ID: string = "EthereumLedgerTestNetwork";
   public readonly network: NetworkId = {
@@ -451,15 +448,13 @@ export class EthereumTestEnvironment {
     let inUseTokenAttribute: string;
     let inUseContractKeyChainId: string;
     switch (newTokenType) {
-      case TokenType.ERC20:
-      case TokenType.NONSTANDARD_FUNGIBLE:
+      case TokenType.FUNGIBLE:
         inUseContractName =
           this.tokenContracts.get(SupportedContractTypes.FUNGIBLE) ?? "";
         inUseTokenAttribute = "amount";
         inUseContractKeyChainId = this.keychainPluginFungible.getKeychainId();
         break;
-      case TokenType.ERC721:
-      case TokenType.NONSTANDARD_NONFUNGIBLE:
+      case TokenType.NONFUNGIBLE:
         inUseContractName =
           this.tokenContracts.get(SupportedContractTypes.NONFUNGIBLE) ?? "";
         inUseTokenAttribute = "tokenId";
@@ -546,15 +541,13 @@ export class EthereumTestEnvironment {
     let inUseContractName: string;
     let inUseTokenAttribute: string;
     switch (inUseTokenType) {
-      case TokenType.ERC20:
-      case TokenType.NONSTANDARD_FUNGIBLE:
+      case TokenType.FUNGIBLE:
         inUseContractKeyChainId = this.keychainPluginFungible.getKeychainId();
         inUseContractName =
           this.tokenContracts.get(SupportedContractTypes.FUNGIBLE) ?? "";
         inUseTokenAttribute = "amount";
         break;
-      case TokenType.ERC721:
-      case TokenType.NONSTANDARD_NONFUNGIBLE:
+      case TokenType.NONFUNGIBLE:
         inUseContractKeyChainId =
           this.keychainPluginNonFungible.getKeychainId();
         inUseContractName =
@@ -619,24 +612,21 @@ export class EthereumTestEnvironment {
   public get defaultAsset(): Asset {
     return {
       id: EthereumTestEnvironment.ETH_ASSET_ID,
-      referenceId:
-        EthereumTestEnvironment.ETHREFERENCE_ID[TokenType.NONSTANDARD_FUNGIBLE],
+      referenceId: EthereumTestEnvironment.ETHREFERENCE_ID[TokenType.FUNGIBLE],
       owner: WHALE_ACCOUNT_ADDRESS,
       contractName:
         this.tokenContracts.get(SupportedContractTypes.FUNGIBLE) ?? "",
       contractAddress:
         this.assetContractAddresses.get(SupportedContractTypes.FUNGIBLE) ?? "",
       networkId: this.network,
-      tokenType: AssetTokenTypeEnum.NonstandardFungible,
+      tokenType: AssetTokenTypeEnum.Fungible,
     };
   }
   public get nonFungibleDefaultAsset(): Asset {
     return {
       id: EthereumTestEnvironment.ETH_NFT_ASSET_ID,
       referenceId:
-        EthereumTestEnvironment.ETHREFERENCE_ID[
-          TokenType.NONSTANDARD_NONFUNGIBLE
-        ],
+        EthereumTestEnvironment.ETHREFERENCE_ID[TokenType.NONFUNGIBLE],
       owner: WHALE_ACCOUNT_ADDRESS,
       contractName:
         this.tokenContracts.get(SupportedContractTypes.NONFUNGIBLE) ?? "",
@@ -644,7 +634,7 @@ export class EthereumTestEnvironment {
         this.assetContractAddresses.get(SupportedContractTypes.NONFUNGIBLE) ??
         "",
       networkId: this.network,
-      tokenType: AssetTokenTypeEnum.NonstandardNonfungible,
+      tokenType: AssetTokenTypeEnum.Nonfungible,
     };
   }
 

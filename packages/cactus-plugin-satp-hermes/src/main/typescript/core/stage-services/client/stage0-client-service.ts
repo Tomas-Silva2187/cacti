@@ -461,8 +461,7 @@ export class Stage0ClientService extends SATPService {
           let token: FungibleAsset | NonFungibleAsset;
 
           switch (sessionData.senderAsset.tokenType) {
-            case TokenType.ERC20:
-            case TokenType.NONSTANDARD_FUNGIBLE:
+            case TokenType.FUNGIBLE:
               this.Log.debug(`${fnTag}, Sender Asset is a fungible token`);
               token = protoToAsset(
                 sessionData.senderAsset,
@@ -480,8 +479,7 @@ export class Stage0ClientService extends SATPService {
                 `${fnTag}, Wrap Asset ID: ${token.id} amount: ${(token as FungibleAsset).amount.toString()}`,
               );
               break;
-            case TokenType.ERC721:
-            case TokenType.NONSTANDARD_NONFUNGIBLE:
+            case TokenType.NONFUNGIBLE:
               this.Log.debug(`${fnTag}, Sender Asset is a non fungible token`);
               token = protoToAsset(
                 sessionData.senderAsset,

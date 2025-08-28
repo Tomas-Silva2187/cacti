@@ -205,7 +205,7 @@ beforeAll(async () => {
     await ethereumEnv.deployAndSetupContracts(ClaimFormat.DEFAULT);
   }
 
-  await besuEnv.mintTokens("100", TokenTypeMain.NONSTANDARD_FUNGIBLE);
+  await besuEnv.mintTokens("100", TokenTypeMain.FUNGIBLE);
   await besuEnv.checkBalance(
     besuEnv.getTestFungibleContractName(),
     besuEnv.getTestFungibleContractAddress(),
@@ -373,7 +373,7 @@ describe("SATPGateway sending a token from Besu to Fabric", () => {
       await besuEnv.approveAssets(
         reqApproveBesuAddress.data.approveAddress,
         "100",
-        TokenTypeMain.NONSTANDARD_FUNGIBLE,
+        TokenTypeMain.FUNGIBLE,
       );
     } else {
       throw new Error("Approve address is undefined");
@@ -879,7 +879,7 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
       await besuEnv.approveAssets(
         reqApproveBesuAddress.data.approveAddress,
         "100",
-        TokenTypeMain.NONSTANDARD_FUNGIBLE,
+        TokenTypeMain.FUNGIBLE,
       );
     } else {
       throw new Error("Approve address is undefined");

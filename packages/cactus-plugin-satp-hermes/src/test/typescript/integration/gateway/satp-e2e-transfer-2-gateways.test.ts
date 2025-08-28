@@ -170,7 +170,7 @@ beforeAll(async () => {
 describe("2 SATPGateways sending a token from Besu to Fabric", () => {
   jest.setTimeout(TIMEOUT);
   it("should mint 100 tokens to the owner account", async () => {
-    await besuEnv.mintTokens("100", TokenTypeMain.NONSTANDARD_FUNGIBLE);
+    await besuEnv.mintTokens("100", TokenTypeMain.FUNGIBLE);
     await besuEnv.checkBalance(
       besuEnv.getTestFungibleContractName(),
       besuEnv.getTestFungibleContractAddress(),
@@ -309,7 +309,7 @@ describe("2 SATPGateways sending a token from Besu to Fabric", () => {
 
     const reqApproveBesuAddress = await dispatcher1?.GetApproveAddress({
       networkId: besuEnv.network,
-      tokenType: TokenType.NonstandardFungible,
+      tokenType: TokenType.Fungible,
     });
     expect(reqApproveBesuAddress?.approveAddress).toBeDefined();
 
@@ -323,7 +323,7 @@ describe("2 SATPGateways sending a token from Besu to Fabric", () => {
       await besuEnv.approveAssets(
         reqApproveBesuAddress.approveAddress,
         "100",
-        TokenTypeMain.NONSTANDARD_FUNGIBLE,
+        TokenTypeMain.FUNGIBLE,
       );
     } else {
       throw new Error("Approve address is undefined");
@@ -332,7 +332,7 @@ describe("2 SATPGateways sending a token from Besu to Fabric", () => {
 
     const reqApproveFabricAddress = await dispatcher2?.GetApproveAddress({
       networkId: fabricEnv.network,
-      tokenType: TokenType.NonstandardFungible,
+      tokenType: TokenType.Fungible,
     });
     expect(reqApproveFabricAddress?.approveAddress).toBeDefined();
 
@@ -528,7 +528,7 @@ describe("2 SATPGateways sending a token from Fabric to Besu", () => {
 
     const reqApproveFabricAddress = await dispatcher1?.GetApproveAddress({
       networkId: fabricEnv.network,
-      tokenType: TokenType.NonstandardFungible,
+      tokenType: TokenType.Fungible,
     });
     expect(reqApproveFabricAddress?.approveAddress).toBeDefined();
 
@@ -548,7 +548,7 @@ describe("2 SATPGateways sending a token from Fabric to Besu", () => {
 
     const reqApproveBesuAddress = await dispatcher2?.GetApproveAddress({
       networkId: besuEnv.network,
-      tokenType: TokenType.NonstandardFungible,
+      tokenType: TokenType.Fungible,
     });
 
     expect(reqApproveBesuAddress?.approveAddress).toBeDefined();
@@ -614,6 +614,17 @@ describe("2 SATPGateways sending a token from Fabric to Besu", () => {
 
 describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
   jest.setTimeout(TIMEOUT);
+  it("should mint a fungible token and transfer it", async () => {
+    await besuEnv.mintTokens("100", TokenTypeMain.FUNGIBLE);
+    await besuEnv.checkBalance(
+      besuEnv.getTestFungibleContractName(),
+      besuEnv.getTestFungibleContractAddress(),
+      besuEnv.getTestFungibleContractAbi(),
+      besuEnv.getTestOwnerAccount(),
+      "100",
+      besuEnv.getTestOwnerSigningCredential(),
+    );
+  });
   it("should realize a transfer", async () => {
     //setup satp gateway
     const factoryOptions: IPluginFactoryOptions = {
@@ -743,7 +754,7 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
 
     const reqApproveBesuAddress = await dispatcher1?.GetApproveAddress({
       networkId: besuEnv.network,
-      tokenType: TokenType.NonstandardFungible,
+      tokenType: TokenType.Fungible,
     });
 
     if (!reqApproveBesuAddress?.approveAddress) {
@@ -758,7 +769,7 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
       await besuEnv.approveAssets(
         reqApproveBesuAddress.approveAddress,
         "100",
-        TokenTypeMain.NONSTANDARD_FUNGIBLE,
+        TokenTypeMain.FUNGIBLE,
       );
     } else {
       throw new Error("Approve address is undefined");
@@ -768,7 +779,7 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
 
     const reqApproveEthereumAddress = await dispatcher2?.GetApproveAddress({
       networkId: ethereumEnv.network,
-      tokenType: TokenType.NonstandardFungible,
+      tokenType: TokenType.Fungible,
     });
 
     expect(reqApproveEthereumAddress?.approveAddress).toBeDefined();
@@ -839,7 +850,7 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
 describe("2 SATPGateways sending a non fungible token from Besu to Ethereum", () => {
   jest.setTimeout(TIMEOUT);
   it("should mint a non fungible token on Besu and transfer it to Ethereum", async () => {
-    await besuEnv.mintTokens("1001", TokenTypeMain.NONSTANDARD_NONFUNGIBLE);
+    await besuEnv.mintTokens("1001", TokenTypeMain.NONFUNGIBLE);
     await besuEnv.checkBalance(
       besuEnv.getTestNonFungibleContractName(),
       besuEnv.getTestNonFungibleContractAddress(),
@@ -977,7 +988,7 @@ describe("2 SATPGateways sending a non fungible token from Besu to Ethereum", ()
 
     const reqApproveBesuAddress = await dispatcher1?.GetApproveAddress({
       networkId: besuEnv.network,
-      tokenType: TokenType.NonstandardNonfungible,
+      tokenType: TokenType.Nonfungible,
     });
 
     if (!reqApproveBesuAddress?.approveAddress) {
@@ -992,7 +1003,7 @@ describe("2 SATPGateways sending a non fungible token from Besu to Ethereum", ()
       await besuEnv.approveAssets(
         reqApproveBesuAddress.approveAddress,
         "1001",
-        TokenTypeMain.NONSTANDARD_NONFUNGIBLE,
+        TokenTypeMain.NONFUNGIBLE,
       );
     } else {
       throw new Error("Approve address is undefined");
@@ -1000,7 +1011,7 @@ describe("2 SATPGateways sending a non fungible token from Besu to Ethereum", ()
 
     const reqApproveEthereumAddress = await dispatcher2?.GetApproveAddress({
       networkId: ethereumEnv.network,
-      tokenType: TokenType.NonstandardNonfungible,
+      tokenType: TokenType.Nonfungible,
     });
 
     expect(reqApproveEthereumAddress?.approveAddress).toBeDefined();
@@ -1019,7 +1030,7 @@ describe("2 SATPGateways sending a non fungible token from Besu to Ethereum", ()
       ethereumEnv,
       "1001",
       "1001",
-      TokenTypeMain.NONSTANDARD_NONFUNGIBLE,
+      TokenTypeMain.NONFUNGIBLE,
     );
 
     const res = await dispatcher1?.Transact(req);
@@ -1199,7 +1210,7 @@ describe("2 SATPGateways sending a non fungible token from Ethereum to Besu", ()
 
     const reqApproveBesuAddress = await dispatcher2?.GetApproveAddress({
       networkId: besuEnv.network,
-      tokenType: TokenType.NonstandardNonfungible,
+      tokenType: TokenType.Nonfungible,
     });
 
     if (!reqApproveBesuAddress?.approveAddress) {
@@ -1212,7 +1223,7 @@ describe("2 SATPGateways sending a non fungible token from Ethereum to Besu", ()
 
     const reqApproveEthereumAddress = await dispatcher1?.GetApproveAddress({
       networkId: ethereumEnv.network,
-      tokenType: TokenType.NonstandardNonfungible,
+      tokenType: TokenType.Nonfungible,
     });
 
     expect(reqApproveEthereumAddress?.approveAddress).toBeDefined();
@@ -1225,7 +1236,7 @@ describe("2 SATPGateways sending a non fungible token from Ethereum to Besu", ()
       await ethereumEnv.approveAssets(
         reqApproveEthereumAddress.approveAddress,
         "1001",
-        TokenTypeMain.NONSTANDARD_NONFUNGIBLE,
+        TokenTypeMain.NONFUNGIBLE,
       );
     } else {
       throw new Error("Approve address is undefined");
@@ -1241,7 +1252,7 @@ describe("2 SATPGateways sending a non fungible token from Ethereum to Besu", ()
       besuEnv,
       "1001",
       "1001",
-      TokenTypeMain.NONSTANDARD_NONFUNGIBLE,
+      TokenTypeMain.NONFUNGIBLE,
     );
 
     const res = await dispatcher1?.Transact(req);

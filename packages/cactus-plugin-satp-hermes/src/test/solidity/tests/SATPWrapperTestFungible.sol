@@ -84,7 +84,7 @@ contract SATPWrapperTest is Test{
     }
 
     function testWrap() public {
-        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONSTANDARD_FUNGIBLE, contract1.name(), "refID", address(user), signatures);
+        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.FUNGIBLE, contract1.name(), "refID", address(user), signatures);
 
         Token memory tokenReceived = wrapperContract.getToken(contract1.name());
 
@@ -95,9 +95,9 @@ contract SATPWrapperTest is Test{
 
     function testWrapTokenAlreadyWrapped() public {
 
-        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONSTANDARD_FUNGIBLE, contract1.name(), "refID", address(user), signatures);
+        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.FUNGIBLE, contract1.name(), "refID", address(user), signatures);
 
-        try wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONSTANDARD_FUNGIBLE, contract1.name(), "refID", address(user), signatures) returns (bool s) {
+        try wrapperContract.wrap(contract1.name(), address(contract1), TokenType.FUNGIBLE, contract1.name(), "refID", address(user), signatures) returns (bool s) {
             require(!s, "Expected an error");
         }
         catch Error(string memory) {
@@ -107,7 +107,7 @@ contract SATPWrapperTest is Test{
     }
 
     function testUnwrap() public {
-        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONSTANDARD_FUNGIBLE, contract1.name(), "refID", address(user), signatures);
+        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.FUNGIBLE, contract1.name(), "refID", address(user), signatures);
 
         wrapperContract.unwrap(contract1.name());
 
@@ -117,7 +117,7 @@ contract SATPWrapperTest is Test{
     }
 
     function testMint() public {
-        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONSTANDARD_FUNGIBLE, contract1.name(), "refID", address(user), signatures);
+        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.FUNGIBLE, contract1.name(), "refID", address(user), signatures);
         wrapperContract.mint(contract1.name(), 10);
         
         assertEq(contract1.balanceOf(address(wrapperContract)), 10, "Token not minted");
@@ -144,7 +144,7 @@ contract SATPWrapperTest is Test{
     }
 
     function testUnwrapATokenWithValueLocked() public {
-        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONSTANDARD_FUNGIBLE, contract1.name(), "refID", address(user), signatures);
+        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.FUNGIBLE, contract1.name(), "refID", address(user), signatures);
 
         wrapperContract.mint(contract1.name(), 10);
 

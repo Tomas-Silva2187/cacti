@@ -318,10 +318,8 @@ export class BesuLeaf
           `${fnTag}, Getting Approve Address for asset type: ${getEnumKeyByValue(TokenType, assetType)}`,
         );
         switch (assetType) {
-          case TokenType.ERC20:
-          case TokenType.NONSTANDARD_FUNGIBLE:
-          case TokenType.ERC721:
-          case TokenType.NONSTANDARD_NONFUNGIBLE:
+          case TokenType.FUNGIBLE:
+          case TokenType.NONFUNGIBLE:
             if (!this.wrapperContractAddress) {
               throw new ApproveAddressError(
                 `${fnTag}, Wrapper Contract Address not available for approving address`,
@@ -518,10 +516,8 @@ export class BesuLeaf
         );
 
         switch (asset.type) {
-          case TokenType.ERC20:
-          case TokenType.NONSTANDARD_FUNGIBLE:
-          case TokenType.ERC721:
-          case TokenType.NONSTANDARD_NONFUNGIBLE:
+          case TokenType.FUNGIBLE:
+          case TokenType.NONFUNGIBLE:
             if (!this.wrapperContractName || !this.wrapperContractAddress) {
               throw new WrapperContractError(
                 `${fnTag}, Wrapper Contract not deployed`,
@@ -984,8 +980,7 @@ export class BesuLeaf
         this.log.info(token);
 
         switch (Number(token.tokenType)) {
-          case TokenType.ERC20:
-          case TokenType.NONSTANDARD_FUNGIBLE:
+          case TokenType.FUNGIBLE:
             return {
               contractName: token.contractName,
               id: token.tokenId,
@@ -996,8 +991,7 @@ export class BesuLeaf
               amount: Number(token.amount) as Amount,
               network: this.networkIdentification,
             } as EvmFungibleAsset;
-          case TokenType.ERC721:
-          case TokenType.NONSTANDARD_NONFUNGIBLE:
+          case TokenType.NONFUNGIBLE:
             return {
               contractName: token.contractName,
               id: token.tokenId,

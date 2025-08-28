@@ -61,8 +61,7 @@ export function buildAndCheckAsset(
   let token: Asset;
 
   switch (sessionAsset.tokenType) {
-    case TokenType.ERC20:
-    case TokenType.NONSTANDARD_FUNGIBLE:
+    case TokenType.FUNGIBLE:
       token = protoToAsset(sessionAsset, networkId) as Asset;
       if (token.id == undefined) {
         throw new TokenIdMissingError(fnTag);
@@ -77,8 +76,7 @@ export function buildAndCheckAsset(
         `${fnTag}, ${protocolStep} Asset ID: ${token.id} amount: ${token.amount}`,
       );
       return { token: token, networkId: networkId } as SessionAssetBuildData;
-    case TokenType.ERC721:
-    case TokenType.NONSTANDARD_NONFUNGIBLE:
+    case TokenType.NONFUNGIBLE:
       token = protoToAsset(sessionAsset, networkId) as Asset;
       if (token.id == undefined) {
         throw new TokenIdMissingError(fnTag);

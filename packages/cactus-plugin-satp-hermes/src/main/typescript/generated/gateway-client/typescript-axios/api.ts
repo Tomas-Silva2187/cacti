@@ -322,11 +322,8 @@ export interface Asset {
 }
 
 export const AssetTokenTypeEnum = {
-    Erc20: 'ERC20',
-    Erc721: 'ERC721',
-    Erc1155: 'ERC1155',
-    NonstandardFungible: 'NONSTANDARD_FUNGIBLE',
-    NonstandardNonfungible: 'NONSTANDARD_NONFUNGIBLE'
+    Fungible: 'FUNGIBLE',
+    Nonfungible: 'NONFUNGIBLE'
 } as const;
 
 export type AssetTokenTypeEnum = typeof AssetTokenTypeEnum[keyof typeof AssetTokenTypeEnum];
@@ -1334,11 +1331,8 @@ export interface GetApproveAddressRequest {
 }
 
 export const GetApproveAddressRequestTokenTypeEnum = {
-    Erc20: 'ERC20',
-    Erc721: 'ERC721',
-    Erc1155: 'ERC1155',
-    NonstandardFungible: 'NONSTANDARD_FUNGIBLE',
-    NonstandardNonfungible: 'NONSTANDARD_NONFUNGIBLE'
+    Fungible: 'FUNGIBLE',
+    Nonfungible: 'NONFUNGIBLE'
 } as const;
 
 export type GetApproveAddressRequestTokenTypeEnum = typeof GetApproveAddressRequestTokenTypeEnum[keyof typeof GetApproveAddressRequestTokenTypeEnum];
@@ -3459,11 +3453,8 @@ export type TokenChainTypeEnum = typeof TokenChainTypeEnum[keyof typeof TokenCha
  */
 
 export const TokenType = {
-    Erc20: 'ERC20',
-    Erc721: 'ERC721',
-    Erc1155: 'ERC1155',
-    NonstandardFungible: 'NONSTANDARD_FUNGIBLE',
-    NonstandardNonfungible: 'NONSTANDARD_NONFUNGIBLE'
+    Fungible: 'FUNGIBLE',
+    Nonfungible: 'NONFUNGIBLE'
 } as const;
 
 export type TokenType = typeof TokenType[keyof typeof TokenType];
@@ -3793,11 +3784,8 @@ export interface TransactRequestSourceAsset {
 }
 
 export const TransactRequestSourceAssetTokenTypeEnum = {
-    Erc20: 'ERC20',
-    Erc721: 'ERC721',
-    Erc1155: 'ERC1155',
-    NonstandardFungible: 'NONSTANDARD_FUNGIBLE',
-    NonstandardNonfungible: 'NONSTANDARD_NONFUNGIBLE'
+    Fungible: 'FUNGIBLE',
+    Nonfungible: 'NONFUNGIBLE'
 } as const;
 
 export type TransactRequestSourceAssetTokenTypeEnum = typeof TransactRequestSourceAssetTokenTypeEnum[keyof typeof TransactRequestSourceAssetTokenTypeEnum];
@@ -4448,11 +4436,11 @@ export const GetApproveAddressApiAxiosParamCreator = function (configuration?: C
          * Get approve address for the token transfer
          * @summary Get approve address
          * @param {TransactRequestSourceAssetNetworkId} networkId 
-         * @param {'ERC20' | 'ERC721' | 'ERC1155' | 'NONSTANDARD_FUNGIBLE' | 'NONSTANDARD_NONFUNGIBLE'} tokenType 
+         * @param {'FUNGIBLE' | 'NONFUNGIBLE'} tokenType 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getApproveAddress: async (networkId: TransactRequestSourceAssetNetworkId, tokenType: 'ERC20' | 'ERC721' | 'ERC1155' | 'NONSTANDARD_FUNGIBLE' | 'NONSTANDARD_NONFUNGIBLE', options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getApproveAddress: async (networkId: TransactRequestSourceAssetNetworkId, tokenType: 'FUNGIBLE' | 'NONFUNGIBLE', options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'networkId' is not null or undefined
             assertParamExists('getApproveAddress', 'networkId', networkId)
             // verify required parameter 'tokenType' is not null or undefined
@@ -4502,11 +4490,11 @@ export const GetApproveAddressApiFp = function(configuration?: Configuration) {
          * Get approve address for the token transfer
          * @summary Get approve address
          * @param {TransactRequestSourceAssetNetworkId} networkId 
-         * @param {'ERC20' | 'ERC721' | 'ERC1155' | 'NONSTANDARD_FUNGIBLE' | 'NONSTANDARD_NONFUNGIBLE'} tokenType 
+         * @param {'FUNGIBLE' | 'NONFUNGIBLE'} tokenType 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getApproveAddress(networkId: TransactRequestSourceAssetNetworkId, tokenType: 'ERC20' | 'ERC721' | 'ERC1155' | 'NONSTANDARD_FUNGIBLE' | 'NONSTANDARD_NONFUNGIBLE', options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GetApproveAddress200Response>> {
+        async getApproveAddress(networkId: TransactRequestSourceAssetNetworkId, tokenType: 'FUNGIBLE' | 'NONFUNGIBLE', options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GetApproveAddress200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getApproveAddress(networkId, tokenType, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -4524,11 +4512,11 @@ export const GetApproveAddressApiFactory = function (configuration?: Configurati
          * Get approve address for the token transfer
          * @summary Get approve address
          * @param {TransactRequestSourceAssetNetworkId} networkId 
-         * @param {'ERC20' | 'ERC721' | 'ERC1155' | 'NONSTANDARD_FUNGIBLE' | 'NONSTANDARD_NONFUNGIBLE'} tokenType 
+         * @param {'FUNGIBLE' | 'NONFUNGIBLE'} tokenType 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getApproveAddress(networkId: TransactRequestSourceAssetNetworkId, tokenType: 'ERC20' | 'ERC721' | 'ERC1155' | 'NONSTANDARD_FUNGIBLE' | 'NONSTANDARD_NONFUNGIBLE', options?: any): AxiosPromise<GetApproveAddress200Response> {
+        getApproveAddress(networkId: TransactRequestSourceAssetNetworkId, tokenType: 'FUNGIBLE' | 'NONFUNGIBLE', options?: any): AxiosPromise<GetApproveAddress200Response> {
             return localVarFp.getApproveAddress(networkId, tokenType, options).then((request) => request(axios, basePath));
         },
     };
@@ -4545,12 +4533,12 @@ export class GetApproveAddressApi extends BaseAPI {
      * Get approve address for the token transfer
      * @summary Get approve address
      * @param {TransactRequestSourceAssetNetworkId} networkId 
-     * @param {'ERC20' | 'ERC721' | 'ERC1155' | 'NONSTANDARD_FUNGIBLE' | 'NONSTANDARD_NONFUNGIBLE'} tokenType 
+     * @param {'FUNGIBLE' | 'NONFUNGIBLE'} tokenType 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof GetApproveAddressApi
      */
-    public getApproveAddress(networkId: TransactRequestSourceAssetNetworkId, tokenType: 'ERC20' | 'ERC721' | 'ERC1155' | 'NONSTANDARD_FUNGIBLE' | 'NONSTANDARD_NONFUNGIBLE', options?: AxiosRequestConfig) {
+    public getApproveAddress(networkId: TransactRequestSourceAssetNetworkId, tokenType: 'FUNGIBLE' | 'NONFUNGIBLE', options?: AxiosRequestConfig) {
         return GetApproveAddressApiFp(this.configuration).getApproveAddress(networkId, tokenType, options).then((request) => request(this.axios, this.basePath));
     }
 }

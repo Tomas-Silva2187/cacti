@@ -84,8 +84,8 @@ beforeAll(async () => {
 
     await ethereumEnv.deployAndSetupContracts(ClaimFormat.DEFAULT);
 
-    await ethereumEnv.mintTokens("100", TokenType.NONSTANDARD_FUNGIBLE);
-    await ethereumEnv.mintTokens("1001", TokenType.NONSTANDARD_NONFUNGIBLE);
+    await ethereumEnv.mintTokens("100", TokenType.FUNGIBLE);
+    await ethereumEnv.mintTokens("1001", TokenType.NONFUNGIBLE);
   }
 }, TIMEOUT);
 
@@ -136,14 +136,14 @@ describe("Ethereum Leaf Test with Fungible Tokens", () => {
     await ethereumEnv.approveAssets(
       wrapperContractAddress,
       "100",
-      TokenType.NONSTANDARD_FUNGIBLE,
+      TokenType.FUNGIBLE,
     );
   });
   it("Should Wrap a token", async () => {
     asset = {
       id: ethereumEnv.defaultAsset.id,
       referenceId: ethereumEnv.defaultAsset.referenceId,
-      type: TokenType.NONSTANDARD_FUNGIBLE,
+      type: TokenType.FUNGIBLE,
       owner: WHALE_ACCOUNT_ADDRESS,
       contractName: ethereumEnv.defaultAsset.contractName,
       contractAddress: ethereumEnv.defaultAsset.contractAddress!,
@@ -270,7 +270,7 @@ describe("Ethereum Leaf Test with Fungible Tokens", () => {
     await ethereumEnv.approveAssets(
       wrapperContractAddress,
       "100",
-      TokenType.NONSTANDARD_FUNGIBLE,
+      TokenType.FUNGIBLE,
     );
 
     const response = await ethereumLeaf.lockAsset(asset.id, 100 as Amount);
@@ -434,7 +434,7 @@ describe("Ethereum Leaf Non Fungible Test", () => {
     nonFungibleAsset = {
       id: ethereumEnv.nonFungibleDefaultAsset.id,
       referenceId: ethereumEnv.nonFungibleDefaultAsset.referenceId,
-      type: TokenType.NONSTANDARD_NONFUNGIBLE,
+      type: TokenType.NONFUNGIBLE,
       owner: WHALE_ACCOUNT_ADDRESS,
       contractName: ethereumEnv.nonFungibleDefaultAsset.contractName,
       contractAddress: ethereumEnv.nonFungibleDefaultAsset.contractAddress!,
@@ -476,7 +476,7 @@ describe("Ethereum Leaf Non Fungible Test", () => {
     await ethereumEnv.approveAssets(
       ethereumLeaf.getWrapperContract("NONFUNGIBLE"),
       "1001",
-      TokenType.NONSTANDARD_NONFUNGIBLE,
+      TokenType.NONFUNGIBLE,
     );
   });
 
@@ -588,7 +588,7 @@ describe("Ethereum Leaf Non Fungible Test", () => {
     await ethereumEnv.approveAssets(
       ethereumLeaf.getWrapperContract("NONFUNGIBLE"),
       uniqueTokenId1,
-      TokenType.NONSTANDARD_NONFUNGIBLE,
+      TokenType.NONFUNGIBLE,
     );
     const response = await ethereumLeaf.lockAsset(
       nonFungibleAsset.id,

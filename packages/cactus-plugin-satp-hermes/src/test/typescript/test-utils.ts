@@ -244,15 +244,13 @@ export function getTransactRequest(
     };
   } else {
     switch (assetType) {
-      case TransactAssetType.ERC20:
-      case TransactAssetType.NONSTANDARD_FUNGIBLE:
+      case TransactAssetType.FUNGIBLE:
         return {
           contextID,
           sourceAsset: { ...from.defaultAsset, amount: fromAmount },
           receiverAsset: { ...to.defaultAsset, amount: toAmount },
         };
-      case TransactAssetType.ERC721:
-      case TransactAssetType.NONSTANDARD_NONFUNGIBLE:
+      case TransactAssetType.NONFUNGIBLE:
         return {
           contextID,
           sourceAsset: { ...from.nonFungibleDefaultAsset, amount: fromAmount },

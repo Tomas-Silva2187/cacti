@@ -112,7 +112,7 @@ describe("Fabric Bridge Test", () => {
     await fabricEnv.giveRoleToBridge(fabricEnv.getBridgeMSPID());
 
     await fabricEnv.approveAmount(
-      await fabricLeaf.getApproveAddress(TokenType.NONSTANDARD_FUNGIBLE),
+      await fabricLeaf.getApproveAddress(TokenType.FUNGIBLE),
       "100",
     );
   });
@@ -120,7 +120,7 @@ describe("Fabric Bridge Test", () => {
     asset = {
       id: fabricEnv.defaultAsset.id,
       referenceId: fabricEnv.defaultAsset.referenceId,
-      type: TokenType.NONSTANDARD_FUNGIBLE,
+      type: TokenType.FUNGIBLE,
       owner: fabricEnv.clientId,
       contractName: fabricEnv.satpContractName,
       channelName: fabricEnv.fabricChannelName,
@@ -187,7 +187,7 @@ describe("Fabric Bridge Test", () => {
     await fabricEnv.checkBalance(
       fabricEnv.getTestContractName(),
       fabricEnv.getTestChannelName(),
-      fabricLeaf.getApproveAddress(TokenType.NONSTANDARD_FUNGIBLE),
+      fabricLeaf.getApproveAddress(TokenType.FUNGIBLE),
       "100",
       fabricEnv.getTestOwnerSigningCredential(),
     );
@@ -232,7 +232,7 @@ describe("Fabric Bridge Test", () => {
     await fabricEnv.checkBalance(
       fabricEnv.getTestContractName(),
       fabricEnv.getTestChannelName(),
-      fabricLeaf.getApproveAddress(TokenType.NONSTANDARD_FUNGIBLE),
+      fabricLeaf.getApproveAddress(TokenType.FUNGIBLE),
       "0",
       fabricEnv.getTestOwnerSigningCredential(),
     );
@@ -250,7 +250,7 @@ describe("Fabric Bridge Test", () => {
 
   it("Should Burn a token", async () => {
     await fabricEnv.approveAmount(
-      fabricLeaf.getApproveAddress(TokenType.NONSTANDARD_FUNGIBLE),
+      fabricLeaf.getApproveAddress(TokenType.FUNGIBLE),
       "100",
     );
 
@@ -284,7 +284,7 @@ describe("Fabric Bridge Test", () => {
     await fabricEnv.checkBalance(
       fabricEnv.getTestContractName(),
       fabricEnv.getTestChannelName(),
-      fabricLeaf.getApproveAddress(TokenType.NONSTANDARD_FUNGIBLE),
+      fabricLeaf.getApproveAddress(TokenType.FUNGIBLE),
       "0",
       fabricEnv.getTestOwnerSigningCredential(),
     );
@@ -323,7 +323,7 @@ describe("Fabric Bridge Test", () => {
     await fabricEnv.checkBalance(
       fabricEnv.getTestContractName(),
       fabricEnv.getTestChannelName(),
-      fabricLeaf.getApproveAddress(TokenType.NONSTANDARD_FUNGIBLE),
+      fabricLeaf.getApproveAddress(TokenType.FUNGIBLE),
       "100",
       fabricEnv.getTestOwnerSigningCredential(),
     );
@@ -357,7 +357,7 @@ describe("Fabric Bridge Test", () => {
     await fabricEnv.checkBalance(
       fabricEnv.getTestContractName(),
       fabricEnv.getTestChannelName(),
-      fabricLeaf.getApproveAddress(TokenType.NONSTANDARD_FUNGIBLE),
+      fabricLeaf.getApproveAddress(TokenType.FUNGIBLE),
       "0",
       fabricEnv.getTestOwnerSigningCredential(),
     );

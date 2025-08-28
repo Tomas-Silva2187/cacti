@@ -303,10 +303,8 @@ export class EthereumLeaf
           `${fnTag}, Getting Approve Address for asset type: ${getEnumKeyByValue(TokenType, assetType)}`,
         );
         switch (assetType) {
-          case TokenType.ERC20:
-          case TokenType.NONSTANDARD_FUNGIBLE:
-          case TokenType.ERC721:
-          case TokenType.NONSTANDARD_NONFUNGIBLE:
+          case TokenType.FUNGIBLE:
+          case TokenType.NONFUNGIBLE:
             if (!this.wrapperContractAddress) {
               throw new ApproveAddressError(
                 `${fnTag}, Wrapper Contract Address not available for approving address`,
@@ -503,10 +501,8 @@ export class EthereumLeaf
         );
 
         switch (asset.type) {
-          case TokenType.ERC20:
-          case TokenType.ERC721:
-          case TokenType.NONSTANDARD_FUNGIBLE:
-          case TokenType.NONSTANDARD_NONFUNGIBLE:
+          case TokenType.FUNGIBLE:
+          case TokenType.NONFUNGIBLE:
             if (!this.wrapperContractName || !this.wrapperContractAddress) {
               throw new WrapperContractError(
                 `${fnTag}, Wrapper Contract not deployed`,
@@ -1015,8 +1011,7 @@ export class EthereumLeaf
         const token = response.callOutput as TokenResponse;
 
         switch (Number(token.tokenType)) {
-          case TokenType.ERC20:
-          case TokenType.NONSTANDARD_FUNGIBLE:
+          case TokenType.FUNGIBLE:
             this.log.debug("Returning Fungible Asset");
             return {
               contractName: token.contractName,
@@ -1028,8 +1023,7 @@ export class EthereumLeaf
               amount: Number(token.amount) as Amount,
               network: this.networkIdentification,
             } as EvmFungibleAsset;
-          case TokenType.ERC721:
-          case TokenType.NONSTANDARD_NONFUNGIBLE:
+          case TokenType.NONFUNGIBLE:
             this.log.debug("Returning Non Fungible Asset");
             return {
               contractName: token.contractName,

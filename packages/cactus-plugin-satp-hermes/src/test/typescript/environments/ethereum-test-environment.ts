@@ -233,6 +233,9 @@ export class EthereumTestEnvironment {
   public getTestNonFungibleContractName(): string {
     return this.tokenContracts.get(SupportedContractTypes.NONFUNGIBLE) ?? "";
   }
+  public getTestOracleContractName(): string {
+    return this.tokenContracts.get(SupportedContractTypes.ORACLE) ?? "";
+  }
 
   public getTestOwnerAccount(): string {
     return WHALE_ACCOUNT_ADDRESS;
@@ -405,6 +408,17 @@ export class EthereumTestEnvironment {
     contract_name: string,
     contract: { abi: any; bytecode: { object: string } },
   ): Promise<string> {
+    if (this.tokenContracts.has(SupportedContractTypes.ORACLE)) {
+      const SATPFungibleTokenContract = {
+        contractName: this.tokenContracts.get(SupportedContractTypes.ORACLE),
+        abi: SATPTokenContract.abi,
+        bytecode: SATPTokenContract.bytecode.object,
+      };
+      this.keychainPluginFungible.set(
+        this.tokenContracts.get(SupportedContractTypes.ORACLE) ?? "",
+        JSON.stringify(SATPFungibleTokenContract),
+      );
+    }
     const blOracleContract = await this.connector.deployContract({
       contract: {
         contractJSON: {

@@ -200,17 +200,6 @@ export class BesuTestEnvironment {
       );
     }
 
-    if (this.tokenContracts.has(SupportedContractTypes.ORACLE)) {
-      this.keychainPluginFungible.set(
-        this.tokenContracts.get(SupportedContractTypes.ORACLE) ?? "",
-        JSON.stringify(SATPTokenContract),
-      );
-      this.tokenContractCodes.set(
-        SupportedContractTypes.FUNGIBLE,
-        SATPTokenContract,
-      );
-    }
-
     // Plugin Registry setup
     const pluginRegistry = new PluginRegistry({
       plugins: [
@@ -411,6 +400,17 @@ export class BesuTestEnvironment {
     contract_name: string,
     contract: { abi: any; bytecode: { object: string } },
   ): Promise<string> {
+    if (this.tokenContracts.has(SupportedContractTypes.ORACLE)) {
+      this.keychainPluginFungible.set(
+        this.tokenContracts.get(SupportedContractTypes.ORACLE) ?? "",
+        JSON.stringify(SATPTokenContract),
+      );
+      this.tokenContractCodes.set(
+        SupportedContractTypes.ORACLE,
+        SATPTokenContract,
+      );
+    }
+
     const blOracleContract = await this.connector.deployContract({
       keychainId: this.keychainPluginFungible.getKeychainId(),
       contractName: contract_name,
@@ -594,6 +594,9 @@ export class BesuTestEnvironment {
   }
   public getTestNonFungibleContractName(): string {
     return this.tokenContracts.get(SupportedContractTypes.NONFUNGIBLE) ?? "";
+  }
+  public getTestOracleContractName(): string {
+    return this.tokenContracts.get(SupportedContractTypes.ORACLE) ?? "";
   }
 
   public getTestFungibleContractAddress(): string {

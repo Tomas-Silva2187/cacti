@@ -450,15 +450,15 @@ export class EthereumLeaf
    * @returns {unknown} The contract address of the wrapper contract.
    * @throws {InvalidWrapperContract} If the wrapper contract type is invalid.
    */
-  public getWrapperContract(type: "FUNGIBLE" | "NONFUNGIBLE"): string {
+  public getWrapperContract(type: TokenType): string {
     const fnTag = `${EthereumLeaf.CLASS_NAME}}#getWrapperContract`;
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
     return context.with(ctx, () => {
       try {
         this.log.debug(`${fnTag}, Getting Wrapper Contract Address`);
         switch (type) {
-          case "FUNGIBLE":
-          case "NONFUNGIBLE":
+          case TokenType.FUNGIBLE:
+          case TokenType.NONFUNGIBLE:
             if (!this.wrapperContractAddress) {
               throw new WrapperContractError(
                 `${fnTag}, Wrapper Contract not deployed`,

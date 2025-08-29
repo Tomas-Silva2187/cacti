@@ -194,7 +194,7 @@ describe("Besu Leaf Test with Fungible Tokens", () => {
       besuEnv.getTestFungibleContractName(),
       besuEnv.getTestFungibleContractAddress(),
       besuEnv.getTestFungibleContractAbi(),
-      besuLeaf.getWrapperContract("FUNGIBLE"),
+      besuLeaf.getWrapperContract(TokenType.FUNGIBLE),
       "100",
       besuEnv.getTestOwnerSigningCredential(),
     );
@@ -233,7 +233,7 @@ describe("Besu Leaf Test with Fungible Tokens", () => {
       besuEnv.getTestFungibleContractName(),
       besuEnv.getTestFungibleContractAddress(),
       besuEnv.getTestFungibleContractAbi(),
-      besuLeaf.getWrapperContract("FUNGIBLE"),
+      besuLeaf.getWrapperContract(TokenType.FUNGIBLE),
       "0",
       besuEnv.getTestOwnerSigningCredential(),
     );
@@ -251,8 +251,9 @@ describe("Besu Leaf Test with Fungible Tokens", () => {
   });
 
   it("Should Burn a token", async () => {
-    const wrapperContractAddress =
-      await besuLeaf.getWrapperContract("FUNGIBLE");
+    const wrapperContractAddress = await besuLeaf.getWrapperContract(
+      TokenType.FUNGIBLE,
+    );
 
     await besuEnv.approveAssets(
       wrapperContractAddress,
@@ -287,7 +288,7 @@ describe("Besu Leaf Test with Fungible Tokens", () => {
       besuEnv.getTestFungibleContractName(),
       besuEnv.getTestFungibleContractAddress(),
       besuEnv.getTestFungibleContractAbi(),
-      besuLeaf.getWrapperContract("FUNGIBLE"),
+      besuLeaf.getWrapperContract(TokenType.FUNGIBLE),
       "0",
       besuEnv.getTestOwnerSigningCredential(),
     );
@@ -326,7 +327,7 @@ describe("Besu Leaf Test with Fungible Tokens", () => {
       besuEnv.getTestFungibleContractName(),
       besuEnv.getTestFungibleContractAddress(),
       besuEnv.getTestFungibleContractAbi(),
-      besuLeaf.getWrapperContract("FUNGIBLE"),
+      besuLeaf.getWrapperContract(TokenType.FUNGIBLE),
       "100",
       besuEnv.getTestOwnerSigningCredential(),
     );
@@ -359,7 +360,7 @@ describe("Besu Leaf Test with Fungible Tokens", () => {
       besuEnv.getTestFungibleContractName(),
       besuEnv.getTestFungibleContractAddress(),
       besuEnv.getTestFungibleContractAbi(),
-      besuLeaf.getWrapperContract("FUNGIBLE"),
+      besuLeaf.getWrapperContract(TokenType.FUNGIBLE),
       "0",
       besuEnv.getTestOwnerSigningCredential(),
     );
@@ -460,7 +461,7 @@ describe("Besu Leaf Test with Non Fungible Tokens", () => {
 
   it("Should Approve a token", async () => {
     await besuEnv.approveAssets(
-      besuLeaf.getWrapperContract("NONFUNGIBLE"),
+      besuLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
       uniqueTokenId1,
       TokenType.NONFUNGIBLE,
     );
@@ -495,7 +496,7 @@ describe("Besu Leaf Test with Non Fungible Tokens", () => {
       besuEnv.getTestNonFungibleContractName(),
       besuEnv.getTestNonFungibleContractAddress(),
       besuEnv.getTestNonFungibleContractAbi(),
-      besuLeaf.getWrapperContract("NONFUNGIBLE"),
+      besuLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
       "1",
       besuEnv.getTestOwnerSigningCredential(),
     );
@@ -547,7 +548,7 @@ describe("Besu Leaf Test with Non Fungible Tokens", () => {
       besuEnv.getTestNonFungibleContractName(),
       besuEnv.getTestNonFungibleContractAddress(),
       besuEnv.getTestNonFungibleContractAbi(),
-      besuLeaf.getWrapperContract("NONFUNGIBLE"),
+      besuLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
       "0",
       besuEnv.getTestOwnerSigningCredential(),
     );
@@ -570,7 +571,7 @@ describe("Besu Leaf Test with Non Fungible Tokens", () => {
 
   it("Should Burn a token", async () => {
     await besuEnv.approveAssets(
-      besuLeaf.getWrapperContract("NONFUNGIBLE"),
+      besuLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
       uniqueTokenId1,
       TokenType.NONFUNGIBLE,
     );
@@ -613,7 +614,7 @@ describe("Besu Leaf Test with Non Fungible Tokens", () => {
       besuEnv.getTestNonFungibleContractName(),
       besuEnv.getTestNonFungibleContractAddress(),
       besuEnv.getTestNonFungibleContractAbi(),
-      besuLeaf.getWrapperContract("NONFUNGIBLE"),
+      besuLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
       "0",
       besuEnv.getTestOwnerSigningCredential(),
     );
@@ -661,7 +662,7 @@ describe("Besu Leaf Test with Non Fungible Tokens", () => {
       besuEnv.getTestNonFungibleContractName(),
       besuEnv.getTestNonFungibleContractAddress(),
       besuEnv.getTestNonFungibleContractAbi(),
-      besuLeaf.getWrapperContract("NONFUNGIBLE"),
+      besuLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
       "1",
       besuEnv.getTestOwnerSigningCredential(),
     );
@@ -702,7 +703,7 @@ describe("Besu Leaf Test with Non Fungible Tokens", () => {
       besuEnv.getTestNonFungibleContractName(),
       besuEnv.getTestNonFungibleContractAddress(),
       besuEnv.getTestNonFungibleContractAbi(),
-      besuLeaf.getWrapperContract("NONFUNGIBLE"),
+      besuLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
       "0",
       besuEnv.getTestOwnerSigningCredential(),
     );

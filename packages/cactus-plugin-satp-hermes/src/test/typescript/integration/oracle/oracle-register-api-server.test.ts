@@ -87,7 +87,7 @@ beforeAll(async () => {
         },
         [
           {
-            assetType: SupportedBesuContractTypes.FUNGIBLE,
+            assetType: SupportedBesuContractTypes.ORACLE,
             contractName: businessLogicContract,
           },
         ],
@@ -100,7 +100,7 @@ beforeAll(async () => {
         },
         [
           {
-            assetType: SupportedEthereumContractTypes.FUNGIBLE,
+            assetType: SupportedEthereumContractTypes.ORACLE,
             contractName: businessLogicContract,
           },
         ],
@@ -257,7 +257,7 @@ describe("Oracle registering READ, UPDATE, and READ_AND_UPDATE tasks successfull
       },
       destinationNetworkId: besuEnv.network,
       destinationContract: {
-        contractName: besuEnv.getTestFungibleContractName(),
+        contractName: besuEnv.getTestOracleContractName(),
         contractAddress: besuContractAddress,
         contractAbi: OracleTestContract.abi,
         contractBytecode: OracleTestContract.bytecode.object,
@@ -285,7 +285,7 @@ describe("Oracle registering READ, UPDATE, and READ_AND_UPDATE tasks successfull
     await oracleApi.executeOracleTask({
       destinationNetworkId: ethereumEnv.network,
       destinationContract: {
-        contractName: ethereumEnv.getTestFungibleContractName(),
+        contractName: ethereumEnv.getTestOracleContractName(),
         contractAddress: ethereumContractAddress,
         contractAbi: OracleTestContract.abi,
         contractBytecode: OracleTestContract.bytecode.object,
@@ -300,7 +300,7 @@ describe("Oracle registering READ, UPDATE, and READ_AND_UPDATE tasks successfull
     await oracleApi.executeOracleTask({
       destinationNetworkId: ethereumEnv.network,
       destinationContract: {
-        contractName: ethereumEnv.getTestFungibleContractName(),
+        contractName: ethereumEnv.getTestOracleContractName(),
         contractAddress: ethereumContractAddress,
         contractAbi: OracleTestContract.abi,
         contractBytecode: OracleTestContract.bytecode.object,
@@ -398,7 +398,7 @@ describe("Oracle registering READ, UPDATE, and READ_AND_UPDATE tasks successfull
       },
       destinationNetworkId: besuEnv.network,
       destinationContract: {
-        contractName: besuEnv.getTestFungibleContractName(),
+        contractName: besuEnv.getTestOracleContractName(),
         contractAddress: besuContractAddress,
         contractAbi: OracleTestContract.abi,
         contractBytecode: OracleTestContract.bytecode.object,
@@ -500,7 +500,7 @@ describe("Oracle registering READ, UPDATE, and READ_AND_UPDATE tasks successfull
     const response = await oracleApi.registerOracleTask({
       destinationNetworkId: besuEnv.network,
       destinationContract: {
-        contractName: besuEnv.getTestFungibleContractName(),
+        contractName: besuEnv.getTestOracleContractName(),
         contractAddress: besuContractAddress,
         contractAbi: OracleTestContract.abi,
         contractBytecode: OracleTestContract.bytecode.object,
@@ -522,7 +522,7 @@ describe("Oracle registering READ, UPDATE, and READ_AND_UPDATE tasks successfull
     const readNonceTask = await oracleApi.executeOracleTask({
       sourceNetworkId: besuEnv.network,
       sourceContract: {
-        contractName: besuEnv.getTestFungibleContractName(),
+        contractName: besuEnv.getTestOracleContractName(),
         contractAddress: besuContractAddress,
         contractAbi: OracleTestContract.abi,
         contractBytecode: OracleTestContract.bytecode.object,

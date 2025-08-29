@@ -106,7 +106,9 @@ describe("Fabric Bridge Test", () => {
     expect(fabricLeaf.getDeployWrapperContractReceipt()).toBeDefined();
   });
   it("Should return the wrapper contract name", async () => {
-    const wrapperContractName = fabricLeaf.getWrapperContract("FUNGIBLE");
+    const wrapperContractName = fabricLeaf.getWrapperContract(
+      TokenType.FUNGIBLE,
+    );
     expect(wrapperContractName).toBeDefined();
 
     await fabricEnv.giveRoleToBridge(fabricEnv.getBridgeMSPID());

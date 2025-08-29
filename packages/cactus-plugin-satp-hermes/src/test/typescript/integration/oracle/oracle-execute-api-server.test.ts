@@ -83,7 +83,7 @@ beforeAll(async () => {
         },
         [
           {
-            assetType: SupportedBesuContractTypes.FUNGIBLE,
+            assetType: SupportedBesuContractTypes.ORACLE,
             contractName: businessLogicContract,
           },
         ],
@@ -96,7 +96,7 @@ beforeAll(async () => {
         },
         [
           {
-            assetType: SupportedEthereumContractTypes.FUNGIBLE,
+            assetType: SupportedEthereumContractTypes.ORACLE,
             contractName: businessLogicContract,
           },
         ],
@@ -206,7 +206,7 @@ describe("Oracle executing READ, UPDATE, and READ_AND_UPDATE tasks successfully"
     let response = await oracleApi.executeOracleTask({
       destinationNetworkId: ethereumEnv.network,
       destinationContract: {
-        contractName: ethereumEnv.getTestFungibleContractName(),
+        contractName: ethereumEnv.getTestOracleContractName(),
         contractAddress: ethereumContractAddress,
         contractAbi: OracleTestContract.abi,
         contractBytecode: OracleTestContract.bytecode.object,
@@ -236,7 +236,7 @@ describe("Oracle executing READ, UPDATE, and READ_AND_UPDATE tasks successfully"
     let response = await oracleApi.executeOracleTask({
       destinationNetworkId: ethereumEnv.network,
       destinationContract: {
-        contractName: ethereumEnv.getTestFungibleContractName(),
+        contractName: ethereumEnv.getTestOracleContractName(),
         contractAddress: ethereumContractAddress,
         contractAbi: OracleTestContract.abi,
         contractBytecode: OracleTestContract.bytecode.object,
@@ -290,7 +290,7 @@ describe("Oracle executing READ, UPDATE, and READ_AND_UPDATE tasks successfully"
     let response = await oracleApi.executeOracleTask({
       sourceNetworkId: ethereumEnv.network,
       sourceContract: {
-        contractName: ethereumEnv.getTestFungibleContractName(),
+        contractName: ethereumEnv.getTestOracleContractName(),
         contractAddress: ethereumContractAddress,
         contractAbi: OracleTestContract.abi,
         contractBytecode: OracleTestContract.bytecode.object,
@@ -342,7 +342,7 @@ describe("Oracle executing READ, UPDATE, and READ_AND_UPDATE tasks successfully"
     const response = await oracleApi.executeOracleTask({
       sourceNetworkId: ethereumEnv.network,
       sourceContract: {
-        contractName: ethereumEnv.getTestFungibleContractName(),
+        contractName: ethereumEnv.getTestOracleContractName(),
         contractAddress: ethereumContractAddress,
         contractAbi: OracleTestContract.abi,
         contractBytecode: OracleTestContract.bytecode.object,
@@ -351,7 +351,7 @@ describe("Oracle executing READ, UPDATE, and READ_AND_UPDATE tasks successfully"
       },
       destinationNetworkId: besuEnv.network,
       destinationContract: {
-        contractName: besuEnv.getTestFungibleContractName(),
+        contractName: besuEnv.getTestOracleContractName(),
         contractAddress: besuContractAddress,
         contractAbi: OracleTestContract.abi,
         methodName: "setData",

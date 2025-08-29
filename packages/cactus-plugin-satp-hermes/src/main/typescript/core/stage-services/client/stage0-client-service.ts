@@ -3,7 +3,6 @@ import {
   ClaimFormat,
   MessageType,
   WrapAssertionClaimSchema,
-  TokenType,
 } from "../../../generated/proto/cacti/satp/v02/common/message_pb";
 import {
   NewSessionRequest,
@@ -17,7 +16,6 @@ import { stringify as safeStableStringify } from "safe-stable-stringify";
 
 import { FailedToProcessError } from "../../errors/satp-handler-errors";
 import {
-  AmountMissingError,
   HashError,
   LedgerAssetError,
   LedgerAssetIdError,
@@ -27,9 +25,7 @@ import {
   SessionIdError,
   SessionMissMatchError,
   SignatureVerificationError,
-  TokenIdMissingError,
   TransferContextIdError,
-  UniqueTokenDescriptorMissingError,
 } from "../../errors/satp-service-errors";
 import { SATPSession } from "../../satp-session";
 import {
@@ -43,22 +39,16 @@ import {
 } from "../../session-utils";
 import { signatureVerifier } from "../data-verifier";
 import {
-  type FungibleAsset,
-  type NonFungibleAsset,
-} from "../../../cross-chain-mechanisms/bridge/ontology/assets/asset";
-import {
   SATPService,
   SATPServiceType,
   ISATPClientServiceOptions,
   ISATPServiceOptions,
 } from "../satp-service";
-import { protoToAsset } from "../service-utils";
 import { getMessageTypeName } from "../../satp-utils";
-import { LedgerType } from "@hyperledger/cactus-core-api";
 import { BridgeManagerClientInterface } from "../../../cross-chain-mechanisms/bridge/interfaces/bridge-manager-client-interface";
 import { NetworkId } from "../../../public-api";
 import { context, SpanStatusCode } from "@opentelemetry/api";
-
+import { buildAndCheckAsset, SessionSide } from "../../satp-utils";
 export class Stage0ClientService extends SATPService {
   public static readonly SATP_STAGE = "0";
   public static readonly SERVICE_TYPE = SATPServiceType.Client;
@@ -449,60 +439,16 @@ export class Stage0ClientService extends SATPService {
           });
           this.Log.info(`${fnTag}, Wrapping Asset...`);
 
-          if (sessionData.senderAsset == undefined) {
-            throw new LedgerAssetError(fnTag);
-          }
-
-          const networkId = {
-            id: sessionData.senderAsset.networkId?.id,
-            ledgerType: sessionData.senderAsset.networkId?.type as LedgerType,
-          } as NetworkId;
-
-          let token: FungibleAsset | NonFungibleAsset;
-
-          switch (sessionData.senderAsset.tokenType) {
-            case TokenType.FUNGIBLE:
-              this.Log.debug(`${fnTag}, Sender Asset is a fungible token`);
-              token = protoToAsset(
-                sessionData.senderAsset,
-                networkId,
-              ) as FungibleAsset;
-              if (token.id == undefined) {
-                throw new TokenIdMissingError(fnTag);
-              }
-              if (token.amount == undefined) {
-                throw new AmountMissingError(fnTag);
-              }
-
-              this.Log.debug(`${fnTag}, Wrap: ${safeStableStringify(token)}`);
-              this.Log.debug(
-                `${fnTag}, Wrap Asset ID: ${token.id} amount: ${(token as FungibleAsset).amount.toString()}`,
-              );
-              break;
-            case TokenType.NONFUNGIBLE:
-              this.Log.debug(`${fnTag}, Sender Asset is a non fungible token`);
-              token = protoToAsset(
-                sessionData.senderAsset,
-                networkId,
-              ) as NonFungibleAsset;
-              if (token.id == undefined) {
-                throw new TokenIdMissingError(fnTag);
-              }
-              if (token.uniqueDescriptor == undefined) {
-                throw new UniqueTokenDescriptorMissingError(fnTag);
-              }
-
-              this.Log.debug(`${fnTag}, Wrap: ${safeStableStringify(token)}`);
-              this.Log.debug(
-                `${fnTag}, Wrap Asset ID: ${token.id} amount: ${String((token as NonFungibleAsset).uniqueDescriptor)}`,
-              );
-              break;
-            default:
-              throw new Error("Unsupported asset type");
-          }
+          const tokenBuildData = buildAndCheckAsset(
+            fnTag,
+            stepTag,
+            this.Log,
+            sessionData,
+            SessionSide.CLIENT,
+          );
 
           const bridge = this.bridgeManager.getSATPExecutionLayer(
-            networkId,
+            tokenBuildData.networkId,
             this.claimFormat,
           );
 
@@ -511,7 +457,7 @@ export class Stage0ClientService extends SATPService {
             {},
           );
 
-          const res = await bridge.wrapAsset(token);
+          const res = await bridge.wrapAsset(tokenBuildData.token);
 
           sessionData.senderWrapAssertionClaim.receipt = res.receipt;
 

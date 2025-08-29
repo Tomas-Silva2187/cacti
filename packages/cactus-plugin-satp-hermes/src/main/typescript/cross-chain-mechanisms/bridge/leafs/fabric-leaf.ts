@@ -695,22 +695,21 @@ export class FabricLeaf
    * @returns {unknown} The contract address of the wrapper contract.
    * @throws {InvalidWrapperContract} If the wrapper contract type is invalid.
    */
-  public getWrapperContract(type: "FUNGIBLE" | "NONFUNGIBLE"): string {
+  public getWrapperContract(type: TokenType): string {
     const fnTag = `${FabricLeaf.CLASS_NAME}#getWrapperContract`;
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
     return context.with(ctx, () => {
       try {
         this.log.debug(`${fnTag}, Getting Wrapper Contract Adress`);
         switch (type) {
-          case "FUNGIBLE":
+          case TokenType.FUNGIBLE:
             if (!this.wrapperContractName) {
               throw new WrapperContractError(
                 `${fnTag}, Wrapper Contract not deployed`,
               );
             }
             return this.wrapperContractName;
-          case "NONFUNGIBLE":
-            //TODO implement: can be the same wrapper of fungible assets
+          case TokenType.NONFUNGIBLE:
             throw new InvalidWrapperContract(
               `${fnTag}, Non-fungible wrapper contract not implemented`,
             );

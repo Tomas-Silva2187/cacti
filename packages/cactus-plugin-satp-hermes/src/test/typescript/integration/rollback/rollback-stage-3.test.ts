@@ -14,6 +14,7 @@ import { BesuTestEnvironment, FabricTestEnvironment } from "../../test-utils";
 import {
   AssetSchema,
   ClaimFormat,
+  ERCTokenStandard,
   TokenType,
 } from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
 import { v4 as uuidv4 } from "uuid";
@@ -295,6 +296,7 @@ describe.skip("Rollback Test stage 3", () => {
       contractName: besuEnv.getTestFungibleContractName(),
       contractAddress: besuEnv.getTestFungibleContractAddress(),
       network: besuEnv.network,
+      ercTokenStandard: ERCTokenStandard.ERC20,
     };
     const besuReceipt = await besuLeaf.wrapAsset(besuAsset);
     expect(besuReceipt).toBeDefined();
@@ -318,6 +320,7 @@ describe.skip("Rollback Test stage 3", () => {
       mspId: "Org1MSP",
       channelName: fabricEnv.fabricChannelName,
       contractName: fabricEnv.satpContractName,
+      ercTokenStandard: ERCTokenStandard.ERC20,
     };
 
     const fabricReceipt = await fabricLeaf.wrapAsset(fabricAsset);

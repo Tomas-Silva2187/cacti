@@ -1,5 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
-import { TokenType } from "../../../../generated/proto/cacti/satp/v02/common/message_pb";
+import {
+  ERCTokenStandard,
+  TokenType,
+} from "../../../../generated/proto/cacti/satp/v02/common/message_pb";
 import { NetworkId } from "../../../../public-api";
 
 export interface Asset {
@@ -9,6 +12,7 @@ export interface Asset {
   owner: string;
   contractName: string;
   network: NetworkId;
+  ercTokenStandard: ERCTokenStandard;
 }
 
 export type Brand<K, T> = K & { __brand: T };

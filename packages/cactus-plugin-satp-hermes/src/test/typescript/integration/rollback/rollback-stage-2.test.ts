@@ -19,7 +19,10 @@ import { v4 as uuidv4 } from "uuid";
 import { SATP_VERSION } from "../../../../main/typescript/core/constants";
 import { SATPSession } from "../../../../main/typescript/core/satp-session";
 import { getSatpLogKey } from "../../../../main/typescript/gateway-utils";
-import { TokenType } from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
+import {
+  TokenType,
+  ERCTokenStandard,
+} from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
 import {
   SATPGatewayConfig,
   PluginFactorySATPGateway,
@@ -280,6 +283,7 @@ describe.skip("Rollback Test stage 2", () => {
       contractName: besuEnv.getTestFungibleContractName(),
       contractAddress: besuEnv.getTestFungibleContractAddress(),
       network: besuEnv.network,
+      ercTokenStandard: ERCTokenStandard.ERC20,
     };
     const besuReceipt = await besuLeaf.wrapAsset(besuAsset);
     log.info(`Besu Asset Wrapped: ${besuReceipt}`);

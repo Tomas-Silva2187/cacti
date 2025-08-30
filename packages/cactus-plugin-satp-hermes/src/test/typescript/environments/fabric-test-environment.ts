@@ -6,6 +6,7 @@ import {
 import {
   AssetTokenTypeEnum,
   Configuration,
+  AssetErcTokenStandardEnum,
 } from "../../../main/typescript/generated/gateway-client/typescript-axios";
 import {
   FABRIC_25_LTS_AIO_FABRIC_VERSION,
@@ -1018,6 +1019,7 @@ export class FabricTestEnvironment {
       channelName: this.fabricChannelName,
       networkId: this.network,
       tokenType: AssetTokenTypeEnum.Fungible,
+      ercTokenStandard: AssetErcTokenStandardEnum.Erc20,
     };
   }
 
@@ -1031,6 +1033,7 @@ export class FabricTestEnvironment {
       channelName: this.fabricChannelName,
       networkId: this.network,
       tokenType: AssetTokenTypeEnum.Nonfungible,
+      ercTokenStandard: AssetErcTokenStandardEnum.Erc721,
     };
   }
 

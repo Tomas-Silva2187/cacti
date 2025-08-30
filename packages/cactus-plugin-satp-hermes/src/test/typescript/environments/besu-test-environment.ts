@@ -21,7 +21,12 @@ import { PluginRegistry } from "@hyperledger/cactus-core";
 import { randomUUID as uuidv4 } from "node:crypto";
 import { expect } from "@jest/globals";
 import { ClaimFormat } from "../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
-import { Asset, AssetTokenTypeEnum, NetworkId } from "../../../main/typescript";
+import {
+  Asset,
+  AssetTokenTypeEnum,
+  NetworkId,
+  AssetErcTokenStandardEnum,
+} from "../../../main/typescript";
 import { LedgerType } from "@hyperledger/cactus-core-api";
 import {
   IBesuLeafNeworkOptions,
@@ -677,6 +682,7 @@ export class BesuTestEnvironment {
         this.assetContractAddresses.get(SupportedContractTypes.FUNGIBLE) ?? "",
       networkId: this.network,
       tokenType: AssetTokenTypeEnum.Fungible,
+      ercTokenStandard: AssetErcTokenStandardEnum.Erc20,
     };
   }
   public get nonFungibleDefaultAsset(): Asset {
@@ -691,6 +697,7 @@ export class BesuTestEnvironment {
         "",
       networkId: this.network,
       tokenType: AssetTokenTypeEnum.Nonfungible,
+      ercTokenStandard: AssetErcTokenStandardEnum.Erc721,
     };
   }
 

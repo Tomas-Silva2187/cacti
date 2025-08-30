@@ -4,7 +4,10 @@ import {
   Containers,
 } from "@hyperledger/cactus-test-tooling";
 import path from "path";
-import { TokenType } from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
+import {
+  TokenType,
+  ERCTokenStandard,
+} from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
 import { ClaimFormat } from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
 import { LedgerType } from "@hyperledger/cactus-core-api";
 import { BesuTestEnvironment } from "../../test-utils";
@@ -150,6 +153,7 @@ describe("Besu Leaf Test with Fungible Tokens", () => {
         id: BesuTestEnvironment.BESU_NETWORK_ID,
         ledgerType: LedgerType.Besu2X,
       },
+      ercTokenStandard: ERCTokenStandard.ERC20,
     } as EvmFungibleAsset;
 
     const response = await besuLeaf.wrapAsset(asset);
@@ -430,6 +434,7 @@ describe("Besu Leaf Test with Non Fungible Tokens", () => {
         id: BesuTestEnvironment.BESU_NETWORK_ID,
         ledgerType: LedgerType.Besu2X,
       },
+      ercTokenStandard: ERCTokenStandard.ERC721,
     } as EvmNonFungibleAsset;
 
     const response = await besuLeaf.wrapAsset(nonFungibleAsset);

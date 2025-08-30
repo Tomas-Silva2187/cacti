@@ -25,7 +25,12 @@ import {
   WHALE_ACCOUNT_ADDRESS,
 } from "@hyperledger/cactus-test-geth-ledger";
 import { ClaimFormat } from "../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
-import { Asset, AssetTokenTypeEnum, NetworkId } from "../../../main/typescript";
+import {
+  Asset,
+  AssetErcTokenStandardEnum,
+  AssetTokenTypeEnum,
+  NetworkId,
+} from "../../../main/typescript";
 import { LedgerType } from "@hyperledger/cactus-core-api";
 import {
   IEthereumLeafNeworkOptions,
@@ -634,6 +639,7 @@ export class EthereumTestEnvironment {
         this.assetContractAddresses.get(SupportedContractTypes.FUNGIBLE) ?? "",
       networkId: this.network,
       tokenType: AssetTokenTypeEnum.Fungible,
+      ercTokenStandard: AssetErcTokenStandardEnum.Erc20,
     };
   }
   public get nonFungibleDefaultAsset(): Asset {
@@ -649,6 +655,7 @@ export class EthereumTestEnvironment {
         "",
       networkId: this.network,
       tokenType: AssetTokenTypeEnum.Nonfungible,
+      ercTokenStandard: AssetErcTokenStandardEnum.Erc721,
     };
   }
 

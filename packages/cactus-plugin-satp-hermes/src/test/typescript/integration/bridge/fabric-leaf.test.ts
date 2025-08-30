@@ -8,7 +8,10 @@ import {
   pruneDockerAllIfGithubAction,
 } from "@hyperledger/cactus-test-tooling";
 
-import { TokenType } from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
+import {
+  TokenType,
+  ERCTokenStandard,
+} from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
 import { ClaimFormat } from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
 import { LedgerType } from "@hyperledger/cactus-core-api";
 import { FabricTestEnvironment } from "../../test-utils";
@@ -132,6 +135,7 @@ describe("Fabric Bridge Test", () => {
         id: FabricTestEnvironment.FABRIC_NETWORK_ID,
         ledgerType: LedgerType.Fabric2,
       },
+      ercTokenStandard: ERCTokenStandard.ERC20,
     } as FabricFungibleAsset;
 
     const response = await fabricLeaf.wrapAsset(asset);

@@ -25,6 +25,7 @@ export function assetToProto(asset: Asset, networkId: NetworkId): ProtoAsset {
     tokenType: asset.type,
     referenceId: asset.referenceId,
     owner: asset.owner,
+    ercTokenStandard: asset.ercTokenStandard,
   });
 
   switch (networkId.ledgerType) {
@@ -69,6 +70,7 @@ export function protoToAsset(asset: ProtoAsset, networkId: NetworkId): Asset {
     owner: asset.owner,
     contractName: asset.contractName,
     network: networkId,
+    ercTokenStandard: asset.ercTokenStandard,
   };
   if (asset.tokenType == TokenType.FUNGIBLE) {
     (assetObj as FungibleAsset).amount = Number(asset.amount) as Amount;
@@ -100,6 +102,7 @@ export function compareProtoAsset(
     asset1.contractName === asset2.contractName &&
     asset1.mspId === asset2.mspId &&
     asset1.channelName === asset2.channelName &&
-    asset1.contractAddress === asset2.contractAddress
+    asset1.contractAddress === asset2.contractAddress &&
+    asset1.ercTokenStandard === asset2.ercTokenStandard
   );
 }

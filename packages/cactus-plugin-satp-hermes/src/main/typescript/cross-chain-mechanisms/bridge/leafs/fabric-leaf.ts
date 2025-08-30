@@ -777,6 +777,7 @@ export class FabricLeaf
             asset.channelName,
             asset.contractName,
             safeStableStringify(interactions),
+            asset.ercTokenStandard.toString(),
           ],
           contractName: this.wrapperContractName,
           invocationType: FabricContractInvocationType.Send,
@@ -1160,21 +1161,10 @@ export class FabricLeaf
               contractName: token.contractName,
               amount: token.amount.toString(),
               network: this.networkIdentification,
+              ercTokenStandard: token.ercTokenStandard,
             } as FabricFungibleAsset;
           case TokenType.NONFUNGIBLE:
             throw new Error("Fabric does not support non fungible tokens yet");
-          //Uncomment following snippet to allow non fungible tokens to be returned
-          /*return {
-              type: Number(token.tokenType),
-              id: token.tokenId,
-              referenceId: token.referenceId,
-              owner: token.owner,
-              mspId: token.mspId,
-              channelName: token.channelName,
-              contractName: token.contractName,
-              uniqueDescriptor: token.amount.toString(),
-              network: this.networkIdentification,
-            } as FabricNonFungibleAsset;*/
           default:
             throw new Error("Unsupported Token Type");
         }

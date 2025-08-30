@@ -263,7 +263,7 @@ describe("1 SATPGateway sending a token from Besu to Ethereum", () => {
 
     const reqApproveBesuAddress = await approveAddressApi.getApproveAddress(
       besuEnv.network,
-      TokenType.NonstandardFungible,
+      TokenType.Fungible,
     );
 
     if (!reqApproveBesuAddress?.data.approveAddress) {
@@ -287,7 +287,7 @@ describe("1 SATPGateway sending a token from Besu to Ethereum", () => {
 
     const reqApproveEthereumAddress = await approveAddressApi.getApproveAddress(
       ethereumEnv.network,
-      TokenType.NonstandardFungible,
+      TokenType.Fungible,
     );
 
     expect(reqApproveEthereumAddress?.data.approveAddress).toBeDefined();
@@ -503,7 +503,7 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
 
     const reqApproveBesuAddress = await approveAddressApi1.getApproveAddress(
       besuEnv.network,
-      TokenType.NonstandardFungible,
+      TokenType.Fungible,
     );
 
     if (!reqApproveBesuAddress?.data.approveAddress) {
@@ -534,7 +534,7 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
     const reqApproveEthereumAddress =
       await approveAddressApi2.getApproveAddress(
         ethereumEnv.network,
-        TokenType.NonstandardFungible,
+        TokenType.Fungible,
       );
 
     expect(reqApproveEthereumAddress?.data.approveAddress).toBeDefined();
@@ -764,7 +764,7 @@ describe("2 SATPGateways sending a token from Ethereum to Besu", () => {
     const reqApproveEthereumAddress =
       await approveAddressApi1.getApproveAddress(
         ethereumEnv.network,
-        TokenType.NonstandardFungible,
+        TokenType.Fungible,
       );
 
     if (!reqApproveEthereumAddress?.data.approveAddress) {
@@ -796,7 +796,7 @@ describe("2 SATPGateways sending a token from Ethereum to Besu", () => {
 
     const reqApproveBesuAddress = await approveAddressApi2.getApproveAddress(
       besuEnv.network,
-      TokenType.NonstandardFungible,
+      TokenType.Fungible,
     );
 
     expect(reqApproveBesuAddress?.data.approveAddress).toBeDefined();

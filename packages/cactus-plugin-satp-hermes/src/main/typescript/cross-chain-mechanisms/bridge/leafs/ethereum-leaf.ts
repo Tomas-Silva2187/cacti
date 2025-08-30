@@ -532,6 +532,7 @@ export class EthereumLeaf
             asset.referenceId,
             asset.owner,
             interactions,
+            asset.ercTokenStandard,
           ],
           web3SigningCredential: this.signingCredential,
           gasConfig: this.gasConfig,
@@ -1028,6 +1029,7 @@ export class EthereumLeaf
               owner: token.owner,
               amount: Number(token.amount) as Amount,
               network: this.networkIdentification,
+              ercTokenStandard: Number(token.ercTokenStandard),
             } as EvmFungibleAsset;
           case TokenType.NONFUNGIBLE:
             this.log.debug("Returning Non Fungible Asset");
@@ -1040,6 +1042,7 @@ export class EthereumLeaf
               owner: token.owner,
               uniqueDescriptor: Number(token.amount) as UniqueTokenID,
               network: this.networkIdentification,
+              ercTokenStandard: Number(token.ercTokenStandard),
             } as EvmNonFungibleAsset;
           default:
             throw new Error("Unexpected Token Type");

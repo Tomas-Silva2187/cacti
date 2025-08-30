@@ -244,7 +244,7 @@ describe("SATPGateway sending a token from Besu to Fabric", () => {
 
     const reqApproveBesuAddress = await approveAddressApi.getApproveAddress(
       besuEnv.network,
-      TokenType.NonstandardFungible,
+      TokenType.Fungible,
     );
 
     expect(reqApproveBesuAddress?.data.approveAddress).toBeDefined();
@@ -268,7 +268,7 @@ describe("SATPGateway sending a token from Besu to Fabric", () => {
 
     const reqApproveFabricAddress = await approveAddressApi.getApproveAddress(
       fabricEnv.network,
-      TokenType.NonstandardFungible,
+      TokenType.Fungible,
     );
     expect(reqApproveFabricAddress?.data.approveAddress).toBeDefined();
 
@@ -402,7 +402,7 @@ describe("SATPGateway sending a token from Fabric to Besu", () => {
 
     const reqApproveFabricAddress = await approveAddressApi.getApproveAddress(
       fabricEnv.network,
-      TokenType.NonstandardFungible,
+      TokenType.Fungible,
     );
 
     if (!reqApproveFabricAddress?.data.approveAddress) {
@@ -424,7 +424,7 @@ describe("SATPGateway sending a token from Fabric to Besu", () => {
 
     const reqApproveBesuAddress = await approveAddressApi.getApproveAddress(
       besuEnv.network,
-      TokenType.NonstandardFungible,
+      TokenType.Fungible,
     );
 
     expect(reqApproveBesuAddress?.data.approveAddress).toBeDefined();
@@ -560,7 +560,7 @@ describe("SATPGateway sending a token from Besu to Ethereum", () => {
 
     const reqApproveBesuAddress = await approveAddressApi.getApproveAddress(
       besuEnv.network,
-      TokenType.NonstandardFungible,
+      TokenType.Fungible,
     );
 
     if (!reqApproveBesuAddress?.data.approveAddress) {
@@ -584,7 +584,7 @@ describe("SATPGateway sending a token from Besu to Ethereum", () => {
 
     const reqApproveEthereumAddress = await approveAddressApi.getApproveAddress(
       ethereumEnv.network,
-      TokenType.NonstandardFungible,
+      TokenType.Fungible,
     );
 
     expect(reqApproveEthereumAddress?.data.approveAddress).toBeDefined();

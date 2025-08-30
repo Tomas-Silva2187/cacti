@@ -77,27 +77,27 @@ contract SATPWrapperTest is Test{
     }
 
     function testWrap() public {
-        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures);
+        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures, ERCTokenStandard.ERC721);
         Token memory tokenReceived = wrapperContract.getToken(contract1.name());
         assertEq(tokenReceived.contractAddress, address(contract1), "Tokens don't match");
         assertEq(wrapperContract.getAllAssetsIDs()[0], contract1.name(), "Ids don't match");
     }
 
     function testUnwrap() public {
-        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures);
+        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures, ERCTokenStandard.ERC721);
         wrapperContract.unwrap(contract1.name());
         Token memory tokenReceived = wrapperContract.getToken(contract1.name());
         assertNotEq(tokenReceived.contractAddress, address(contract1), "Tokens don't match");
     }
 
     function testMint() public {
-        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures);
+        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures, ERCTokenStandard.ERC721);
         wrapperContract.mint(contract1.name(), 1001);
         assertEq(contract1.balanceOf(address(wrapperContract)), 1, "Token not minted");
     }
 
     function testBurn() public {
-        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures);
+        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures, ERCTokenStandard.ERC721);
         wrapperContract.mint(contract1.name(), 1001);
         assertEq(contract1.balanceOf(address(wrapperContract)), 1, "Tokens not minted");
         vm.prank(address(wrapperContract));
@@ -108,7 +108,7 @@ contract SATPWrapperTest is Test{
     }
 
     function testLock() public {
-        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures);
+        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures, ERCTokenStandard.ERC721);
         vm.prank(address(wrapperContract));
         contract1.mint(address(user), 1001);
         vm.prank(user);
@@ -119,7 +119,7 @@ contract SATPWrapperTest is Test{
     }
 
     function testUnlock() public {
-        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures);
+        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures, ERCTokenStandard.ERC721);
         vm.prank(address(wrapperContract));
         contract1.mint(address(user), 1001);
         vm.prank(user);
@@ -130,7 +130,7 @@ contract SATPWrapperTest is Test{
     }
 
     function testAssign() public {
-        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures);
+        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures, ERCTokenStandard.ERC721);
         wrapperContract.mint(contract1.name(), 1002);
         wrapperContract.assign(contract1.name(), address(user), 1002);
         assertEq(contract1.balanceOf(address(user)), 1, "Token not assigned");
@@ -147,7 +147,7 @@ contract SATPWrapperTest is Test{
     }
 
     function testUnwrapATokenWithValueLocked() public {
-       wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures);
+       wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures, ERCTokenStandard.ERC721);
        wrapperContract.mint(contract1.name(), 1001);
        try wrapperContract.unwrap(contract1.name()) returns (bool s) {
            require(!s, "Expected an error");

@@ -18,6 +18,8 @@ enum InteractionType { MINT, BURN, ASSIGN, CHECKPERMITION, LOCK, UNLOCK, APPROVE
  * @dev Enum representing the supported variable types used for contract-to-contract calls.
  */
 enum AssetParameterIdentifier {CONTRACTADDRESS, TOKENTYPE, TOKENID, OWNER, AMOUNT, BRIDGE, RECEIVER, UNIQUE_DESCRIPTOR}
+
+enum ERCTokenStandard { UNSPECIFIED, ERC20, ERC721, ERC1155 }
  
 
 /**
@@ -38,6 +40,7 @@ struct Token {
     address owner;
     uint amount; //amount that is approved by the contract owner
     //uint locked_amount; //amount that is approved by the contract owner
+    ERCTokenStandard ercTokenStandard;
 }
 
 /**
@@ -132,7 +135,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
      * @param owner The owner of the token.
      * @param interactions The interactions to be used for the token.
      */
-    function wrap(string memory contractName, address contractAddress, TokenType tokenType, string memory tokenId, string memory referenceId, address owner, InteractionSignature[] memory interactions ) external onlyOwner returns (bool wrapSuccess) {
+    function wrap(string memory contractName, address contractAddress, TokenType tokenType, string memory tokenId, string memory referenceId, address owner, InteractionSignature[] memory interactions, ERCTokenStandard ercTokenStandard) external onlyOwner returns (bool wrapSuccess) {
         if(tokens[tokenId].contractAddress != address(0)) {
             revert TokenAlreadyWrapped(tokenId);
         }
@@ -144,7 +147,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
             require(interact(tokenId, InteractionType.CHECKPERMITION), "Contract does not have permission to interact with the token");
         }
 
-        tokens[tokenId] = Token(contractName, contractAddress, tokenType, tokenId, referenceId, owner, 0);
+        tokens[tokenId] = Token(contractName, contractAddress, tokenType, tokenId, referenceId, owner, 0, ercTokenStandard);
     
         ids.push(tokenId);
         
@@ -156,8 +159,8 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
      * Overloaded wrap method that does not receive interactions. This can be used for non-standard tokens.
      * TODO: Implement that functionality for standard tokens. 
      */
-    function wrap(string memory contractName,  address contractAddress, TokenType tokenType, string memory tokenId, string memory referenceId, address owner) external onlyOwner returns (bool wrapSuccess) {
-        return this.wrap(contractName, contractAddress, tokenType, tokenId, referenceId, owner, new InteractionSignature[](0));
+    function wrap(string memory contractName,  address contractAddress, TokenType tokenType, string memory tokenId, string memory referenceId, address owner, ERCTokenStandard ercTokenStandard) external onlyOwner returns (bool wrapSuccess) {
+        return this.wrap(contractName, contractAddress, tokenType, tokenId, referenceId, owner, new InteractionSignature[](0), ercTokenStandard);
     }
 
     /**
@@ -383,10 +386,10 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
         }
         else if (tt == TokenType.NONFUNGIBLE) {
             if(NFT_IDs[tokenId][assetAttribute]) {
-                return Token(tokens[tokenId].contractName, tokens[tokenId].contractAddress, tokens[tokenId].tokenType, tokenId, tokens[tokenId].referenceId, tokens[tokenId].owner, assetAttribute);
+                return Token(tokens[tokenId].contractName, tokens[tokenId].contractAddress, tokens[tokenId].tokenType, tokenId, tokens[tokenId].referenceId, tokens[tokenId].owner, assetAttribute, tokens[tokenId].ercTokenStandard);
             }
             else {
-                return Token(tokens[tokenId].contractName, tokens[tokenId].contractAddress, tokens[tokenId].tokenType, tokenId, tokens[tokenId].referenceId, tokens[tokenId].owner, 0);
+                return Token(tokens[tokenId].contractName, tokens[tokenId].contractAddress, tokens[tokenId].tokenType, tokenId, tokens[tokenId].referenceId, tokens[tokenId].owner, 0, tokens[tokenId].ercTokenStandard);
             }            
         }
     }

@@ -3,7 +3,10 @@ import {
   pruneDockerAllIfGithubAction,
   Containers,
 } from "@hyperledger/cactus-test-tooling";
-import { TokenType } from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
+import {
+  TokenType,
+  ERCTokenStandard,
+} from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
 import { ClaimFormat } from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
 import { WHALE_ACCOUNT_ADDRESS } from "@hyperledger/cactus-test-geth-ledger";
 import { LedgerType } from "@hyperledger/cactus-core-api";
@@ -153,6 +156,7 @@ describe("Ethereum Leaf Test with Fungible Tokens", () => {
         id: EthereumTestEnvironment.ETH_NETWORK_ID,
         ledgerType: LedgerType.Ethereum,
       },
+      ercTokenStandard: ERCTokenStandard.ERC20,
     } as EvmFungibleAsset;
 
     const response = await ethereumLeaf.wrapAsset(asset);
@@ -446,6 +450,7 @@ describe("Ethereum Leaf Non Fungible Test", () => {
         id: EthereumTestEnvironment.ETH_NETWORK_ID,
         ledgerType: LedgerType.Ethereum,
       },
+      ercTokenStandard: ERCTokenStandard.ERC721,
     } as EvmNonFungibleAsset;
 
     const response = await ethereumLeaf.wrapAsset(nonFungibleAsset);

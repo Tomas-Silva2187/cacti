@@ -319,6 +319,12 @@ export interface Asset {
      * @memberof Asset
      */
     'referenceId': string;
+    /**
+     * The ERC token standard.
+     * @type {string}
+     * @memberof Asset
+     */
+    'ercTokenStandard': AssetErcTokenStandardEnum;
 }
 
 export const AssetTokenTypeEnum = {
@@ -327,6 +333,14 @@ export const AssetTokenTypeEnum = {
 } as const;
 
 export type AssetTokenTypeEnum = typeof AssetTokenTypeEnum[keyof typeof AssetTokenTypeEnum];
+export const AssetErcTokenStandardEnum = {
+    Unspecified: 'UNSPECIFIED',
+    Erc20: 'ERC20',
+    Erc721: 'ERC721',
+    Erc1155: 'ERC1155'
+} as const;
+
+export type AssetErcTokenStandardEnum = typeof AssetErcTokenStandardEnum[keyof typeof AssetErcTokenStandardEnum];
 
 /**
  * Response schema for an audit request. Contains the proofs generated during the audit period and the start and end datetimes.
@@ -614,6 +628,22 @@ export interface DraftVersions {
      */
     'Crash'?: string;
 }
+/**
+ * The ERC token standard.
+ * @export
+ * @enum {string}
+ */
+
+export const ERCTokenStandard = {
+    Unspecified: 'UNSPECIFIED',
+    Erc20: 'ERC20',
+    Erc721: 'ERC721',
+    Erc1155: 'ERC1155'
+} as const;
+
+export type ERCTokenStandard = typeof ERCTokenStandard[keyof typeof ERCTokenStandard];
+
+
 /**
  * Provides an estimation for a transaction, including costs, amounts, and execution duration.
  * @export
@@ -3781,6 +3811,12 @@ export interface TransactRequestSourceAsset {
      * @memberof TransactRequestSourceAsset
      */
     'referenceId': string;
+    /**
+     * The ERC token standard.
+     * @type {string}
+     * @memberof TransactRequestSourceAsset
+     */
+    'ercTokenStandard': TransactRequestSourceAssetErcTokenStandardEnum;
 }
 
 export const TransactRequestSourceAssetTokenTypeEnum = {
@@ -3789,6 +3825,14 @@ export const TransactRequestSourceAssetTokenTypeEnum = {
 } as const;
 
 export type TransactRequestSourceAssetTokenTypeEnum = typeof TransactRequestSourceAssetTokenTypeEnum[keyof typeof TransactRequestSourceAssetTokenTypeEnum];
+export const TransactRequestSourceAssetErcTokenStandardEnum = {
+    Unspecified: 'UNSPECIFIED',
+    Erc20: 'ERC20',
+    Erc721: 'ERC721',
+    Erc1155: 'ERC1155'
+} as const;
+
+export type TransactRequestSourceAssetErcTokenStandardEnum = typeof TransactRequestSourceAssetErcTokenStandardEnum[keyof typeof TransactRequestSourceAssetErcTokenStandardEnum];
 
 /**
  * The network of the DLT being interacted with.

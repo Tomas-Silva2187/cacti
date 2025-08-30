@@ -542,6 +542,7 @@ export class BesuLeaf
             asset.referenceId,
             asset.owner,
             interactions,
+            asset.ercTokenStandard,
           ],
           signingCredential: this.signingCredential,
           gas: this.gas,
@@ -996,6 +997,7 @@ export class BesuLeaf
               owner: token.owner,
               amount: Number(token.amount) as Amount,
               network: this.networkIdentification,
+              ercTokenStandard: Number(token.ercTokenStandard),
             } as EvmFungibleAsset;
           case TokenType.NONFUNGIBLE:
             return {
@@ -1007,6 +1009,7 @@ export class BesuLeaf
               owner: token.owner,
               uniqueDescriptor: Number(token.amount) as UniqueTokenID,
               network: this.networkIdentification,
+              ercTokenStandard: Number(token.ercTokenStandard),
             } as EvmNonFungibleAsset;
           default:
             throw new Error("Unexpected Token Type");

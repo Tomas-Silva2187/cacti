@@ -69,7 +69,7 @@ error InsuficientAmountLocked(string tokenId, uint256 amount);
 
 error TokenNotSupported(string tokenId);
 
-error TokenAlreadyLocked(string tokenId);
+error TokenAlreadyLocked(string tokenId, uint256 unique_descriptor);
 
 
 /**
@@ -92,6 +92,8 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
      * Mapping of token IDs to InteractionSignature structs.
      */
     mapping (string => mapping(InteractionType => InteractionSignature)) public tokensInteractions;
+
+    mapping (string => mapping(uint256 => bool)) public NFT_IDs;
 
     string[] ids;
 
@@ -166,20 +168,10 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
         if(tokens[tokenId].contractAddress == address(0)) {
             revert TokenNotAvailable(tokenId);
         }
-        TokenType tt = tokens[tokenId].tokenType;
-        if(tt == TokenType.FUNGIBLE) {
-            if(tokens[tokenId].amount > 0) {
-                revert TokenLocked(tokenId);
-            } 
-        }
-        else if(tt == TokenType.NONFUNGIBLE) {
-            if(tokens[tokenId].amount != 0) {
-                revert TokenLocked(tokenId);
-            }
-        }
-        else {
-            revert TokenNotSupported(tokenId);
-        }
+        if(tokens[tokenId].amount > 0) {
+            revert TokenLocked(tokenId);
+        }     
+        
         deleteFromArray(tokens[tokenId].tokenId);
         delete tokens[tokenId];
 
@@ -196,30 +188,24 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
         if(tokens[tokenId].contractAddress == address(0)){
             revert TokenNotAvailable(tokenId);
         }
+        require(assetAttribute > 0, "Invalid asset attribute");
 
-        bool lockSuccess = interact(tokenId, InteractionType.LOCK, assetAttribute);
-
-        if(lockSuccess) {
-            TokenType tt = tokens[tokenId].tokenType;
-            if (tt == TokenType.FUNGIBLE) {
-                // The locked amount is added to the amount of the token struct
-                tokens[tokenId].amount += assetAttribute;
-            }
-            else if (tt == TokenType.NONFUNGIBLE) {
-                // When dealing with non-fungible tokens, the "amount" is interpreted as the token unique descriptor.
-                if(tokens[tokenId].amount != 0) {
-                    revert TokenAlreadyLocked(tokenId);
-                }
-                tokens[tokenId].amount = assetAttribute;
-            }
-            else {
-                revert TokenNotSupported(tokenId);
-            }
-            emit Lock(tokenId, assetAttribute);
-            return true;
+        TokenType tt = tokens[tokenId].tokenType;
+        if (tt == TokenType.FUNGIBLE) {
+            require(interact(tokenId, InteractionType.LOCK, assetAttribute), "Token Lock Failed");
+            tokens[tokenId].amount += assetAttribute;
         }
-
-        revert TokenNotLocked(tokenId);
+        else if (tt == TokenType.NONFUNGIBLE) {
+            require(NFT_IDs[tokenId][assetAttribute] == false, "Token Already Locked");
+            require(interact(tokenId, InteractionType.LOCK, assetAttribute), "Token Lock Failed");
+            tokens[tokenId].amount += 1;
+            NFT_IDs[tokenId][assetAttribute] = true;
+        }
+        else {
+            revert TokenNotSupported(tokenId);
+        }
+        emit Lock(tokenId, assetAttribute);
+        return true;
     } 
 
     /**
@@ -228,9 +214,11 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
      * @param assetAttribute The amount of tokens to be unlocked, for fungible tokens, or the uniqueDescriptor of the token to unlock, for non fungible tokens.
      */
     function unlock(string memory tokenId, uint256 assetAttribute) external onlyOwner returns (bool success) {
-        if(tokens[tokenId].contractAddress == address(0)){
+        if (tokens[tokenId].contractAddress == address(0)){
             revert TokenNotAvailable(tokenId);
         }
+        require(assetAttribute > 0, "Invalid asset attribute");
+
         TokenType tt = tokens[tokenId].tokenType;
         if (tt == TokenType.FUNGIBLE) {
             if(tokens[tokenId].amount < assetAttribute) {
@@ -238,21 +226,20 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
             }
             require(interact(tokenId, InteractionType.UNLOCK, assetAttribute), "Unlock fungible asset call failed");
             tokens[tokenId].amount -= assetAttribute;
-            emit Unlock(tokenId, assetAttribute);
-            return true;
         }
         else if (tt == TokenType.NONFUNGIBLE) {
-            // The provided value to unlock should be equal to what is stored logically as the unique descriptor of the NFT. 
-            require(tokens[tokenId].amount != 0, "Trying to Unlock an asset that is not locked");
-            require(tokens[tokenId].amount == assetAttribute, "Unlocking NFT cannot be done due to wrong uniqueDescriptor");
+            require(NFT_IDs[tokenId][assetAttribute] == true, "Token Not Locked");
+            require(tokens[tokenId].amount > 0, "Trying to Unlock an asset that is not accounted for");
             require(interact(tokenId, InteractionType.UNLOCK, assetAttribute), "Unlock non fungible asset call failed");
-            tokens[tokenId].amount = 0;
-            emit Unlock(tokenId, assetAttribute);
-            return true;
-        }
+            tokens[tokenId].amount -= 1;
+            NFT_IDs[tokenId][assetAttribute] = false;
+        } 
         else {
             revert TokenNotSupported(tokenId);
         }
+
+        emit Unlock(tokenId, assetAttribute);
+        return true;
     } 
 
     /**
@@ -264,11 +251,23 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
         if(tokens[tokenId].contractAddress == address(0)){
             revert TokenNotAvailable(tokenId);
         }
+        require(assetAttribute > 0, "Invalid asset attribute");
 
-        require(interact(tokenId, InteractionType.MINT, assetAttribute) , "mint asset call failed");
-        // upon minting, the minted attribute is set as the value that was minted 
-        // (may it be amount for fungibles, or uniqueDescriptor for non-fungibles)
-        tokens[tokenId].amount = assetAttribute;
+        TokenType tt = tokens[tokenId].tokenType;
+        if (tt == TokenType.FUNGIBLE) {
+            require(interact(tokenId, InteractionType.MINT, assetAttribute) , "mint asset call failed");
+            tokens[tokenId].amount = assetAttribute;
+        }
+        else if (tt == TokenType.NONFUNGIBLE) {
+            require(NFT_IDs[tokenId][assetAttribute] == false, "Unique Descriptor already exists");
+            require(interact(tokenId, InteractionType.MINT, assetAttribute) , "mint asset call failed");
+            tokens[tokenId].amount += 1;
+            NFT_IDs[tokenId][assetAttribute] = true;
+        }
+        else {
+            revert TokenNotSupported(tokenId);
+        }
+
         emit Mint(tokenId, assetAttribute);
         return true;
     }
@@ -279,32 +278,30 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
      * @param assetAttribute The amount of tokens to be burned, for fungible tokens, or the uniqueDescriptor of the token to burn, for non fungible tokens.
      */
     function burn(string memory tokenId, uint256 assetAttribute) external onlyOwner returns (bool success) {
+        if(tokens[tokenId].contractAddress == address(0)){
+            revert TokenNotAvailable(tokenId);
+        }
+        require(assetAttribute > 0, "Invalid asset attribute");
+
         TokenType tt = tokens[tokenId].tokenType;
         if (tt == TokenType.FUNGIBLE) {
             require(tokens[tokenId].amount >= assetAttribute, "burn asset asset is not locked");
-
             require(interact(tokenId, InteractionType.BURN, assetAttribute), "burn asset call failed");
-
             tokens[tokenId].amount -= assetAttribute;
-
-            emit Burn(tokenId, assetAttribute);
-            return true;
         }
         else if (tt == TokenType.NONFUNGIBLE) {
-            require(tokens[tokenId].amount != 0, "Burning unminted asset");
-
-            require(tokens[tokenId].amount == assetAttribute, "Burning NFT failed due to wrong uniqueDescriptor");
-
+            require(tokens[tokenId].amount > 0, "Trying to burn an unaccounted Asset");
+            require(NFT_IDs[tokenId][assetAttribute] == true, "Unique Descriptor does not exist");
             require(interact(tokenId, InteractionType.BURN, assetAttribute), "burn asset call failed");
-
-            tokens[tokenId].amount = 0;
-
-            emit Burn(tokenId, assetAttribute);
-            return true;
+            tokens[tokenId].amount -= 1;
+            NFT_IDs[tokenId][assetAttribute] = false;
         }   
         else {
             revert TokenNotSupported(tokenId);
         }
+
+        emit Burn(tokenId, assetAttribute);
+        return true;
     }
 
     /**
@@ -314,44 +311,38 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
      * @param assetAttribute The amount of tokens to be assigned, for fungible tokens, or the uniqueDescriptor of the token to be assigned, for non-fungible tokens.
      */
     function assign(string memory tokenId, address receiver_account, uint256 assetAttribute) external onlyOwner returns (bool success) {
+        if(tokens[tokenId].contractAddress == address(0)){
+            revert TokenNotAvailable(tokenId);
+        }
+        require(assetAttribute > 0, "Invalid asset attribute");
+
         TokenType tt = tokens[tokenId].tokenType;
         if (tt == TokenType.FUNGIBLE) {
             require(tokens[tokenId].amount >= assetAttribute, "assign asset asset is not locked");
-
             require(interact(tokenId, InteractionType.ASSIGN, assetAttribute, receiver_account), "assign asset call failed");
-
             tokens[tokenId].amount -= assetAttribute;
-
-            emit Assign(tokenId, receiver_account, assetAttribute);
-            return true;
         }
         else if (tt == TokenType.NONFUNGIBLE) {
-            require(tokens[tokenId].amount == assetAttribute, "Assign nft - asset is not locked");
-
+            require(tokens[tokenId].amount > 0, "Assign nft - asset is not locked");
+            require(NFT_IDs[tokenId][assetAttribute] == true, "Unique Descriptor does not exist");
             require(interact(tokenId, InteractionType.ASSIGN, assetAttribute, receiver_account), "assign nft call failed");
-
-            tokens[tokenId].amount = 0;
-
-            emit Assign(tokenId, receiver_account, assetAttribute);
-            return true;
+            tokens[tokenId].amount -= 1;
+            NFT_IDs[tokenId][assetAttribute] = false;
         }
         else {
             revert TokenNotSupported(tokenId);
         }
+        emit Assign(tokenId, receiver_account, assetAttribute);
+        return true;
     }
 
     /**
      * @notice REQUIRED by OpenZeppelin: Supports the use of safe functions for ERC721 tokens.
      * @return success A boolean indicating if the account has the bridge role.
      */
-    function onERC721Received(
-    address,
-    address,
-    uint256,
-    bytes calldata
-) external pure override returns (bytes4) {
-    return this.onERC721Received.selector;
-}
+    function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
 
 
     /**
@@ -382,7 +373,22 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
      * @return token the token with the given token ID.
      */
     function getToken(string memory tokenId) view public returns (Token memory token) {
-        return tokens[tokenId];
+        return getToken(tokenId, 0);
+    }
+
+    function getToken(string memory tokenId, uint256 assetAttribute) view public returns (Token memory token) {
+        TokenType tt = tokens[tokenId].tokenType;
+        if (tt == TokenType.FUNGIBLE) {
+            return tokens[tokenId];
+        }
+        else if (tt == TokenType.NONFUNGIBLE) {
+            if(NFT_IDs[tokenId][assetAttribute]) {
+                return Token(tokens[tokenId].contractName, tokens[tokenId].contractAddress, tokens[tokenId].tokenType, tokenId, tokens[tokenId].referenceId, tokens[tokenId].owner, assetAttribute);
+            }
+            else {
+                return Token(tokens[tokenId].contractName, tokens[tokenId].contractAddress, tokens[tokenId].tokenType, tokenId, tokens[tokenId].referenceId, tokens[tokenId].owner, 0);
+            }            
+        }
     }
 
     /**

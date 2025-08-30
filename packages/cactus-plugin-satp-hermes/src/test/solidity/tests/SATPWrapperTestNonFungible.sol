@@ -114,7 +114,7 @@ contract SATPWrapperTest is Test{
         vm.prank(user);
         contract1.approve(address(wrapperContract), 1001);
         wrapperContract.lock(contract1.name(), 1001);
-        Token memory token = wrapperContract.getToken(contract1.name());
+        Token memory token = wrapperContract.getToken(contract1.name(), 1001);
         assertEq(token.amount, 1001, "Token not locked");
     }
 
@@ -160,26 +160,6 @@ contract SATPWrapperTest is Test{
 
     function testMintATokenNotWrapped() public {
         try wrapperContract.mint(contract1.name(), 1001) returns (bool s) {
-            require(!s, "Expected an error");
-        }
-        catch Error(string memory) {
-        }
-        catch (bytes memory /*lowLevelData*/) {
-        }
-    }
-
-    function testOverwriteLockedToken() public {
-        wrapperContract.wrap(contract1.name(), address(contract1), TokenType.NONFUNGIBLE, contract1.name(), "refID", address(user), signatures);
-        vm.startPrank(address(wrapperContract));
-        contract1.mint(address(user), 1001);
-        contract1.mint(address(user), 1002);
-        vm.stopPrank();
-        vm.startPrank(user);
-        contract1.approve(address(wrapperContract), 1001);
-        contract1.approve(address(wrapperContract), 1002);
-        vm.stopPrank();
-        wrapperContract.lock(contract1.name(), 1001);
-        try wrapperContract.lock(contract1.name(), 1002) returns (bool s) {
             require(!s, "Expected an error");
         }
         catch Error(string memory) {

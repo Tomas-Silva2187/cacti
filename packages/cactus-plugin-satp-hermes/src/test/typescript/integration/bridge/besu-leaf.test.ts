@@ -478,6 +478,7 @@ describe("Besu Leaf Test with Non Fungible Tokens", () => {
 
     const response2 = (await besuLeaf.getAsset(
       nonFungibleAsset.id,
+      Number(uniqueTokenId1) as UniqueTokenID,
     )) as EvmNonFungibleAsset;
     expect(response2).toBeDefined();
     expect(response2.id).toBe(nonFungibleAsset.id);
@@ -645,6 +646,7 @@ describe("Besu Leaf Test with Non Fungible Tokens", () => {
 
     const response2 = (await besuLeaf.getAsset(
       nonFungibleAsset.id,
+      Number(uniqueTokenId2) as UniqueTokenID,
     )) as EvmNonFungibleAsset;
     expect(response2).toBeDefined();
     expect(response2.id).toBe(nonFungibleAsset.id);

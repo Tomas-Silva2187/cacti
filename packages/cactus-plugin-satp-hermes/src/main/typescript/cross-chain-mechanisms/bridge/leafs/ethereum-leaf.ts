@@ -975,7 +975,10 @@ export class EthereumLeaf
    * @throws {WrapperContractError} If the wrapper contract is not deployed.
    * @throws {TransactionError} If the transaction fails.
    */
-  public async getAsset(assetId: string): Promise<EvmAsset> {
+  public async getAsset(
+    assetId: string,
+    uniqueDescriptor?: UniqueTokenID,
+  ): Promise<EvmAsset> {
     const fnTag = `${EthereumLeaf.CLASS_NAME}}#getAsset`;
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
     return context.with(ctx, async () => {
@@ -999,7 +1002,10 @@ export class EthereumLeaf
           },
           invocationType: EthContractInvocationType.Call,
           methodName: "getToken",
-          params: [assetId],
+          params: [
+            assetId,
+            ...(uniqueDescriptor !== undefined ? [uniqueDescriptor] : []),
+          ],
           web3SigningCredential: this.signingCredential,
           gasConfig: this.gasConfig,
         })) as EthereumResponse;

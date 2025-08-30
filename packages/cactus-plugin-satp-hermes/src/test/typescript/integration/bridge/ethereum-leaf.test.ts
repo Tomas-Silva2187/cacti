@@ -494,6 +494,7 @@ describe("Ethereum Leaf Non Fungible Test", () => {
 
     const response2 = (await ethereumLeaf.getAsset(
       nonFungibleAsset.id,
+      Number(uniqueTokenId1) as UniqueTokenID,
     )) as EvmNonFungibleAsset;
     expect(response2).toBeDefined();
     expect(response2.id).toBe(nonFungibleAsset.id);
@@ -663,6 +664,7 @@ describe("Ethereum Leaf Non Fungible Test", () => {
 
     const response2 = (await ethereumLeaf.getAsset(
       nonFungibleAsset.id,
+      Number(uniqueTokenId2) as UniqueTokenID,
     )) as EvmNonFungibleAsset;
     expect(response2).toBeDefined();
     expect(response2.id).toBe(nonFungibleAsset.id);

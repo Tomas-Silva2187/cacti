@@ -60,8 +60,8 @@ export class EthereumTestEnvironment {
   public static readonly ETH_ASSET_ID: string = "EthereumExampleAsset";
   public static readonly ETH_NFT_ASSET_ID: string = "EthereumExampleNFT";
   public static readonly ETHREFERENCE_ID: Record<TokenType, string> = {
-    [TokenType.FUNGIBLE]: ExampleOntologyERC20.id,
-    [TokenType.NONFUNGIBLE]: ExampleOntologyERC721.id,
+    [TokenType.NONSTANDARD_FUNGIBLE]: ExampleOntologyERC20.id,
+    [TokenType.NONSTANDARD_NONFUNGIBLE]: ExampleOntologyERC721.id,
     [TokenType.UNSPECIFIED]: "",
   };
   public static readonly ETH_NETWORK_ID: string = "EthereumLedgerTestNetwork";
@@ -467,13 +467,13 @@ export class EthereumTestEnvironment {
     let inUseTokenAttribute: string;
     let inUseContractKeyChainId: string;
     switch (newTokenType) {
-      case TokenType.FUNGIBLE:
+      case TokenType.NONSTANDARD_FUNGIBLE:
         inUseContractName =
           this.tokenContracts.get(SupportedContractTypes.FUNGIBLE) ?? "";
         inUseTokenAttribute = "amount";
         inUseContractKeyChainId = this.keychainPluginFungible.getKeychainId();
         break;
-      case TokenType.NONFUNGIBLE:
+      case TokenType.NONSTANDARD_NONFUNGIBLE:
         inUseContractName =
           this.tokenContracts.get(SupportedContractTypes.NONFUNGIBLE) ?? "";
         inUseTokenAttribute = "tokenId";
@@ -560,13 +560,13 @@ export class EthereumTestEnvironment {
     let inUseContractName: string;
     let inUseTokenAttribute: string;
     switch (inUseTokenType) {
-      case TokenType.FUNGIBLE:
+      case TokenType.NONSTANDARD_FUNGIBLE:
         inUseContractKeyChainId = this.keychainPluginFungible.getKeychainId();
         inUseContractName =
           this.tokenContracts.get(SupportedContractTypes.FUNGIBLE) ?? "";
         inUseTokenAttribute = "amount";
         break;
-      case TokenType.NONFUNGIBLE:
+      case TokenType.NONSTANDARD_NONFUNGIBLE:
         inUseContractKeyChainId =
           this.keychainPluginNonFungible.getKeychainId();
         inUseContractName =
@@ -631,7 +631,8 @@ export class EthereumTestEnvironment {
   public get defaultAsset(): Asset {
     return {
       id: EthereumTestEnvironment.ETH_ASSET_ID,
-      referenceId: EthereumTestEnvironment.ETHREFERENCE_ID[TokenType.FUNGIBLE],
+      referenceId:
+        EthereumTestEnvironment.ETHREFERENCE_ID[TokenType.NONSTANDARD_FUNGIBLE],
       owner: WHALE_ACCOUNT_ADDRESS,
       contractName:
         this.tokenContracts.get(SupportedContractTypes.FUNGIBLE) ?? "",
@@ -646,7 +647,9 @@ export class EthereumTestEnvironment {
     return {
       id: EthereumTestEnvironment.ETH_NFT_ASSET_ID,
       referenceId:
-        EthereumTestEnvironment.ETHREFERENCE_ID[TokenType.NONFUNGIBLE],
+        EthereumTestEnvironment.ETHREFERENCE_ID[
+          TokenType.NONSTANDARD_NONFUNGIBLE
+        ],
       owner: WHALE_ACCOUNT_ADDRESS,
       contractName:
         this.tokenContracts.get(SupportedContractTypes.NONFUNGIBLE) ?? "",

@@ -240,7 +240,7 @@ describe("Shutdown Verify State Tests", () => {
         id: "mockNetworkId",
         ledgerType: LedgerType.Ethereum,
       },
-      tokenType: "FUNGIBLE",
+      tokenType: "NONSTANDARD_FUNGIBLE",
       referenceId: "",
       amount: "100",
       ercTokenStandard: "ERC20",

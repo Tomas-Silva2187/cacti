@@ -244,13 +244,13 @@ export function getTransactRequest(
     };
   } else {
     switch (assetType) {
-      case TransactAssetType.FUNGIBLE:
+      case TransactAssetType.NONSTANDARD_FUNGIBLE:
         return {
           contextID,
           sourceAsset: { ...from.defaultAsset, amount: fromAmount },
           receiverAsset: { ...to.defaultAsset, amount: toAmount },
         };
-      case TransactAssetType.NONFUNGIBLE:
+      case TransactAssetType.NONSTANDARD_NONFUNGIBLE:
         return {
           contextID,
           sourceAsset: { ...from.nonFungibleDefaultAsset, amount: fromAmount },

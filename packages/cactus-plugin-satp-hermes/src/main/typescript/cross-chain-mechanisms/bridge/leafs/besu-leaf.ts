@@ -318,8 +318,8 @@ export class BesuLeaf
           `${fnTag}, Getting Approve Address for asset type: ${getEnumKeyByValue(TokenType, assetType)}`,
         );
         switch (assetType) {
-          case TokenType.FUNGIBLE:
-          case TokenType.NONFUNGIBLE:
+          case TokenType.NONSTANDARD_FUNGIBLE:
+          case TokenType.NONSTANDARD_NONFUNGIBLE:
             if (!this.wrapperContractAddress) {
               throw new ApproveAddressError(
                 `${fnTag}, Wrapper Contract Address not available for approving address`,
@@ -472,8 +472,8 @@ export class BesuLeaf
       try {
         this.log.debug(`${fnTag}, Getting Wrapper Contract Address`);
         switch (type) {
-          case TokenType.FUNGIBLE:
-          case TokenType.NONFUNGIBLE:
+          case TokenType.NONSTANDARD_FUNGIBLE:
+          case TokenType.NONSTANDARD_NONFUNGIBLE:
             if (!this.wrapperContractAddress) {
               throw new WrapperContractError(
                 `${fnTag}, Wrapper Contract not deployed`,
@@ -516,8 +516,8 @@ export class BesuLeaf
         );
 
         switch (asset.type) {
-          case TokenType.FUNGIBLE:
-          case TokenType.NONFUNGIBLE:
+          case TokenType.NONSTANDARD_FUNGIBLE:
+          case TokenType.NONSTANDARD_NONFUNGIBLE:
             if (!this.wrapperContractName || !this.wrapperContractAddress) {
               throw new WrapperContractError(
                 `${fnTag}, Wrapper Contract not deployed`,
@@ -987,7 +987,7 @@ export class BesuLeaf
         this.log.info(token);
 
         switch (Number(token.tokenType)) {
-          case TokenType.FUNGIBLE:
+          case TokenType.NONSTANDARD_FUNGIBLE:
             return {
               contractName: token.contractName,
               id: token.tokenId,
@@ -999,7 +999,7 @@ export class BesuLeaf
               network: this.networkIdentification,
               ercTokenStandard: Number(token.ercTokenStandard),
             } as EvmFungibleAsset;
-          case TokenType.NONFUNGIBLE:
+          case TokenType.NONSTANDARD_NONFUNGIBLE:
             return {
               contractName: token.contractName,
               id: token.tokenId,

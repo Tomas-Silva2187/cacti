@@ -61,7 +61,7 @@ export function buildAndCheckAsset(
   let token: Asset;
 
   switch (sessionAsset.tokenType) {
-    case TokenType.FUNGIBLE:
+    case TokenType.NONSTANDARD_FUNGIBLE:
       token = protoToAsset(sessionAsset, networkId) as Asset;
       if (token.id == undefined) {
         throw new TokenIdMissingError(fnTag);
@@ -76,7 +76,7 @@ export function buildAndCheckAsset(
         `${fnTag}, ${protocolStep} Asset ID: ${token.id} amount: ${token.amount}`,
       );
       return { token: token, networkId: networkId } as SessionAssetBuildData;
-    case TokenType.NONFUNGIBLE:
+    case TokenType.NONSTANDARD_NONFUNGIBLE:
       token = protoToAsset(sessionAsset, networkId) as Asset;
       if (token.id == undefined) {
         throw new TokenIdMissingError(fnTag);

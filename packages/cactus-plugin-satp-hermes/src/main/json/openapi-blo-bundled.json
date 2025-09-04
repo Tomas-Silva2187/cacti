@@ -142,8 +142,8 @@
                       "tokenType": {
                         "type": "string",
                         "enum": [
-                          "FUNGIBLE",
-                          "NONFUNGIBLE"
+                          "NONSTANDARD_FUNGIBLE",
+                          "NONSTANDARD_NONFUNGIBLE"
                         ],
                         "description": "The type of token."
                       },
@@ -226,8 +226,8 @@
                       "tokenType": {
                         "type": "string",
                         "enum": [
-                          "FUNGIBLE",
-                          "NONFUNGIBLE"
+                          "NONSTANDARD_FUNGIBLE",
+                          "NONSTANDARD_NONFUNGIBLE"
                         ],
                         "description": "The type of token."
                       },
@@ -2657,8 +2657,8 @@
             "schema": {
               "type": "string",
               "enum": [
-                "FUNGIBLE",
-                "NONFUNGIBLE"
+                "NONSTANDARD_FUNGIBLE",
+                "NONSTANDARD_NONFUNGIBLE"
               ],
               "description": "The type of token."
             },
@@ -4601,8 +4601,8 @@
           "tokenType": {
             "type": "string",
             "enum": [
-              "FUNGIBLE",
-              "NONFUNGIBLE"
+              "NONSTANDARD_FUNGIBLE",
+              "NONSTANDARD_NONFUNGIBLE"
             ],
             "description": "The type of token."
           },
@@ -4703,8 +4703,8 @@
               "tokenType": {
                 "type": "string",
                 "enum": [
-                  "FUNGIBLE",
-                  "NONFUNGIBLE"
+                  "NONSTANDARD_FUNGIBLE",
+                  "NONSTANDARD_NONFUNGIBLE"
                 ],
                 "description": "The type of token."
               },
@@ -4787,8 +4787,8 @@
               "tokenType": {
                 "type": "string",
                 "enum": [
-                  "FUNGIBLE",
-                  "NONFUNGIBLE"
+                  "NONSTANDARD_FUNGIBLE",
+                  "NONSTANDARD_NONFUNGIBLE"
                 ],
                 "description": "The type of token."
               },
@@ -8298,8 +8298,8 @@
           "tokenType": {
             "type": "string",
             "enum": [
-              "FUNGIBLE",
-              "NONFUNGIBLE"
+              "NONSTANDARD_FUNGIBLE",
+              "NONSTANDARD_NONFUNGIBLE"
             ],
             "description": "The type of token."
           }
@@ -10058,8 +10058,8 @@
       "TokenType": {
         "type": "string",
         "enum": [
-          "FUNGIBLE",
-          "NONFUNGIBLE"
+          "NONSTANDARD_FUNGIBLE",
+          "NONSTANDARD_NONFUNGIBLE"
         ],
         "description": "The type of token."
       },

@@ -303,8 +303,8 @@ export class EthereumLeaf
           `${fnTag}, Getting Approve Address for asset type: ${getEnumKeyByValue(TokenType, assetType)}`,
         );
         switch (assetType) {
-          case TokenType.FUNGIBLE:
-          case TokenType.NONFUNGIBLE:
+          case TokenType.NONSTANDARD_FUNGIBLE:
+          case TokenType.NONSTANDARD_NONFUNGIBLE:
             if (!this.wrapperContractAddress) {
               throw new ApproveAddressError(
                 `${fnTag}, Wrapper Contract Address not available for approving address`,
@@ -457,8 +457,8 @@ export class EthereumLeaf
       try {
         this.log.debug(`${fnTag}, Getting Wrapper Contract Address`);
         switch (type) {
-          case TokenType.FUNGIBLE:
-          case TokenType.NONFUNGIBLE:
+          case TokenType.NONSTANDARD_FUNGIBLE:
+          case TokenType.NONSTANDARD_NONFUNGIBLE:
             if (!this.wrapperContractAddress) {
               throw new WrapperContractError(
                 `${fnTag}, Wrapper Contract not deployed`,
@@ -501,8 +501,8 @@ export class EthereumLeaf
         );
 
         switch (asset.type) {
-          case TokenType.FUNGIBLE:
-          case TokenType.NONFUNGIBLE:
+          case TokenType.NONSTANDARD_FUNGIBLE:
+          case TokenType.NONSTANDARD_NONFUNGIBLE:
             if (!this.wrapperContractName || !this.wrapperContractAddress) {
               throw new WrapperContractError(
                 `${fnTag}, Wrapper Contract not deployed`,
@@ -1018,7 +1018,7 @@ export class EthereumLeaf
         const token = response.callOutput as TokenResponse;
 
         switch (Number(token.tokenType)) {
-          case TokenType.FUNGIBLE:
+          case TokenType.NONSTANDARD_FUNGIBLE:
             this.log.debug("Returning Fungible Asset");
             return {
               contractName: token.contractName,
@@ -1031,7 +1031,7 @@ export class EthereumLeaf
               network: this.networkIdentification,
               ercTokenStandard: Number(token.ercTokenStandard),
             } as EvmFungibleAsset;
-          case TokenType.NONFUNGIBLE:
+          case TokenType.NONSTANDARD_NONFUNGIBLE:
             this.log.debug("Returning Non Fungible Asset");
             return {
               contractName: token.contractName,

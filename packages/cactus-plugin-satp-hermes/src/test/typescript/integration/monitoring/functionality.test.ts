@@ -127,7 +127,7 @@ async function waitForMetric(metric: string, maxRetries = 5) {
 }
 
 async function executeTransfer() {
-  await besuEnv.mintTokens("100", TokenTypeMain.FUNGIBLE);
+  await besuEnv.mintTokens("100", TokenTypeMain.NONSTANDARD_FUNGIBLE);
   await besuEnv.checkBalance(
     besuEnv.getTestFungibleContractName(),
     besuEnv.getTestFungibleContractAddress(),
@@ -219,7 +219,7 @@ async function executeTransfer() {
     await besuEnv.approveAssets(
       reqApproveBesuAddress.approveAddress,
       "100",
-      TokenTypeMain.FUNGIBLE,
+      TokenTypeMain.NONSTANDARD_FUNGIBLE,
     );
   } else {
     throw new Error("Approve address is undefined");

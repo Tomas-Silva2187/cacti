@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 /**
  * @dev Enum for the supported token types.
  */
-enum TokenType { UNSPECIFIED, FUNGIBLE, NONFUNGIBLE } //TODO: FIX THIS ENUM TO BE THE SAME OF THE BRIDGE
+enum TokenType { UNSPECIFIED, BASIC_FUNGIBLE, BASIC_NONFUNGIBLE } //TODO: FIX THIS ENUM TO BE THE SAME OF THE BRIDGE
 /**
  * @dev Enum for the supported interaction types.
  */
@@ -202,11 +202,11 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
         require(assetAttribute > 0, "Invalid asset attribute");
 
         TokenType tt = tokens[tokenId].tokenType;
-        if (tt == TokenType.FUNGIBLE) {
+        if (tt == TokenType.BASIC_FUNGIBLE) {
             require(interact(tokenId, InteractionType.LOCK, assetAttribute), "Token Lock Failed");
             tokens[tokenId].amount += assetAttribute;
         }
-        else if (tt == TokenType.NONFUNGIBLE) {
+        else if (tt == TokenType.BASIC_NONFUNGIBLE) {
             require(NFT_IDs[tokenId][assetAttribute] == false, "Token Already Locked");
             require(interact(tokenId, InteractionType.LOCK, assetAttribute), "Token Lock Failed");
             tokens[tokenId].amount += 1;
@@ -231,14 +231,14 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
         require(assetAttribute > 0, "Invalid asset attribute");
 
         TokenType tt = tokens[tokenId].tokenType;
-        if (tt == TokenType.FUNGIBLE) {
+        if (tt == TokenType.BASIC_FUNGIBLE) {
             if(tokens[tokenId].amount < assetAttribute) {
                 revert InsuficientAmountLocked(tokenId, assetAttribute);
             }
             require(interact(tokenId, InteractionType.UNLOCK, assetAttribute), "Unlock fungible asset call failed");
             tokens[tokenId].amount -= assetAttribute;
         }
-        else if (tt == TokenType.NONFUNGIBLE) {
+        else if (tt == TokenType.BASIC_NONFUNGIBLE) {
             require(NFT_IDs[tokenId][assetAttribute] == true, "Token Not Locked");
             require(tokens[tokenId].amount > 0, "Trying to Unlock an asset that is not accounted for");
             require(interact(tokenId, InteractionType.UNLOCK, assetAttribute), "Unlock non fungible asset call failed");
@@ -265,11 +265,11 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
         require(assetAttribute > 0, "Invalid asset attribute");
 
         TokenType tt = tokens[tokenId].tokenType;
-        if (tt == TokenType.FUNGIBLE) {
+        if (tt == TokenType.BASIC_FUNGIBLE) {
             require(interact(tokenId, InteractionType.MINT, assetAttribute) , "mint asset call failed");
             tokens[tokenId].amount = assetAttribute;
         }
-        else if (tt == TokenType.NONFUNGIBLE) {
+        else if (tt == TokenType.BASIC_NONFUNGIBLE) {
             require(NFT_IDs[tokenId][assetAttribute] == false, "Unique Descriptor already exists");
             require(interact(tokenId, InteractionType.MINT, assetAttribute) , "mint asset call failed");
             tokens[tokenId].amount += 1;
@@ -295,12 +295,12 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
         require(assetAttribute > 0, "Invalid asset attribute");
 
         TokenType tt = tokens[tokenId].tokenType;
-        if (tt == TokenType.FUNGIBLE) {
+        if (tt == TokenType.BASIC_FUNGIBLE) {
             require(tokens[tokenId].amount >= assetAttribute, "burn asset asset is not locked");
             require(interact(tokenId, InteractionType.BURN, assetAttribute), "burn asset call failed");
             tokens[tokenId].amount -= assetAttribute;
         }
-        else if (tt == TokenType.NONFUNGIBLE) {
+        else if (tt == TokenType.BASIC_NONFUNGIBLE) {
             require(tokens[tokenId].amount > 0, "Trying to burn an unaccounted Asset");
             require(NFT_IDs[tokenId][assetAttribute] == true, "Unique Descriptor does not exist");
             require(interact(tokenId, InteractionType.BURN, assetAttribute), "burn asset call failed");
@@ -328,12 +328,12 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
         require(assetAttribute > 0, "Invalid asset attribute");
 
         TokenType tt = tokens[tokenId].tokenType;
-        if (tt == TokenType.FUNGIBLE) {
+        if (tt == TokenType.BASIC_FUNGIBLE) {
             require(tokens[tokenId].amount >= assetAttribute, "assign asset asset is not locked");
             require(interact(tokenId, InteractionType.ASSIGN, assetAttribute, receiver_account), "assign asset call failed");
             tokens[tokenId].amount -= assetAttribute;
         }
-        else if (tt == TokenType.NONFUNGIBLE) {
+        else if (tt == TokenType.BASIC_NONFUNGIBLE) {
             require(tokens[tokenId].amount > 0, "Assign nft - asset is not locked");
             require(NFT_IDs[tokenId][assetAttribute] == true, "Unique Descriptor does not exist");
             require(interact(tokenId, InteractionType.ASSIGN, assetAttribute, receiver_account), "assign nft call failed");
@@ -400,7 +400,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
         TokenType tt = tokens[tokenId].tokenType;
         /*When dealing with fungible tokens, the attribute that is relevant is the amount that is held by an actor
         at a specific point in time. The amount is returned with the token, when the token is fungible.*/
-        if (tt == TokenType.FUNGIBLE) {
+        if (tt == TokenType.BASIC_FUNGIBLE) {
             return tokens[tokenId];
         }
         /*When dealing with non fungible tokens, the relevant attribute is the unique descriptor. Since the same contract
@@ -408,7 +408,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract, IERC721Receiver{
         asset. The wrapper contract then verifies if it holds the asset with that unique descriptor. If it holds it, the
         contract returns the unique descriptor with the token. If not, it returns 0 as the unique descriptor, which is to
         be interpreted as the absence of that same token.*/
-        else if (tt == TokenType.NONFUNGIBLE) {
+        else if (tt == TokenType.BASIC_NONFUNGIBLE) {
             /*The reason the token is rebuilt upon the return is due to internal logic of the protocol. Everytime a token is passed between
             steps of the protocol, the token is expected to have an amount attribute. The leafs that receive the tokens from the contract
             rebuild the asset according to its type (Fungible or NonFungible) and interpret the value of the amount field accordingly. */

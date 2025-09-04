@@ -56,8 +56,8 @@ export class BesuTestEnvironment {
   public static readonly BESU_ASSET_ID: string = "BesuExampleAsset";
   public static readonly BESU_ASSET_ID2: string = "BesuExampleAsset2";
   public static readonly BESU_REFERENCE_ID: Record<TokenType, string> = {
-    [TokenType.FUNGIBLE]: ExampleOntologyERC20.id,
-    [TokenType.NONFUNGIBLE]: ExampleOntologyERC721.id,
+    [TokenType.NONSTANDARD_FUNGIBLE]: ExampleOntologyERC20.id,
+    [TokenType.NONSTANDARD_NONFUNGIBLE]: ExampleOntologyERC721.id,
     [TokenType.UNSPECIFIED]: "",
   };
   public static readonly BESU_NETWORK_ID: string = "BesuLedgerTestNetwork";
@@ -464,13 +464,13 @@ export class BesuTestEnvironment {
     let inUseTokenAttribute: string;
     let inUseContractKeyChainId: string;
     switch (newTokenType) {
-      case TokenType.FUNGIBLE:
+      case TokenType.NONSTANDARD_FUNGIBLE:
         inUseContractName =
           this.tokenContracts.get(SupportedContractTypes.FUNGIBLE) ?? "";
         inUseTokenAttribute = "amount";
         inUseContractKeyChainId = this.keychainPluginFungible.getKeychainId();
         break;
-      case TokenType.NONFUNGIBLE:
+      case TokenType.NONSTANDARD_NONFUNGIBLE:
         inUseContractName =
           this.tokenContracts.get(SupportedContractTypes.NONFUNGIBLE) ?? "";
         inUseTokenAttribute = "tokenId";
@@ -556,13 +556,13 @@ export class BesuTestEnvironment {
     let inUseContractName: string;
     let inUseTokenAttribute: string;
     switch (inUseTokenType) {
-      case TokenType.FUNGIBLE:
+      case TokenType.NONSTANDARD_FUNGIBLE:
         inUseContractKeyChainId = this.keychainPluginFungible.getKeychainId();
         inUseContractName =
           this.tokenContracts.get(SupportedContractTypes.FUNGIBLE) ?? "";
         inUseTokenAttribute = "amount";
         break;
-      case TokenType.NONFUNGIBLE:
+      case TokenType.NONSTANDARD_NONFUNGIBLE:
         inUseContractKeyChainId =
           this.keychainPluginNonFungible.getKeychainId();
         inUseContractName =
@@ -674,7 +674,8 @@ export class BesuTestEnvironment {
   public get defaultAsset(): Asset {
     return {
       id: BesuTestEnvironment.BESU_ASSET_ID,
-      referenceId: BesuTestEnvironment.BESU_REFERENCE_ID[TokenType.FUNGIBLE],
+      referenceId:
+        BesuTestEnvironment.BESU_REFERENCE_ID[TokenType.NONSTANDARD_FUNGIBLE],
       owner: this.firstHighNetWorthAccount,
       contractName:
         this.tokenContracts.get(SupportedContractTypes.FUNGIBLE) ?? "",
@@ -688,7 +689,10 @@ export class BesuTestEnvironment {
   public get nonFungibleDefaultAsset(): Asset {
     return {
       id: BesuTestEnvironment.BESU_ASSET_ID2,
-      referenceId: BesuTestEnvironment.BESU_REFERENCE_ID[TokenType.NONFUNGIBLE],
+      referenceId:
+        BesuTestEnvironment.BESU_REFERENCE_ID[
+          TokenType.NONSTANDARD_NONFUNGIBLE
+        ],
       owner: this.firstHighNetWorthAccount,
       contractName:
         this.tokenContracts.get(SupportedContractTypes.NONFUNGIBLE) ?? "",

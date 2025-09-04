@@ -118,8 +118,8 @@ paths:
                     tokenType:
                       type: string
                       enum:
-                        - FUNGIBLE
-                        - NONFUNGIBLE
+                        - NONSTANDARD_FUNGIBLE
+                        - NONSTANDARD_NONFUNGIBLE
                       description: The type of token.
                     referenceId:
                       type: string
@@ -181,8 +181,8 @@ paths:
                     tokenType:
                       type: string
                       enum:
-                        - FUNGIBLE
-                        - NONFUNGIBLE
+                        - NONSTANDARD_FUNGIBLE
+                        - NONSTANDARD_NONFUNGIBLE
                       description: The type of token.
                     referenceId:
                       type: string
@@ -2021,8 +2021,8 @@ paths:
           schema:
             type: string
             enum:
-              - FUNGIBLE
-              - NONFUNGIBLE
+              - NONSTANDARD_FUNGIBLE
+              - NONSTANDARD_NONFUNGIBLE
             description: The type of token.
           required: true
       responses:
@@ -3452,8 +3452,8 @@ components:
         tokenType:
           type: string
           enum:
-            - FUNGIBLE
-            - NONFUNGIBLE
+            - NONSTANDARD_FUNGIBLE
+            - NONSTANDARD_NONFUNGIBLE
           description: The type of token.
         referenceId:
           type: string
@@ -3530,8 +3530,8 @@ components:
             tokenType:
               type: string
               enum:
-                - FUNGIBLE
-                - NONFUNGIBLE
+                - NONSTANDARD_FUNGIBLE
+                - NONSTANDARD_NONFUNGIBLE
               description: The type of token.
             referenceId:
               type: string
@@ -3593,8 +3593,8 @@ components:
             tokenType:
               type: string
               enum:
-                - FUNGIBLE
-                - NONFUNGIBLE
+                - NONSTANDARD_FUNGIBLE
+                - NONSTANDARD_NONFUNGIBLE
               description: The type of token.
             referenceId:
               type: string
@@ -6291,8 +6291,8 @@ components:
         tokenType:
           type: string
           enum:
-            - FUNGIBLE
-            - NONFUNGIBLE
+            - NONSTANDARD_FUNGIBLE
+            - NONSTANDARD_NONFUNGIBLE
           description: The type of token.
       required:
         - networkId
@@ -7580,8 +7580,8 @@ components:
     TokenType:
       type: string
       enum:
-        - FUNGIBLE
-        - NONFUNGIBLE
+        - NONSTANDARD_FUNGIBLE
+        - NONSTANDARD_NONFUNGIBLE
       description: The type of token.
     ERCTokenStandard:
       type: string

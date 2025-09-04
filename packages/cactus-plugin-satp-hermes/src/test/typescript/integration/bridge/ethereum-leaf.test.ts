@@ -87,8 +87,8 @@ beforeAll(async () => {
 
     await ethereumEnv.deployAndSetupContracts(ClaimFormat.DEFAULT);
 
-    await ethereumEnv.mintTokens("100", TokenType.FUNGIBLE);
-    await ethereumEnv.mintTokens("1001", TokenType.NONFUNGIBLE);
+    await ethereumEnv.mintTokens("100", TokenType.NONSTANDARD_FUNGIBLE);
+    await ethereumEnv.mintTokens("1001", TokenType.NONSTANDARD_NONFUNGIBLE);
   }
 }, TIMEOUT);
 
@@ -131,7 +131,7 @@ describe("Ethereum Leaf Test with Fungible Tokens", () => {
 
   it("Should return the wrapper contract address", async () => {
     const wrapperContractAddress = await ethereumLeaf.getWrapperContract(
-      TokenType.FUNGIBLE,
+      TokenType.NONSTANDARD_FUNGIBLE,
     );
     expect(wrapperContractAddress).toBeDefined();
 
@@ -140,14 +140,14 @@ describe("Ethereum Leaf Test with Fungible Tokens", () => {
     await ethereumEnv.approveAssets(
       wrapperContractAddress,
       "100",
-      TokenType.FUNGIBLE,
+      TokenType.NONSTANDARD_FUNGIBLE,
     );
   });
   it("Should Wrap a token", async () => {
     asset = {
       id: ethereumEnv.defaultAsset.id,
       referenceId: ethereumEnv.defaultAsset.referenceId,
-      type: TokenType.FUNGIBLE,
+      type: TokenType.NONSTANDARD_FUNGIBLE,
       owner: WHALE_ACCOUNT_ADDRESS,
       contractName: ethereumEnv.defaultAsset.contractName,
       contractAddress: ethereumEnv.defaultAsset.contractAddress!,
@@ -207,7 +207,7 @@ describe("Ethereum Leaf Test with Fungible Tokens", () => {
       ethereumEnv.getTestFungibleContractName(),
       ethereumEnv.getTestFungibleContractAddress(),
       ethereumEnv.getTestFungibleContractAbi(),
-      ethereumLeaf.getWrapperContract(TokenType.FUNGIBLE),
+      ethereumLeaf.getWrapperContract(TokenType.NONSTANDARD_FUNGIBLE),
       "100",
       ethereumEnv.getTestOwnerSigningCredential(),
     );
@@ -250,7 +250,7 @@ describe("Ethereum Leaf Test with Fungible Tokens", () => {
       ethereumEnv.getTestFungibleContractName(),
       ethereumEnv.getTestFungibleContractAddress(),
       ethereumEnv.getTestFungibleContractAbi(),
-      ethereumLeaf.getWrapperContract(TokenType.FUNGIBLE),
+      ethereumLeaf.getWrapperContract(TokenType.NONSTANDARD_FUNGIBLE),
       "0",
       ethereumEnv.getTestOwnerSigningCredential(),
     );
@@ -270,13 +270,13 @@ describe("Ethereum Leaf Test with Fungible Tokens", () => {
 
   it("Should Burn a token", async () => {
     const wrapperContractAddress = await ethereumLeaf.getWrapperContract(
-      TokenType.FUNGIBLE,
+      TokenType.NONSTANDARD_FUNGIBLE,
     );
 
     await ethereumEnv.approveAssets(
       wrapperContractAddress,
       "100",
-      TokenType.FUNGIBLE,
+      TokenType.NONSTANDARD_FUNGIBLE,
     );
 
     const response = await ethereumLeaf.lockAsset(asset.id, 100 as Amount);
@@ -308,7 +308,7 @@ describe("Ethereum Leaf Test with Fungible Tokens", () => {
       ethereumEnv.getTestFungibleContractName(),
       ethereumEnv.getTestFungibleContractAddress(),
       ethereumEnv.getTestFungibleContractAbi(),
-      ethereumLeaf.getWrapperContract(TokenType.FUNGIBLE),
+      ethereumLeaf.getWrapperContract(TokenType.NONSTANDARD_FUNGIBLE),
       "0",
       ethereumEnv.getTestOwnerSigningCredential(),
     );
@@ -348,7 +348,7 @@ describe("Ethereum Leaf Test with Fungible Tokens", () => {
       ethereumEnv.getTestFungibleContractName(),
       ethereumEnv.getTestFungibleContractAddress(),
       ethereumEnv.getTestFungibleContractAbi(),
-      ethereumLeaf.getWrapperContract(TokenType.FUNGIBLE),
+      ethereumLeaf.getWrapperContract(TokenType.NONSTANDARD_FUNGIBLE),
       "100",
       ethereumEnv.getTestOwnerSigningCredential(),
     );
@@ -383,7 +383,7 @@ describe("Ethereum Leaf Test with Fungible Tokens", () => {
       ethereumEnv.getTestFungibleContractName(),
       ethereumEnv.getTestFungibleContractAddress(),
       ethereumEnv.getTestFungibleContractAbi(),
-      ethereumLeaf.getWrapperContract(TokenType.FUNGIBLE),
+      ethereumLeaf.getWrapperContract(TokenType.NONSTANDARD_FUNGIBLE),
       "0",
       ethereumEnv.getTestOwnerSigningCredential(),
     );
@@ -431,7 +431,7 @@ describe("Ethereum Leaf Non Fungible Test", () => {
 
   it("Should return the wrapper contract address", async () => {
     const wrapperContractAddress = await ethereumLeaf.getWrapperContract(
-      TokenType.NONFUNGIBLE,
+      TokenType.NONSTANDARD_NONFUNGIBLE,
     );
     expect(wrapperContractAddress).toBeDefined();
 
@@ -441,7 +441,7 @@ describe("Ethereum Leaf Non Fungible Test", () => {
     nonFungibleAsset = {
       id: ethereumEnv.nonFungibleDefaultAsset.id,
       referenceId: ethereumEnv.nonFungibleDefaultAsset.referenceId,
-      type: TokenType.NONFUNGIBLE,
+      type: TokenType.NONSTANDARD_NONFUNGIBLE,
       owner: WHALE_ACCOUNT_ADDRESS,
       contractName: ethereumEnv.nonFungibleDefaultAsset.contractName,
       contractAddress: ethereumEnv.nonFungibleDefaultAsset.contractAddress!,
@@ -482,9 +482,9 @@ describe("Ethereum Leaf Non Fungible Test", () => {
 
   it("Should Approve a token", async () => {
     await ethereumEnv.approveAssets(
-      ethereumLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
+      ethereumLeaf.getWrapperContract(TokenType.NONSTANDARD_NONFUNGIBLE),
       "1001",
-      TokenType.NONFUNGIBLE,
+      TokenType.NONSTANDARD_NONFUNGIBLE,
     );
   });
 
@@ -520,7 +520,7 @@ describe("Ethereum Leaf Non Fungible Test", () => {
       ethereumEnv.getTestNonFungibleContractName(),
       ethereumEnv.getTestNonFungibleContractAddress(),
       ethereumEnv.getTestNonFungibleContractAbi(),
-      ethereumLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
+      ethereumLeaf.getWrapperContract(TokenType.NONSTANDARD_NONFUNGIBLE),
       "1",
       ethereumEnv.getTestOwnerSigningCredential(),
     );
@@ -572,7 +572,7 @@ describe("Ethereum Leaf Non Fungible Test", () => {
       ethereumEnv.getTestNonFungibleContractName(),
       ethereumEnv.getTestNonFungibleContractAddress(),
       ethereumEnv.getTestNonFungibleContractAbi(),
-      ethereumLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
+      ethereumLeaf.getWrapperContract(TokenType.NONSTANDARD_NONFUNGIBLE),
       "0",
       ethereumEnv.getTestOwnerSigningCredential(),
     );
@@ -595,9 +595,9 @@ describe("Ethereum Leaf Non Fungible Test", () => {
 
   it("Should Burn a token", async () => {
     await ethereumEnv.approveAssets(
-      ethereumLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
+      ethereumLeaf.getWrapperContract(TokenType.NONSTANDARD_NONFUNGIBLE),
       uniqueTokenId1,
-      TokenType.NONFUNGIBLE,
+      TokenType.NONSTANDARD_NONFUNGIBLE,
     );
     const response = await ethereumLeaf.lockAsset(
       nonFungibleAsset.id,
@@ -638,7 +638,7 @@ describe("Ethereum Leaf Non Fungible Test", () => {
       ethereumEnv.getTestNonFungibleContractName(),
       ethereumEnv.getTestNonFungibleContractAddress(),
       ethereumEnv.getTestNonFungibleContractAbi(),
-      ethereumLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
+      ethereumLeaf.getWrapperContract(TokenType.NONSTANDARD_NONFUNGIBLE),
       "0",
       ethereumEnv.getTestOwnerSigningCredential(),
     );
@@ -687,7 +687,7 @@ describe("Ethereum Leaf Non Fungible Test", () => {
       ethereumEnv.getTestNonFungibleContractName(),
       ethereumEnv.getTestNonFungibleContractAddress(),
       ethereumEnv.getTestNonFungibleContractAbi(),
-      ethereumLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
+      ethereumLeaf.getWrapperContract(TokenType.NONSTANDARD_NONFUNGIBLE),
       "1",
       ethereumEnv.getTestOwnerSigningCredential(),
     );
@@ -728,7 +728,7 @@ describe("Ethereum Leaf Non Fungible Test", () => {
       ethereumEnv.getTestNonFungibleContractName(),
       ethereumEnv.getTestNonFungibleContractAddress(),
       ethereumEnv.getTestNonFungibleContractAbi(),
-      ethereumLeaf.getWrapperContract(TokenType.NONFUNGIBLE),
+      ethereumLeaf.getWrapperContract(TokenType.NONSTANDARD_NONFUNGIBLE),
       "0",
       ethereumEnv.getTestOwnerSigningCredential(),
     );

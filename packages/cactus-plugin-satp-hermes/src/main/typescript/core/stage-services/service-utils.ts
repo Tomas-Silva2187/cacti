@@ -41,13 +41,13 @@ export function assetToProto(asset: Asset, networkId: NetworkId): ProtoAsset {
     case LedgerType.Besu2X:
     case LedgerType.Ethereum:
       switch (asset.type) {
-        case TokenType.FUNGIBLE:
+        case TokenType.NONSTANDARD_FUNGIBLE:
           protoAsset.amount = BigInt((asset as EvmFungibleAsset).amount);
           protoAsset.contractAddress = (
             asset as EvmFungibleAsset
           ).contractAddress;
           break;
-        case TokenType.NONFUNGIBLE:
+        case TokenType.NONSTANDARD_NONFUNGIBLE:
           protoAsset.amount = BigInt(
             (asset as EvmNonFungibleAsset).uniqueDescriptor,
           );
@@ -80,9 +80,9 @@ export function protoToAsset(asset: ProtoAsset, networkId: NetworkId): Asset {
     network: networkId,
     ercTokenStandard: asset.ercTokenStandard,
   };
-  if (asset.tokenType == TokenType.FUNGIBLE) {
+  if (asset.tokenType == TokenType.NONSTANDARD_FUNGIBLE) {
     (assetObj as FungibleAsset).amount = Number(asset.amount) as Amount;
-  } else if (asset.tokenType == TokenType.NONFUNGIBLE) {
+  } else if (asset.tokenType == TokenType.NONSTANDARD_NONFUNGIBLE) {
     (assetObj as NonFungibleAsset).uniqueDescriptor = Number(
       asset.amount,
     ) as UniqueTokenID;

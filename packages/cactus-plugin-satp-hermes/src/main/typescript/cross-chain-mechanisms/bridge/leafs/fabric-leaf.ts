@@ -351,14 +351,14 @@ export class FabricLeaf
           `${fnTag}, Getting Approve Address for asset type: ${getEnumKeyByValue(TokenType, assetType)}`,
         );
         switch (assetType) {
-          case TokenType.FUNGIBLE:
+          case TokenType.NONSTANDARD_FUNGIBLE:
             if (!this.bridgeId) {
               throw new ApproveAddressError(
                 `${fnTag}, Bridge ID not available for approving address`,
               );
             }
             return this.bridgeId;
-          case TokenType.NONFUNGIBLE:
+          case TokenType.NONSTANDARD_NONFUNGIBLE:
             //TODO implement
             throw new ApproveAddressError(
               `${fnTag}, Non-fungible wrapper contract not implemented`,
@@ -701,14 +701,14 @@ export class FabricLeaf
       try {
         this.log.debug(`${fnTag}, Getting Wrapper Contract Adress`);
         switch (type) {
-          case TokenType.FUNGIBLE:
+          case TokenType.NONSTANDARD_FUNGIBLE:
             if (!this.wrapperContractName) {
               throw new WrapperContractError(
                 `${fnTag}, Wrapper Contract not deployed`,
               );
             }
             return this.wrapperContractName;
-          case TokenType.NONFUNGIBLE:
+          case TokenType.NONSTANDARD_NONFUNGIBLE:
             throw new InvalidWrapperContract(
               `${fnTag}, Non-fungible wrapper contract not implemented`,
             );
@@ -750,14 +750,14 @@ export class FabricLeaf
         );
 
         switch (asset.type) {
-          case TokenType.FUNGIBLE:
+          case TokenType.NONSTANDARD_FUNGIBLE:
             if (!this.contractChannel || !this.wrapperContractName) {
               throw new WrapperContractError(
                 `${fnTag}, Wrapper Contract not deployed`,
               );
             }
             break;
-          case TokenType.NONFUNGIBLE:
+          case TokenType.NONSTANDARD_NONFUNGIBLE:
             throw new Error("Fabric does not support non fungible tokens yet");
           default:
             throw new Error("Asset if unsupported type");
@@ -1148,7 +1148,7 @@ export class FabricLeaf
         const token = JSON.parse(response.functionOutput);
 
         switch (Number(token.tokenType)) {
-          case TokenType.FUNGIBLE:
+          case TokenType.NONSTANDARD_FUNGIBLE:
             return {
               type: Number(token.tokenType),
               id: token.tokenId,
@@ -1161,7 +1161,7 @@ export class FabricLeaf
               network: this.networkIdentification,
               ercTokenStandard: token.ercTokenStandard,
             } as FabricFungibleAsset;
-          case TokenType.NONFUNGIBLE:
+          case TokenType.NONSTANDARD_NONFUNGIBLE:
             throw new Error("Fabric does not support non fungible tokens yet");
           default:
             throw new Error("Unsupported Token Type");

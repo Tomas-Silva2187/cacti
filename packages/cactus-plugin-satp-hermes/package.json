@@ -116,7 +116,8 @@
         "docker:build:latest": "docker build --file ./satp-hermes-gateway.Dockerfile ./ --tag hyperledger/cacti-satp-hermes-gateway:latest",
         "docker:run:stable": "docker run -it hyperledger/cacti-satp-hermes-gateway:$(node -e \"console.log(require('./package.json').version)\")",
         "docker:run:dev": "docker run -it hyperledger/cacti-satp-hermes-gateway:$(git rev-parse --short HEAD)-$(date +\"%Y-%m-%d\")",
-        "docker:compose": "docker compose --project-directory ./ -f ./docker-compose.yml up --build"
+        "docker:compose": "docker compose --project-directory ./ -f ./docker-compose.yml up --build",
+        "test:zk": "npx vitest run src/test/typescript/unit/zero-knowledge/zero-knowledge-handler.test.ts -t \"create and use a Zero Knowledge Handler\""
     },
     "jest": {
         "preset": "ts-jest",

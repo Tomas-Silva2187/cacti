@@ -1,6 +1,5 @@
-import { LogLevelDesc } from "@hyperledger/cactus-common/dist/lib/main/typescript/log-level";
-import { Logger } from "@hyperledger/cactus-common/dist/lib/main/typescript/logging/logger";
-import { LoggerProvider } from "@hyperledger/cactus-common/dist/lib/main/typescript/logging/logger-provider";
+
+import { LoggerProvider } from "@hyperledger/cactus-common/";
 import path from "path";
 import fs from "fs";
 import {
@@ -12,6 +11,7 @@ import {
   ComputationResult,
   SetupKeypair,
   Proof,
+  initialize,
 } from "zokrates-js";
 
 // Instead of: import { initialize } from "zokrates-js";
@@ -23,24 +23,19 @@ export interface ZeroKnowledgeProviderOptions {
 }
 
 export interface ZeroKnowledgeHandlerOptions {
-  logLevel?: LogLevelDesc;
   zkcircuitPath?: string;
   providerOptions?: ZeroKnowledgeProviderOptions;
 }
 
 export class ZeroKnowledgeHandler {
   public static readonly CLASS_NAME = "ZeroKnowledgeHandler";
-  private readonly log: Logger;
-  private readonly logLevel: LogLevelDesc;
-  private provider: ZoKratesProvider | undefined;
+  private readonly log: any;
+  public provider: ZoKratesProvider | undefined;
   private zkcircuitPath: string | undefined;
 
   constructor(options: ZeroKnowledgeHandlerOptions) {
-    //const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#constructor()`;
     const label = ZeroKnowledgeHandler.CLASS_NAME;
-    this.logLevel = options.logLevel || "INFO";
-    this.log = LoggerProvider.getOrCreate({ label, level: this.logLevel });
-    this.initializeZoKrates(options.providerOptions);
+    this.log = LoggerProvider.getOrCreate({ label, level: "INFO" });
     this.zkcircuitPath = options.zkcircuitPath;
   }
 
@@ -48,12 +43,13 @@ export class ZeroKnowledgeHandler {
     options?: ZeroKnowledgeProviderOptions,
   ): Promise<void> {
     const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#initializeZoKrates()`;
-    this.log.debug(`${fnTag} - Initializing ZoKrates...`);
+    this.log.info(`${fnTag} - Initializing ZoKrates Service Provider...`);
     try {
-      const { initialize } = await import("zokrates-js");
       if (options == undefined) {
+        this.log.info("No options provided for handler, default init");
         this.provider = await initialize();
       } else {
+        this.log.info(`Initializing ZoKrates provider with backend: ${options.backend}, curve: ${options.curve}, scheme: ${options.scheme}`);
         initialize().then((defaultProvider) => {
           this.provider = defaultProvider.withOptions({
             backend: options.backend,

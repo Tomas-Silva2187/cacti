@@ -24,64 +24,73 @@ describe("OntologyManager", () => {
     name: "SATP-ERC20",
     id: "token1",
     type: "BESU_2X",
+    contract: "solidity",
     ontology: {
       lock: [
         {
           functionSignature: "transfer(address,address,uint256)",
           variables: ["owner", "bridge", "amount"],
-          available: true,
+          available: "true",
         },
       ],
       unlock: [
         {
           functionSignature: "approve(address,uint256)",
           variables: ["bridge", "amount"],
-          available: true,
+          available: "true",
         },
         {
           functionSignature: "transfer(address,address,uint256)",
           variables: ["bridge", "owner", "amount"],
-          available: true,
+          available: "true",
         },
       ],
       mint: [
         {
           functionSignature: "mint(address,uint256)",
           variables: ["bridge", "amount"],
-          available: true,
+          available: "true",
         },
       ],
       burn: [
         {
           functionSignature: "burn(address,uint256)",
           variables: ["bridge", "amount"],
-          available: true,
+          available: "true",
         },
       ],
       assign: [
         {
           functionSignature: "assign(address,address,uint256)",
           variables: ["bridge", "receiver", "amount"],
-          available: true,
+          available: "true",
         },
       ],
       checkPermission: [
         {
           functionSignature: "hasPermission(address)",
           variables: ["bridge"],
-          available: true,
+          available: "true",
+        },
+      ],
+      approve: [
+        {
+          functionSignature: "approve(address,uint256)",
+          variables: ["bridge", "amount"],
+          available: "true",
         },
       ],
     },
     bytecode: "",
-    ownerSignature: "",
-    bridgeSignature: "",
+    signature: "",
+    hash: "",
   });
 
   const mockOntologyContent2 = JSON.stringify({
     name: "SATP-ERC20",
     id: "token1",
     type: "FABRIC_2",
+    contract: "base64",
     ontology: {
       lock: [
         {
@@ -119,9 +128,16 @@ describe("OntologyManager", () => {
           variables: ["bridgeMSPID"],
         },
       ],
+      approve: [
+        {
+          functionSignature: "approve",
+          variables: ["bridge", "amount"],
+        },
+      ],
     },
-    ownerSignature: "",
-    bridgeSignature: "",
+    bytecode: "",
+    signature: "",
+    hash: "",
   });
 
   beforeEach(() => {

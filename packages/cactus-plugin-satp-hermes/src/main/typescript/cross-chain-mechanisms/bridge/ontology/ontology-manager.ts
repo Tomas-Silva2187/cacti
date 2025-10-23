@@ -14,11 +14,12 @@ import { evmInteractionList } from "./assets/evm-asset";
 import { LedgerNotSupported, OntologyNotFoundError } from "./ontology-errors";
 import * as fs from "fs";
 import * as path from "path";
-import { LogLevelDesc } from "@hyperledger/cactus-common";
+import { /*JsObjectSigner,*/ LogLevelDesc } from "@hyperledger/cactus-common";
 import { SATPLoggerProvider as LoggerProvider } from "../../../core/satp-logger-provider";
 import { SATPLogger as Logger } from "../../../core/satp-logger";
 import { MonitorService } from "../../../services/monitoring/monitor";
 import { context, SpanStatusCode } from "@opentelemetry/api";
+import { isValidOntologyJsonFormat, checkOntologyContent } from "./check-utils";
 
 /**
  * Options for configuring the OntologyManager.
@@ -204,12 +205,14 @@ export class OntologyManager {
    * @param {string} ontology - The ontology to check.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private checkOntology(ontology: string): void {
+  private checkOntology(ontologyAsJson: any): void {
     const fnTag = `${OntologyManager.CLASS_NAME}#checkOntology()`;
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
     return context.with(ctx, () => {
       try {
-        //TODO: implement
+        const formatedOntology = isValidOntologyJsonFormat(ontologyAsJson);
+        checkOntologyContent(formatedOntology);
+        // Call multiple functions to perform different checks
       } catch (err) {
         span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
         span.recordException(err);

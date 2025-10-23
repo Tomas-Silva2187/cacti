@@ -14,12 +14,12 @@ import { evmInteractionList } from "./assets/evm-asset";
 import { LedgerNotSupported, OntologyNotFoundError } from "./ontology-errors";
 import * as fs from "fs";
 import * as path from "path";
-import { /*JsObjectSigner,*/ LogLevelDesc } from "@hyperledger/cactus-common";
+import { JsObjectSigner, Secp256k1Keys, LogLevelDesc, ISignerKeyPair } from "@hyperledger/cactus-common";
 import { SATPLoggerProvider as LoggerProvider } from "../../../core/satp-logger-provider";
 import { SATPLogger as Logger } from "../../../core/satp-logger";
 import { MonitorService } from "../../../services/monitoring/monitor";
 import { context, SpanStatusCode } from "@opentelemetry/api";
-import { isValidOntologyJsonFormat, checkOntologyContent } from "./check-utils";
+import { isValidOntologyJsonFormat, checkOntologyContent, OntologyCheckLevel } from "./check-utils";
 
 /**
  * Options for configuring the OntologyManager.
@@ -41,6 +41,9 @@ export class OntologyManager {
   private readonly log: Logger;
   private readonly logLevel: LogLevelDesc;
   private readonly monitorService: MonitorService;
+  private readonly managerJsObjectSigner: JsObjectSigner;
+  private readonly managerKeyPair?: ISignerKeyPair;
+  private readonly publicKeys: Uint8Array[];
 
   private ontologies: Map<LedgerType, Map<string, string>> = new Map<
     LedgerType,
@@ -55,6 +58,9 @@ export class OntologyManager {
   constructor(
     options: IOntologyManagerOptions,
     monitorService: MonitorService,
+    publicKeys?: Uint8Array[],
+    managerKeyPair?: ISignerKeyPair,
+    ontologyCheckLevel: OntologyCheckLevel = OntologyCheckLevel.DEFAULT,
   ) {
     const fnTag = `${OntologyManager.CLASS_NAME}#constructor()`;
     const label = OntologyManager.CLASS_NAME;
@@ -64,21 +70,29 @@ export class OntologyManager {
       { label, level: this.logLevel },
       monitorService,
     );
+    if (managerKeyPair === undefined) {
+      this.managerKeyPair = Secp256k1Keys.generateKeyPairsBuffer();
+    } else {
+      this.managerKeyPair = managerKeyPair;
+    }
+    this.managerJsObjectSigner = new JsObjectSigner({ privateKey: this.managerKeyPair.privateKey });
+    this.publicKeys = publicKeys || [];
+  
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
 
     context.with(ctx, () => {
       try {
         const ontologiesPath = options.ontologiesPath;
-
         if (ontologiesPath) {
           const files = fs.readdirSync(ontologiesPath);
           files.forEach((file) => {
             if (path.extname(file) === ".json") {
               try {
+              
                 const filePath = path.join(ontologiesPath, file);
                 const content = fs.readFileSync(filePath, "utf-8");
                 const ontology = JSON.parse(content);
-                this.checkOntology(ontology);
+                this.checkOntology(ontology, ontologyCheckLevel);
                 const tokenId = ontology.id as string;
                 const ledgerType = ontology.type as LedgerType;
                 if (!this.ontologies.has(ledgerType))
@@ -91,6 +105,7 @@ export class OntologyManager {
                 this.ontologies.get(ledgerType)?.set(tokenId, content);
               } catch (error) {
                 this.log.error(`Error reading ontology file ${file}: ${error}`);
+                throw error;
               }
             }
           });
@@ -205,13 +220,13 @@ export class OntologyManager {
    * @param {string} ontology - The ontology to check.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private checkOntology(ontologyAsJson: any): void {
+  private checkOntology(ontologyAsJson: any, ontologyCheckLevel: OntologyCheckLevel): void {
     const fnTag = `${OntologyManager.CLASS_NAME}#checkOntology()`;
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
     return context.with(ctx, () => {
       try {
         const formatedOntology = isValidOntologyJsonFormat(ontologyAsJson);
-        checkOntologyContent(formatedOntology);
+        checkOntologyContent(formatedOntology, this.publicKeys, this.managerJsObjectSigner, ontologyCheckLevel);
         // Call multiple functions to perform different checks
       } catch (err) {
         span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });

@@ -10,6 +10,7 @@ import {
   VarType as FabricVarType,
   getVarTypes as getFabricVarType,
 } from "./assets/fabric-asset";
+import { InteractionWithoutFunctionError, InvalidOntologyHash, InvalidOntologySignature, LedgerNotSupported, OntologyFunctionNotAvailable, OntologyFunctionVariableNotSupported, UnknownInteractionError } from "./ontology-errors";
 
 export enum OntologyCheckLevel {
   DEFAULT = "DEFAULT",
@@ -57,22 +58,24 @@ export function isValidOntologyJsonFormat(ontologyJSON: any) {
 
 export function checkOntologyContent(
   ontology: OntologyJson,
-  pubKeyArray?: Uint8Array[],
-  JsObjectSigner?: JsObjectSigner,
+  pubKeyArray: Uint8Array[],
+  JsObjectSigner: JsObjectSigner,
   level: OntologyCheckLevel = OntologyCheckLevel.DEFAULT,
 ) {
-  // levels should be listed from most to least strict - most strict levels need to perform all checks of the less strict levels
-  switch (level) {
-    case OntologyCheckLevel.HASHED_SIGNED:
-      validateOntologySignature(ontology, pubKeyArray!, JsObjectSigner!);
-      break;
-    case OntologyCheckLevel.HASHED:
-      validateOntologyHash(ontology, JsObjectSigner!);
-      break;
-    case OntologyCheckLevel.DEFAULT:
-      validateOntologyFunctions(ontology);
-      break;
-  }
+  try {
+    // levels should be listed from most to least strict - most strict levels need to perform all checks of the less strict levels
+    switch (level) {
+      case OntologyCheckLevel.HASHED_SIGNED:
+        validateOntologySignature(ontology, pubKeyArray!, JsObjectSigner!);
+      case OntologyCheckLevel.HASHED:
+        validateOntologyHash(ontology, JsObjectSigner!);
+      case OntologyCheckLevel.DEFAULT:
+        validateOntologyFunctions(ontology);
+        break;
+    }
+  } catch (error) {
+    throw error;
+  }  
 }
 
 /**
@@ -92,9 +95,12 @@ export function validateOntologyHash(
     delete objToHash.signature;
     const validHash =
       JsObjectSigner.dataHash(objToHash).toString() === ontologyJSON.hash;
-    return validHash;
+    console.log(`hash for ${objToHash.type} is: ${JsObjectSigner.dataHash(objToHash).toString()}`);
+    if(!validHash) {
+      throw new InvalidOntologyHash();
+    }
   } catch (error) {
-    return false;
+    throw error;
   }
 }
 
@@ -115,6 +121,7 @@ export function validateOntologySignature(
     const objToHash = JSON.parse(JSON.stringify(ontologyJSON));
     delete objToHash.hash;
     delete objToHash.signature;
+    console.log(`sign for ${objToHash.type} is: ${JsObjectSigner.sign(JsObjectSigner.dataHash(objToHash)).toString()}`);
     for (const key of pubKeys) {
       const validBridgeSignature = JsObjectSigner.verify(
         JsObjectSigner.dataHash(objToHash),
@@ -125,9 +132,9 @@ export function validateOntologySignature(
         return true;
       }
     }
-    return false;
+    throw new InvalidOntologySignature();
   } catch (error) {
-    return false;
+    throw error;
   }
 }
 
@@ -135,25 +142,26 @@ export function validateOntologyFunctions(ontology: OntologyJson) {
   const ontologyInteractions = ontology.ontology;
   for (const [interaction, interactionFunctions] of Object.entries(ontologyInteractions)) {
     if (!(getInteractionType(interaction) in InteractionType)) {
-      throw new Error(`Interaction ${interaction} not recognized in ontology`);
+      throw new UnknownInteractionError(interaction);
     }
     if (interactionFunctions.length === 0) {
-      throw new Error(`No functions defined for interaction ${interaction}`);
+      throw new InteractionWithoutFunctionError(interaction);
     }
     for (const functionData of interactionFunctions) {
       switch (ontology.type as LedgerType) {
         case LedgerType.Ethereum:
         case LedgerType.Besu1X:
         case LedgerType.Besu2X:
-          if (functionData.available !== "true") {
-            throw new Error(
-              `Function ${functionData.functionSignature} not available in ontology`,
+          if (!functionData.available) {
+            throw new OntologyFunctionNotAvailable(
+              functionData.functionSignature,
             );
           }
           for (const variable of functionData.variables) {
             if (!(getEvmVarType(variable) in EvmVarType)) {
-              throw new Error(
-                `Variable type ${variable} not recognized in ontology for EVM`,
+              throw new OntologyFunctionVariableNotSupported(
+                variable,
+                ontology.type,
               );
             }
           }
@@ -161,16 +169,15 @@ export function validateOntologyFunctions(ontology: OntologyJson) {
         case LedgerType.Fabric2:
           for (const variable of functionData.variables) {
             if (!(getFabricVarType(variable) in FabricVarType)) {
-              throw new Error(
-                `Variable type ${variable} not recognized in ontology for Fabric`,
+              throw new OntologyFunctionVariableNotSupported(
+                variable,
+                ontology.type,
               );
             }
           }
           break;
         default:
-          throw new Error(
-            `Ledger type ${ontology.type} not supported for ontology validation`,
-          );
+          throw new LedgerNotSupported();
       }
     }
   }

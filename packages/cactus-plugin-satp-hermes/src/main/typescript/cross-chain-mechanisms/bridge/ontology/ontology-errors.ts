@@ -85,3 +85,13 @@ export class InteractionWithoutFunctionError extends OntologyInternalError {
     super(`Interaction ${interaction} does not have any function defined`, cause ?? null, 500, traceID, trace);
   }
 }
+
+export class InvalidBytecodeError extends OntologyInternalError {
+  constructor(
+    cause?: string | Error | null,
+    traceID?: string,
+    trace?: string,
+  ) {
+    super("Ontology contains invalid bytecode", cause ?? null, 500, traceID, trace);
+  }
+}

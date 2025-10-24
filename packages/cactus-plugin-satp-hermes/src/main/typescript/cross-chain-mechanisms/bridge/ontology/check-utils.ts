@@ -10,12 +10,15 @@ import {
   VarType as FabricVarType,
   getVarTypes as getFabricVarType,
 } from "./assets/fabric-asset";
-import { InteractionWithoutFunctionError, InvalidOntologyHash, InvalidOntologySignature, LedgerNotSupported, OntologyFunctionNotAvailable, OntologyFunctionVariableNotSupported, UnknownInteractionError } from "./ontology-errors";
+import { InteractionWithoutFunctionError, InvalidBytecodeError, InvalidOntologyHash, InvalidOntologySignature, LedgerNotSupported, OntologyFunctionNotAvailable, OntologyFunctionVariableNotSupported, UnknownInteractionError } from "./ontology-errors";
+import { BridgeLeaf } from "../bridge-leaf";
+import { EthereumLeaf } from "../leafs/ethereum-leaf";
 
 export enum OntologyCheckLevel {
   DEFAULT = "DEFAULT",
   HASHED = "HASHED",
   HASHED_SIGNED = "HASHED_SIGNED",
+  BYTECODE = "BYTECODE",
 }
 
 export interface OntologyJson {
@@ -184,9 +187,20 @@ export function validateOntologyFunctions(ontology: OntologyJson) {
   return true;
 }
 
-export function validateOntologyBytecode(
+export async function validateOntologyBytecode(
   ontology: OntologyJson,
   ledgerType: LedgerType,
+  chainLeaf: BridgeLeaf,
 ) {
-  throw new Error("Function not implemented.");
+  switch (ledgerType) {
+    case LedgerType.Ethereum:
+      const address = (chainLeaf as EthereumLeaf).getWrapperContract("FUNGIBLE");
+      const bytecode = (await (chainLeaf as EthereumLeaf).getContractBytecode(address)).response;
+      if (ontology.bytecode !== bytecode) {
+        throw new InvalidBytecodeError();
+      }
+      return true;
+    default:
+      throw new LedgerNotSupported();
+  }
 }

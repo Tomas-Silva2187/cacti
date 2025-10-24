@@ -19,7 +19,8 @@ import { SATPLoggerProvider as LoggerProvider } from "../../../core/satp-logger-
 import { SATPLogger as Logger } from "../../../core/satp-logger";
 import { MonitorService } from "../../../services/monitoring/monitor";
 import { context, SpanStatusCode } from "@opentelemetry/api";
-import { isValidOntologyJsonFormat, checkOntologyContent, OntologyCheckLevel } from "./check-utils";
+import { isValidOntologyJsonFormat, checkOntologyContent, OntologyCheckLevel, validateOntologyBytecode } from "./check-utils";
+import { BridgeLeaf } from "../bridge-leaf";
 
 /**
  * Options for configuring the OntologyManager.
@@ -219,7 +220,6 @@ export class OntologyManager {
    * @private
    * @param {string} ontology - The ontology to check.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private checkOntology(ontologyAsJson: any, ontologyCheckLevel: OntologyCheckLevel): void {
     const fnTag = `${OntologyManager.CLASS_NAME}#checkOntology()`;
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
@@ -277,5 +277,21 @@ export class OntologyManager {
         span.end();
       }
     });
+  }
+
+  /**
+   * Directly checks the bytecode of an ontology is the same that is deployed in a chain.
+   * @param {LedgerType} ledgerType - The type of the ledger.
+   * @param {string} tokenId - The ID of the token.
+   * @param {BridgeLeaf} chainLeaf - The respective chain leaf.
+   * @returns {Promise<boolean>} Whether the bytecode is equal to the one on chain.
+   */
+  public async checkOntologyBytecode(ledgerType: LedgerType, tokenId: string, chainLeaf: BridgeLeaf): Promise<boolean> {
+    try {
+      const ontology = this.getOntology(ledgerType, tokenId);
+      return await validateOntologyBytecode(JSON.parse(ontology), ledgerType, chainLeaf);
+    } catch (error) {
+      throw error;
+    }
   }
 }

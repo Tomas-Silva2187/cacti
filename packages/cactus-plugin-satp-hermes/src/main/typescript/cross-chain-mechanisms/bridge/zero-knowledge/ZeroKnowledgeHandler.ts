@@ -114,4 +114,5 @@ export class ZeroKnowledgeHandler {
   public async computeZoKratesHash(data: string): Promise<string> {
     const parsedData = zoKratesPadding(data);
     return parsedData;
+  }
 }

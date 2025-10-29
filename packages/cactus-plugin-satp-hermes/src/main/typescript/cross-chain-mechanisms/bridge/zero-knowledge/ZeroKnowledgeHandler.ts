@@ -13,6 +13,7 @@ import {
   Proof,
   initialize,
 } from "zokrates-js";
+import { zoKratesPadding } from "./zk-utils";
 
 // Instead of: import { initialize } from "zokrates-js";
 
@@ -109,4 +110,8 @@ export class ZeroKnowledgeHandler {
   ): Promise<boolean> {
     return this.provider!.verify(keypair.vk, proof);
   }
+
+  public async computeZoKratesHash(data: string): Promise<string> {
+    const parsedData = zoKratesPadding(data);
+    return parsedData;
 }

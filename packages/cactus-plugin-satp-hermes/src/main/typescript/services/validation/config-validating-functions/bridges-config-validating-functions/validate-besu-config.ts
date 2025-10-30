@@ -12,13 +12,14 @@ import {
 import { isClaimFormat } from "./validate-bungee-options";
 import type { ClaimFormat } from "../../../../generated/proto/cacti/satp/v02/common/message_pb";
 import { KeyPairJSON } from "../validate-key-pair-json";
-import { NetworkOptionsJSON } from "../validate-cc-config";
+import { NetworkId, NetworkOptionsJSON } from "../validate-cc-config";
 import { isNetworkId } from "../validate-satp-gateway-identity";
 import { Logger } from "@hyperledger/cactus-common";
 import {
   chainConfigElement,
   identifyAndCheckConfigFormat,
 } from "../../../utils";
+import { LedgerType } from "@hyperledger/cactus-core-api";
 
 export interface BesuConfigJSON extends NetworkOptionsJSON {
   signingCredential: Web3SigningCredential;
@@ -107,6 +108,10 @@ function isWeb3SigningCredential(
     isWeb3SigningCredentialPrivateKeyHex(obj) ||
     isWeb3SigningCredentialNone(obj)
   );
+}
+
+export function isBesuNetworkId(obj: NetworkId) {
+  return (obj.ledgerType as LedgerType) === LedgerType.Besu1X || (obj.ledgerType as LedgerType) === LedgerType.Besu2X;
 }
 
 // Type guard for BesuConfigJSON

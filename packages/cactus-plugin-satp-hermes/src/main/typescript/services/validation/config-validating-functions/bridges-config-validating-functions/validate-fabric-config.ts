@@ -11,7 +11,7 @@ import {
 } from "./validate-fabric-options";
 import { isClaimFormat } from "./validate-bungee-options";
 import type { ClaimFormat } from "../../../../generated/proto/cacti/satp/v02/common/message_pb";
-import { NetworkOptionsJSON } from "../validate-cc-config";
+import { NetworkId, NetworkOptionsJSON } from "../validate-cc-config";
 import { isNetworkId } from "../validate-satp-gateway-identity";
 import { isKeyPairJSON, KeyPairJSON } from "../validate-key-pair-json";
 import { X509Identity } from "fabric-network";
@@ -20,6 +20,7 @@ import {
   chainConfigElement,
   identifyAndCheckConfigFormat,
 } from "../../../utils";
+import { LedgerType } from "@hyperledger/cactus-core-api";
 
 export interface FabricConfigJSON extends NetworkOptionsJSON {
   userIdentity?: X509Identity;
@@ -169,6 +170,10 @@ function isUserIdentity(obj: unknown, log: Logger): obj is X509Identity {
     return false;
   }
   return true;
+}
+
+export function isFabricNetworkId(obj: NetworkId) {
+  return (obj.ledgerType as LedgerType) === LedgerType.Fabric2;
 }
 
 // Type guard for FabricConfigJSON

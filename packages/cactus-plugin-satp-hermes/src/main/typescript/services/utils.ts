@@ -106,7 +106,7 @@ export function checkConfigElementFormat<T>(
       if (ccElement.configSubElementType) {
         obj[ccElement.configElement].forEach((subEl: unknown) => {
           if (
-            typeof subEl !== typeof ccElement.configSubElementType ||
+            typeof subEl !== ccElement.configSubElementType ||
             subEl === null
           ) {
             log.error(

@@ -13,7 +13,7 @@ import {
 } from "./validate-ethereum-options";
 import { isClaimFormat } from "./validate-bungee-options";
 import type { ClaimFormat } from "../../../../generated/proto/cacti/satp/v02/common/message_pb";
-import { NetworkOptionsJSON } from "../validate-cc-config";
+import { NetworkId, NetworkOptionsJSON } from "../validate-cc-config";
 import { KeyPairJSON } from "../validate-key-pair-json";
 import { isNetworkId } from "../validate-satp-gateway-identity";
 import { Logger } from "@hyperledger/cactus-common";
@@ -21,6 +21,7 @@ import {
   chainConfigElement,
   identifyAndCheckConfigFormat,
 } from "../../../utils";
+import { LedgerType } from "@hyperledger/cactus-core-api";
 
 export interface EthereumConfigJSON extends NetworkOptionsJSON {
   signingCredential: Web3SigningCredential;
@@ -151,6 +152,10 @@ function isGasConfig(obj: unknown, log: Logger): obj is GasTransactionConfig {
       "maxPriorityFeePerGas" in obj &&
       typeof objRecord.maxPriorityFeePerGas === "string")
   );
+}
+
+export function isEthereumNetworkId(obj: NetworkId) {
+  return (obj.ledgerType as LedgerType) === LedgerType.Ethereum;
 }
 
 // Type guard for EthereumConfigJSON

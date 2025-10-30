@@ -1,10 +1,10 @@
 import fs from "fs-extra";
 
-import { isFabricConfigJSON } from "./bridges-config-validating-functions/validate-fabric-config";
+import { isFabricNetworkId, isFabricConfigJSON } from "./bridges-config-validating-functions/validate-fabric-config";
 import { createFabricOptions } from "./bridges-config-validating-functions/validate-fabric-options";
-import { isBesuConfigJSON } from "./bridges-config-validating-functions/validate-besu-config";
+import { isBesuConfigJSON, isBesuNetworkId } from "./bridges-config-validating-functions/validate-besu-config";
 import { createBesuOptions } from "./bridges-config-validating-functions/validate-besu-options";
-import { isEthereumConfigJSON } from "./bridges-config-validating-functions/validate-ethereum-config";
+import { isEthereumConfigJSON, isEthereumNetworkId } from "./bridges-config-validating-functions/validate-ethereum-config";
 import { createEthereumOptions } from "./bridges-config-validating-functions/validate-ethereum-options";
 import { ICrossChainMechanismsOptions } from "../../../cross-chain-mechanisms/satp-cc-manager";
 import { INetworkOptions } from "../../../cross-chain-mechanisms/bridge/bridge-types";
@@ -50,9 +50,9 @@ function NetworkOptionsJSON(
   const objRecord = obj as Record<string, unknown>;
   return (
     isNetworkId(objRecord.networkIdentification) &&
-    (isFabricConfigJSON(objRecord, log) ||
-      isBesuConfigJSON(objRecord, log) ||
-      isEthereumConfigJSON(objRecord, log))
+    ((isFabricNetworkId(objRecord.networkIdentification) && isFabricConfigJSON(objRecord, log)) ||
+      (isBesuNetworkId(objRecord.networkIdentification) && isBesuConfigJSON(objRecord, log)) ||
+      (isEthereumNetworkId(objRecord.networkIdentification) && isEthereumConfigJSON(objRecord, log)))
   );
 }
 
@@ -86,7 +86,7 @@ async function createBridgeConfig(
   const bridgesConfigParsed: INetworkOptions[] = [];
 
   for (const config of configs) {
-    if (isFabricConfigJSON(config, log)) {
+    if (isFabricNetworkId(config.networkIdentification) && isFabricConfigJSON(config, log)) {
       const fabricOptions = createFabricOptions(config.connectorOptions);
 
       // Read the CA file from the provided path, if available
@@ -220,7 +220,7 @@ async function createBridgeConfig(
       } as Partial<IFabricLeafNeworkOptions> & INetworkOptions;
 
       bridgesConfigParsed.push(fabricConfig);
-    } else if (isBesuConfigJSON(config, log)) {
+    } else if (isBesuNetworkId(config.networkIdentification) && isBesuConfigJSON(config, log)) {
       const besuOptions = createBesuOptions(config.connectorOptions);
       const besuConfig = {
         networkIdentification: config.networkIdentification,
@@ -241,7 +241,7 @@ async function createBridgeConfig(
       } as Partial<IBesuLeafNeworkOptions> & INetworkOptions;
 
       bridgesConfigParsed.push(besuConfig);
-    } else if (isEthereumConfigJSON(config, log)) {
+    } else if (isEthereumNetworkId(config.networkIdentification) && isEthereumConfigJSON(config, log)) {
       const ethereumOptions = createEthereumOptions(config.connectorOptions);
 
       const ethereumConfig = {

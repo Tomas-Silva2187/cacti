@@ -1,5 +1,4 @@
-
-import { LoggerProvider } from "@hyperledger/cactus-common/";
+import { Logger, LoggerProvider } from "@hyperledger/cactus-common/";
 import path from "path";
 import fs from "fs";
 import {
@@ -13,7 +12,6 @@ import {
   Proof,
   initialize,
 } from "zokrates-js";
-import { zoKratesPadding } from "./zk-utils";
 
 // Instead of: import { initialize } from "zokrates-js";
 
@@ -34,9 +32,14 @@ export class ZeroKnowledgeHandler {
   public provider: ZoKratesProvider | undefined;
   private zkcircuitPath: string | undefined;
 
-  constructor(options: ZeroKnowledgeHandlerOptions) {
-    const label = ZeroKnowledgeHandler.CLASS_NAME;
-    this.log = LoggerProvider.getOrCreate({ label, level: "INFO" });
+  constructor(options: ZeroKnowledgeHandlerOptions, log?: Logger) {
+    if (log == undefined) {
+      const label = ZeroKnowledgeHandler.CLASS_NAME;
+      this.log = LoggerProvider.getOrCreate({ label, level: "INFO" });
+    } else {
+      this.log = log;
+    }
+
     this.zkcircuitPath = options.zkcircuitPath;
   }
 
@@ -50,7 +53,9 @@ export class ZeroKnowledgeHandler {
         this.log.info("No options provided for handler, default init");
         this.provider = await initialize();
       } else {
-        this.log.info(`Initializing ZoKrates provider with backend: ${options.backend}, curve: ${options.curve}, scheme: ${options.scheme}`);
+        this.log.info(
+          `Initializing ZoKrates provider with backend: ${options.backend}, curve: ${options.curve}, scheme: ${options.scheme}`,
+        );
         initialize().then((defaultProvider) => {
           this.provider = defaultProvider.withOptions({
             backend: options.backend,
@@ -75,21 +80,45 @@ export class ZeroKnowledgeHandler {
       circuitName,
     );
     const source = fs.readFileSync(resolvedCircuitPath).toString();
-
-    return this.provider!.compile(source);
+    //const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#compileCircuit()`;
+    try {
+      if (this.provider != undefined) {
+        return this.provider.compile(source);
+      }
+      throw new Error("ZoKrates provider not initialized");
+    } catch (error) {
+      this.log.info(error);
+      throw error;
+    }
   }
 
   public async computeWitness(
     CompilationArtifacts: CompilationArtifacts,
     inputs: string[],
   ): Promise<ComputationResult> {
-    return this.provider!.computeWitness(CompilationArtifacts, inputs);
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */ /* tslint:disable-next-line:no-unused-variable */ // @ts-ignore
+    //const paddedInputs = await zoKratesPadding(inputs, this.log);
+    try {
+      if (this.provider != undefined) {
+        return this.provider.computeWitness(CompilationArtifacts, inputs);
+      }
+      throw new Error("ZoKrates provider not initialized");
+    } catch (error) {
+      throw error;
+    }
   }
 
   public async generateProofKeyPair(
     compiledArtifacts: CompilationArtifacts,
   ): Promise<SetupKeypair> {
-    return this.provider!.setup(compiledArtifacts.program);
+    try {
+      if (this.provider != undefined) {
+        return this.provider.setup(compiledArtifacts.program);
+      }
+      throw new Error("ZoKrates provider not initialized");
+    } catch (error) {
+      throw error;
+    }
   }
 
   public async generateProof(
@@ -97,22 +126,44 @@ export class ZeroKnowledgeHandler {
     witness: ComputationResult,
     keypair: SetupKeypair,
   ): Promise<Proof> {
-    return this.provider!.generateProof(
-      compiledArtifacts.program,
-      witness.witness,
-      keypair.pk,
-    );
+    try {
+      if (this.provider != undefined) {
+        return this.provider.generateProof(
+          compiledArtifacts.program,
+          witness.witness,
+          keypair.pk,
+        );
+      }
+      throw new Error("ZoKrates provider not initialized");
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async generateProofSmartContract(
+    keyPair: SetupKeypair,
+  ): Promise<string> {
+    try {
+      if (this.provider != undefined) {
+        return this.provider.exportSolidityVerifier(keyPair.vk);
+      }
+      throw new Error("ZoKrates provider not initialized");
+    } catch (error) {
+      throw error;
+    }
   }
 
   public async verifyProof(
     proof: Proof,
     keypair: SetupKeypair,
   ): Promise<boolean> {
-    return this.provider!.verify(keypair.vk, proof);
-  }
-
-  public async computeZoKratesHash(data: string): Promise<string> {
-    const parsedData = zoKratesPadding(data);
-    return parsedData;
+    try {
+      if (this.provider != undefined) {
+        return this.provider.verify(keypair.vk, proof);
+      }
+      throw new Error("ZoKrates provider not initialized");
+    } catch (error) {
+      throw error;
+    }
   }
 }

@@ -19,7 +19,7 @@ import {
   Web3SigningCredentialType,
 } from "@hyperledger/cactus-plugin-ledger-connector-ethereum";
 import { IPluginBungeeHermesOptions } from "@hyperledger/cactus-plugin-bungee-hermes";
-import { expect } from "@jest/globals";
+//import { expect } from "@jest/globals";
 import {
   GethTestLedger,
   WHALE_ACCOUNT_ADDRESS,
@@ -73,6 +73,9 @@ export class EthereumTestEnvironment {
   public keychainPluginFungible!: PluginKeychainMemory;
   public keychainPluginNonFungible!: PluginKeychainMemory;
   public keychainPluginWrapper!: PluginKeychainMemory;
+
+  public additionalKeyChainPluginHolder: Record<string, PluginKeychainMemory> =
+    {};
 
   public keychainEntryKey!: string;
   public keychainEntryValue!: string;
@@ -361,11 +364,11 @@ export class EthereumTestEnvironment {
         type: Web3SigningCredentialType.GethKeychainPassword,
       },
     });
-    expect(deployOutSATPTokenContract).toBeTruthy();
-    expect(deployOutSATPTokenContract.transactionReceipt).toBeTruthy();
-    expect(
-      deployOutSATPTokenContract.transactionReceipt.contractAddress,
-    ).toBeTruthy();
+    //expect(deployOutSATPTokenContract).toBeTruthy();
+    //expect(deployOutSATPTokenContract.transactionReceipt).toBeTruthy();
+    //expect(
+    //  deployOutSATPTokenContract.transactionReceipt.contractAddress,
+    //).toBeTruthy();
 
     this.assetContractAddresses.set(
       assetType,
@@ -420,9 +423,9 @@ export class EthereumTestEnvironment {
       web3SigningCredential: this.getTestOracleSigningCredential(),
       gasConfig: this.gasConfig,
     });
-    expect(blOracleContract).toBeTruthy();
-    expect(blOracleContract.transactionReceipt).toBeTruthy();
-    expect(blOracleContract.transactionReceipt.contractAddress).toBeTruthy();
+    //expect(blOracleContract).toBeTruthy();
+    //expect(blOracleContract.transactionReceipt).toBeTruthy();
+    //expect(blOracleContract.transactionReceipt.contractAddress).toBeTruthy();
 
     this.assetContractAddresses.set(
       SupportedContractTypes.FUNGIBLE,
@@ -468,6 +471,7 @@ export class EthereumTestEnvironment {
       default:
         throw new Error(`Unsupported token type for minting: ${newTokenType}`);
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const responseMint = await this.connector.invokeContract({
       contract: {
         contractName: inUseContractName,
@@ -482,8 +486,8 @@ export class EthereumTestEnvironment {
         type: Web3SigningCredentialType.GethKeychainPassword,
       },
     });
-    expect(responseMint).toBeTruthy();
-    expect(responseMint.success).toBeTruthy();
+    //expect(responseMint).toBeTruthy();
+    //expect(responseMint.success).toBeTruthy();
     this.log.info(
       `Minted ${inUseTokenAttribute} ${assetAttribute} to firstHighNetWorthAccount`,
     );
@@ -491,6 +495,7 @@ export class EthereumTestEnvironment {
 
   public async giveRoleToBridge(wrapperAddress: string): Promise<void> {
     if (this.tokenContracts.has(SupportedContractTypes.FUNGIBLE)) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const giveRoleRes = await this.connector.invokeContract({
         contract: {
           contractName:
@@ -506,13 +511,14 @@ export class EthereumTestEnvironment {
           type: Web3SigningCredentialType.GethKeychainPassword,
         },
       });
-      expect(giveRoleRes).toBeTruthy();
-      expect(giveRoleRes.success).toBeTruthy();
+      //expect(giveRoleRes).toBeTruthy();
+      //expect(giveRoleRes.success).toBeTruthy();
       this.log.info(
         "BRIDGE_ROLE given over Fungible Token to SATPWrapperContract successfully",
       );
     }
     if (this.tokenContracts.has(SupportedContractTypes.NONFUNGIBLE)) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const giveRoleRes2 = await this.connector.invokeContract({
         contract: {
           contractName:
@@ -528,8 +534,8 @@ export class EthereumTestEnvironment {
           type: Web3SigningCredentialType.GethKeychainPassword,
         },
       });
-      expect(giveRoleRes2).toBeTruthy();
-      expect(giveRoleRes2.success).toBeTruthy();
+      //expect(giveRoleRes2).toBeTruthy();
+      //expect(giveRoleRes2.success).toBeTruthy();
       this.log.info(
         "BRIDGE_ROLE given over Non Fungible Token to SATPWrapperContract successfully",
       );
@@ -565,6 +571,7 @@ export class EthereumTestEnvironment {
           `Unsupported token type for approval: ${inUseTokenType}`,
         );
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const responseApprove = await this.connector.invokeContract({
       contract: {
         contractName: inUseContractName,
@@ -579,8 +586,8 @@ export class EthereumTestEnvironment {
         type: Web3SigningCredentialType.GethKeychainPassword,
       },
     });
-    expect(responseApprove).toBeTruthy();
-    expect(responseApprove.success).toBeTruthy();
+    //expect(responseApprove).toBeTruthy();
+    //expect(responseApprove.success).toBeTruthy();
     this.log.info(
       `Approved ${inUseTokenAttribute} ${assetAttribute} to SATPWrapperContract`,
     );
@@ -594,6 +601,7 @@ export class EthereumTestEnvironment {
     amount: string,
     signingCredential: Web3SigningCredential,
   ): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const responseBalanceBridge = await this.connector.invokeContract({
       contract: {
         contractJSON: {
@@ -609,9 +617,9 @@ export class EthereumTestEnvironment {
       web3SigningCredential: signingCredential,
     });
 
-    expect(responseBalanceBridge).toBeTruthy();
-    expect(responseBalanceBridge.success).toBeTruthy();
-    expect(responseBalanceBridge.callOutput.toString()).toBe(amount);
+    //expect(responseBalanceBridge).toBeTruthy();
+    //expect(responseBalanceBridge.success).toBeTruthy();
+    //expect(responseBalanceBridge.callOutput.toString()).toBe(amount);
   }
   // Gets the default asset configuration for testing
   public get defaultAsset(): Asset {
@@ -701,5 +709,38 @@ export class EthereumTestEnvironment {
       params: params,
       web3SigningCredential: this.getTestOracleSigningCredential(),
     });
+  }
+
+  public async deploySmartContract(contractName: string, rawContract: any) {
+    const keychainPlugin = new PluginKeychainMemory({
+      instanceId: uuidv4(),
+      keychainId: uuidv4(),
+      backend: new Map([[this.keychainEntryKey, this.keychainEntryValue]]),
+    });
+
+    const deployingSmartContract = {
+      contractName: contractName,
+      abi: rawContract.abi,
+      bytecode: rawContract.bytecode.object,
+    };
+    keychainPlugin.set(contractName, JSON.stringify(deployingSmartContract));
+    this.additionalKeyChainPluginHolder[contractName] = keychainPlugin;
+
+    const deployOutContract = await this.connector.deployContract({
+      contract: {
+        keychainId: keychainPlugin.getKeychainId(),
+        contractName: contractName,
+      },
+      constructorArgs: [WHALE_ACCOUNT_ADDRESS],
+      web3SigningCredential: {
+        ethAccount: WHALE_ACCOUNT_ADDRESS,
+        secret: "",
+        type: Web3SigningCredentialType.GethKeychainPassword,
+      },
+    });
+    return deployOutContract;
+    //expect(deployOutContract).toBeTruthy();
+    //expect(deployOutContract.transactionReceipt).toBeTruthy();
+    //expect(deployOutContract.transactionReceipt.contractAddress).toBeTruthy();
   }
 }

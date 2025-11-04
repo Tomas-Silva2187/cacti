@@ -1,15 +1,24 @@
-export async function zoKratesPadding(data: string): Promise<string> {
-    // A GENERATED template to start byte sensitive function to adapt data to ZoKrates hash function
-    //TODO: Adapt this
-// Convert string to bytes (Uint8Array) using UTF-8 encoding
-  const encoder = new TextEncoder();
-  const bytes = encoder.encode(data);
+import { Logger } from "@hyperledger/cactus-common";
 
-  // Iterate from last byte to first
-  for (let i = bytes.length - 1; i >= 0; i--) {
-    const byte = bytes[i];
-    // Do something with each byte (for example, print it)
-    console.log(byte);
+export async function zoKratesPadding(
+  data: string,
+  log?: Logger,
+): Promise<string> {
+  /*const encoder = new TextEncoder();
+  for (const item of data) {
+    const bytes = encoder.encode(item);
+    log.info("bytes for element: ", bytes);
+  }*/
+
+  const bytes = [];
+  let n = Number(data);
+  while (n > 0) {
+    bytes.unshift(n & 0xff);
+    n = n >> 8;
   }
-    return data;
+  // Pad with zeros at the start to reach 64 bytes
+  while (bytes.length < 64) {
+    bytes.unshift(0);
+  }
+  return String.fromCharCode(...new Uint8Array(bytes));
 }

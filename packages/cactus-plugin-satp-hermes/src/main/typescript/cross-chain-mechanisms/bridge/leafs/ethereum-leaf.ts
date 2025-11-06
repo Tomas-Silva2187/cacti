@@ -90,6 +90,11 @@ interface EthereumResponse {
   callOutput: unknown;
 }
 
+export interface EthereumContractBuildElements {
+  contractABI: any;
+  contractBytecode: any;
+}
+
 /**
  * Represents an Ethereum leaf in a cross-chain bridge mechanism.
  *
@@ -154,6 +159,16 @@ export class EthereumLeaf
   private wrapperContractName: string | undefined;
 
   private readonly monitorService: MonitorService;
+
+  private deployedZeroKnowledgeReceipts: Record<
+    string,
+    Web3TransactionReceipt
+  > = {};
+
+  private deployedZeroKnowledgeContracts: Record<
+    string,
+    EthereumContractBuildElements
+  > = {};
 
   /**
    * Constructs a new instance of the `EthereumLeaf` class.
@@ -443,6 +458,80 @@ export class EthereumLeaf
         span.end();
       }
     });
+  }
+
+  public async deployZeroKnowledgeVerifierContract(
+    contractName: string,
+    contractABI: any,
+    contractBytecode: any,
+  ): Promise<void> {
+    const fnTag = `${EthereumLeaf.CLASS_NAME}#deployZKVerifierContract`;
+    const { span, context: ctx } = this.monitorService.startSpan(fnTag);
+    await context.with(ctx, async () => {
+      try {
+        this.log.debug(`${fnTag}, Deploying Zero Knowledge Verifier Contract`);
+
+        const deployOutZKContract = await this.connector.deployContract({
+          contract: {
+            contractJSON: {
+              contractName: contractName,
+              abi: contractABI,
+              bytecode: contractBytecode,
+            },
+          },
+          constructorArgs: [this.signingCredential.ethAccount],
+          web3SigningCredential: this.signingCredential,
+          gasConfig: this.gasConfig,
+        });
+
+        if (!deployOutZKContract.transactionReceipt) {
+          throw new TransactionReceiptError(
+            `${fnTag}, Zero Knowledge Verifier Contract deployment failed: ${safeStableStringify(deployOutZKContract)}`,
+          );
+        }
+
+        if (!deployOutZKContract.transactionReceipt.contractAddress) {
+          throw new ContractAddressError(
+            `${fnTag}, Zero Knowledge Verifier Contract address not found in deploy receipt: ${safeStableStringify(deployOutZKContract.transactionReceipt)}`,
+          );
+        }
+
+        this.log.debug(
+          `${fnTag}, Zero Knowledge Verifier Contract deployed receipt: ${safeStableStringify(deployOutZKContract.transactionReceipt)}`,
+        );
+
+        this.deployedZeroKnowledgeReceipts[contractName] =
+          deployOutZKContract.transactionReceipt;
+
+        this.deployedZeroKnowledgeContracts[contractName] = {
+          contractABI: contractABI,
+          contractBytecode: contractBytecode,
+        };
+      } catch (err) {
+        span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
+        span.recordException(err);
+        throw err;
+      } finally {
+        span.end();
+      }
+    });
+  }
+
+  public getDeployedZeroKnowledgeAddress(contractName: string): string {
+    const fnTag = `${EthereumLeaf.CLASS_NAME}#getDeployedZeroKnowledgeAddress`;
+
+    this.log.debug(
+      `${fnTag}, Getting Deployed Zero Knowledge Address for contract: ${contractName}`,
+    );
+
+    const receipt = this.deployedZeroKnowledgeReceipts[contractName];
+    if (!receipt || !receipt.contractAddress) {
+      throw new ContractAddressError(
+        `${fnTag}, Contract address not found for contract: ${contractName}`,
+      );
+    }
+
+    return receipt.contractAddress;
   }
 
   /**
@@ -841,6 +930,64 @@ export class EthereumLeaf
         })) as EthereumResponse;
         if (!response.success) {
           this.log.debug(response);
+          throw new TransactionError(fnTag);
+        }
+        return {
+          transactionId: response.out.transactionReceipt.transactionHash ?? "",
+          transactionReceipt:
+            safeStableStringify(response.out.transactionReceipt) ?? "",
+        };
+      } catch (err) {
+        span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
+        span.recordException(err);
+        throw err;
+      } finally {
+        span.end();
+      }
+    });
+  }
+
+  public async verifyZeroKnowledgeProof(
+    contractName: string,
+    inputs: any[],
+  ): Promise<TransactionResponse> {
+    const fnTag = `${EthereumLeaf.CLASS_NAME}}#verifyZeroKnowledgeProof`;
+    const { span, context: ctx } = this.monitorService.startSpan(fnTag);
+    return context.with(ctx, async () => {
+      try {
+        this.log.debug(
+          `${fnTag}, Verifying Zero Knowledge Proof: ${contractName}`,
+        );
+
+        if (!this.deployedZeroKnowledgeReceipts[contractName].contractAddress) {
+          throw new Error(`${fnTag}, Zero Knowledge Proof not deployed`);
+        }
+
+        this.log.info(inputs);
+        this.log.info(
+          this.deployedZeroKnowledgeContracts[contractName].contractABI,
+        );
+
+        const response = (await this.connector.invokeContract({
+          contract: {
+            contractJSON: {
+              contractName: contractName,
+              abi: this.deployedZeroKnowledgeContracts[contractName]
+                .contractABI,
+              bytecode:
+                this.deployedZeroKnowledgeContracts[contractName]
+                  .contractBytecode.object,
+            },
+            contractAddress:
+              this.deployedZeroKnowledgeReceipts[contractName].contractAddress,
+          },
+          invocationType: EthContractInvocationType.Send,
+          methodName: "verifyTx",
+          params: inputs,
+          web3SigningCredential: this.signingCredential,
+          gasConfig: this.gasConfig,
+        })) as EthereumResponse;
+        if (!response.success) {
           throw new TransactionError(fnTag);
         }
         return {

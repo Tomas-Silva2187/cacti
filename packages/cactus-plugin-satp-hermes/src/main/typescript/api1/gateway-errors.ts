@@ -1,7 +1,7 @@
-import { asError } from "@hyperledger/cactus-common";
-import { RuntimeError } from "run-time-error-cjs";
+//import { asError } from "@hyperledger/cactus-common";
+//import { RuntimeError } from "run-time-error-cjs";
 import { Error as GatewayErrorType } from "../generated/proto/cacti/satp/v02/common/message_pb";
-export class GatewayError extends RuntimeError {
+export class GatewayError {
   protected errorType = GatewayErrorType.UNSPECIFIED;
   constructor(
     public message: string,
@@ -11,8 +11,8 @@ export class GatewayError extends RuntimeError {
     public traceID?: string,
     public trace?: string,
   ) {
-    super(message, asError(cause));
-    this.name = this.constructor.name;
+    //super(message, asError(cause));
+    //this.name = this.constructor.name;
     Object.setPrototypeOf(this, new.target.prototype); // make sure prototype chain is set to error
   }
 

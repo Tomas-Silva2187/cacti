@@ -1,7 +1,7 @@
-import { asError } from "@hyperledger/cactus-common";
-import { RuntimeError } from "run-time-error-cjs";
+//import { asError } from "@hyperledger/cactus-common";
+//import { RuntimeError } from "run-time-error-cjs";
 import { Error as SATPErrorType } from "../../generated/proto/cacti/satp/v02/common/message_pb";
-export class SATPInternalError extends RuntimeError {
+export class SATPInternalError {
   protected errorType = SATPErrorType.UNSPECIFIED;
   constructor(
     public message: string,
@@ -11,8 +11,8 @@ export class SATPInternalError extends RuntimeError {
     public traceID?: string,
     public trace?: string,
   ) {
-    super(message, asError(cause));
-    this.name = this.constructor.name;
+    //super(message, asError(cause));
+    //this.name = this.constructor.name;
     Object.setPrototypeOf(this, new.target.prototype); // make sure prototype chain is set to error
   }
 

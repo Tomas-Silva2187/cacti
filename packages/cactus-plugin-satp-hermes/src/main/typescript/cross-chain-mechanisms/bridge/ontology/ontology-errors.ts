@@ -1,7 +1,7 @@
-import { asError } from "@hyperledger/cactus-common";
-import { RuntimeError } from "run-time-error-cjs";
+//import { asError } from "@hyperledger/cactus-common";
+//import { RuntimeError } from "run-time-error-cjs";
 
-export class OntologyInternalError extends RuntimeError {
+export class OntologyInternalError {
   constructor(
     public message: string,
     public cause: string | Error | null,
@@ -10,8 +10,8 @@ export class OntologyInternalError extends RuntimeError {
     public traceID?: string,
     public trace?: string,
   ) {
-    super(message, asError(cause));
-    this.name = this.constructor.name;
+    //super(message, asError(cause));
+    //this.name = this.constructor.name;
     Object.setPrototypeOf(this, new.target.prototype); // make sure prototype chain is set to error
     //this.stack = trace || new Error().stack;
   }

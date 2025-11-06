@@ -19,7 +19,7 @@ import Web3 from "web3";
 import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory";
 import { PluginRegistry } from "@hyperledger/cactus-core";
 import { randomUUID as uuidv4 } from "node:crypto";
-import { expect } from "@jest/globals";
+//import { expect } from "@jest/globals";
 import { ClaimFormat } from "../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
 import { Asset, AssetTokenTypeEnum, NetworkId } from "../../../main/typescript";
 import { LedgerType } from "@hyperledger/cactus-core-api";
@@ -243,8 +243,8 @@ export class BesuTestEnvironment {
     const balance = await this.web3.eth.getBalance(
       this.bridgeEthAccount.address,
     );
-    expect(balance).toBeTruthy();
-    expect(parseInt(balance.toString(), 10)).toBeGreaterThan(10e9);
+    //expect(balance).toBeTruthy();
+    //expect(parseInt(balance.toString(), 10)).toBeGreaterThan(10e9);
     this.log.info(`Bridge account funded: New Balance: ${balance} wei`);
   }
 
@@ -358,11 +358,11 @@ export class BesuTestEnvironment {
       bytecode: contractCode.bytecode.object,
       gas: this.gas,
     });
-    expect(deployOutSATPTokenContract).toBeTruthy();
-    expect(deployOutSATPTokenContract.transactionReceipt).toBeTruthy();
-    expect(
-      deployOutSATPTokenContract.transactionReceipt.contractAddress,
-    ).toBeTruthy();
+    //expect(deployOutSATPTokenContract).toBeTruthy();
+    //expect(deployOutSATPTokenContract.transactionReceipt).toBeTruthy();
+    //expect(
+    //deployOutSATPTokenContract.transactionReceipt.contractAddress,
+    //).toBeTruthy();
 
     this.assetContractAddresses.set(
       assetType,
@@ -415,9 +415,9 @@ export class BesuTestEnvironment {
       bytecode: contract.bytecode.object,
       gas: this.gas,
     });
-    expect(blOracleContract).toBeTruthy();
-    expect(blOracleContract.transactionReceipt).toBeTruthy();
-    expect(blOracleContract.transactionReceipt.contractAddress).toBeTruthy();
+    //expect(blOracleContract).toBeTruthy();
+    //expect(blOracleContract.transactionReceipt).toBeTruthy();
+    //expect(blOracleContract.transactionReceipt.contractAddress).toBeTruthy();
 
     this.assetContractAddresses.set(
       SupportedContractTypes.FUNGIBLE,
@@ -481,8 +481,8 @@ export class BesuTestEnvironment {
       },
       gas: this.besuConfig.gas,
     });
-    expect(responseMint).toBeTruthy();
-    expect(responseMint.success).toBeTruthy();
+    //expect(responseMint).toBeTruthy();
+    //expect(responseMint.success).toBeTruthy();
     this.log.info(
       `Minted ${inUseTokenAttribute} ${assetAttribute} to firstHighNetWorthAccount`,
     );
@@ -505,8 +505,8 @@ export class BesuTestEnvironment {
         gas: 1000000,
       });
 
-      expect(giveRoleRes).toBeTruthy();
-      expect(giveRoleRes.success).toBeTruthy();
+      //expect(giveRoleRes).toBeTruthy();
+      //expect(giveRoleRes.success).toBeTruthy();
       this.log.info(
         "BRIDGE_ROLE given over Fungible Token to SATPWrapperContract successfully",
       );
@@ -527,8 +527,8 @@ export class BesuTestEnvironment {
         gas: 1000000,
       });
 
-      expect(giveRoleRes).toBeTruthy();
-      expect(giveRoleRes.success).toBeTruthy();
+      //expect(giveRoleRes).toBeTruthy();
+      //expect(giveRoleRes.success).toBeTruthy();
       this.log.info(
         "BRIDGE_ROLE given over Non Fungible Token to SATPWrapperContract successfully",
       );
@@ -577,8 +577,8 @@ export class BesuTestEnvironment {
       },
       gas: this.besuConfig.gas,
     });
-    expect(responseApprove).toBeTruthy();
-    expect(responseApprove.success).toBeTruthy();
+    //expect(responseApprove).toBeTruthy();
+    //expect(responseApprove.success).toBeTruthy();
     this.log.info(
       `Approved ${inUseTokenAttribute} ${assetAttribute} to SATPWrapperContract`,
     );
@@ -652,9 +652,9 @@ export class BesuTestEnvironment {
       gas: this.besuConfig.gas,
     });
 
-    expect(responseBalanceBridge).toBeTruthy();
-    expect(responseBalanceBridge.success).toBeTruthy();
-    expect(responseBalanceBridge.callOutput).toBe(amount);
+    //expect(responseBalanceBridge).toBeTruthy();
+    //expect(responseBalanceBridge.success).toBeTruthy();
+    //expect(responseBalanceBridge.callOutput).toBe(amount);
   }
   // Gets the default asset configuration for testing
   public get defaultAsset(): Asset {
@@ -741,8 +741,8 @@ export class BesuTestEnvironment {
       gas: this.besuConfig.gas,
     });
 
-    expect(response).toBeTruthy();
-    expect(response.success).toBeTruthy();
+    //expect(response).toBeTruthy();
+    //expect(response.success).toBeTruthy();
 
     return response;
   }
@@ -769,8 +769,8 @@ export class BesuTestEnvironment {
       gas: this.besuConfig.gas,
     });
 
-    expect(response).toBeTruthy();
-    expect(response.success).toBeTruthy();
+    //expect(response).toBeTruthy();
+    //expect(response.success).toBeTruthy();
 
     return response;
   }

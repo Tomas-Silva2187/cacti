@@ -207,7 +207,7 @@ export class EthereumTestEnvironment {
     this.connectorOptions = {
       instanceId: uuidv4(),
       rpcApiWsHost,
-      pluginRegistry,
+      pluginRegistry: pluginRegistry,
       logLevel,
     };
 
@@ -488,6 +488,11 @@ export class EthereumTestEnvironment {
     });
     //expect(responseMint).toBeTruthy();
     //expect(responseMint.success).toBeTruthy();
+    if (!responseMint.success) {
+      throw new Error(
+        `Minting ${inUseTokenAttribute} ${assetAttribute} failed`,
+      );
+    }
     this.log.info(
       `Minted ${inUseTokenAttribute} ${assetAttribute} to firstHighNetWorthAccount`,
     );
@@ -711,7 +716,11 @@ export class EthereumTestEnvironment {
     });
   }
 
-  public async deploySmartContract(contractName: string, rawContract: any) {
+  public async deploySmartContract(
+    contractName: string,
+    contractABI: any,
+    contractBytecode: any,
+  ) {
     const keychainPlugin = new PluginKeychainMemory({
       instanceId: uuidv4(),
       keychainId: uuidv4(),
@@ -720,11 +729,27 @@ export class EthereumTestEnvironment {
 
     const deployingSmartContract = {
       contractName: contractName,
-      abi: rawContract.abi,
-      bytecode: rawContract.bytecode.object,
+      abi: contractABI,
+      bytecode: contractBytecode,
     };
     keychainPlugin.set(contractName, JSON.stringify(deployingSmartContract));
     this.additionalKeyChainPluginHolder[contractName] = keychainPlugin;
+    const rpcApiWsHost = await this.ledger.getRpcApiWebSocketHost();
+    const pluginRegistry = new PluginRegistry({
+      plugins: [
+        this.keychainPluginFungible,
+        this.keychainPluginNonFungible,
+        this.keychainPluginWrapper,
+        keychainPlugin,
+      ],
+    });
+    this.connectorOptions = {
+      instanceId: uuidv4(),
+      rpcApiWsHost,
+      pluginRegistry: pluginRegistry,
+    };
+
+    this.connector = new PluginLedgerConnectorEthereum(this.connectorOptions);
 
     const deployOutContract = await this.connector.deployContract({
       contract: {
@@ -738,6 +763,7 @@ export class EthereumTestEnvironment {
         type: Web3SigningCredentialType.GethKeychainPassword,
       },
     });
+    this.log.debug(deployOutContract);
     return deployOutContract;
     //expect(deployOutContract).toBeTruthy();
     //expect(deployOutContract.transactionReceipt).toBeTruthy();

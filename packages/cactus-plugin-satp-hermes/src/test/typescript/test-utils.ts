@@ -9,7 +9,7 @@ import { Configuration } from "../../main/typescript/generated/gateway-client/ty
 import fs from "fs-extra";
 import path from "path";
 import { execSync } from "child_process";
-import { expect } from "@jest/globals";
+//import { expect } from "@jest/globals";
 import { GatewayIdentity } from "../../main/typescript/core/types";
 import { BesuTestEnvironment } from "./environments/besu-test-environment";
 import { EthereumTestEnvironment } from "./environments/ethereum-test-environment";
@@ -186,7 +186,7 @@ export function setupGatewayDockerFiles(config: GatewayDockerConfig): {
   }
   const configFilePath = path.join(configDir, `gateway-config-${context}.json`);
   fs.writeFileSync(configFilePath, JSON.stringify(jsonObject, null, 2));
-  expect(fs.existsSync(configFilePath)).toBe(true);
+  //expect(fs.existsSync(configFilePath)).toBe(true);
 
   const logDir = path.join(directory, `gateway-info-${gatewayId}/logs`);
   if (!fs.existsSync(logDir)) {

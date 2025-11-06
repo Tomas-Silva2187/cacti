@@ -1,17 +1,26 @@
 import { ZeroKnowledgeHandler } from "../../../../main/typescript/cross-chain-mechanisms/bridge/zero-knowledge/ZeroKnowledgeHandler";
 //import * as fs from "fs";
 import * as path from "path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeAll } from "vitest";
 import {
   CompilationArtifacts,
   ComputationResult,
+  Proof,
   SetupKeypair,
 } from "zokrates-js";
 import { EthereumTestEnvironment } from "../../test-utils";
 import { SupportedContractTypes as SupportedEthereumContractTypes } from "../../environments/ethereum-test-environment";
-import { ClaimFormat } from "../../../../main/typescript";
+import {
+  ClaimFormat,
+  TokenType,
+} from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
 import { LoggerProvider, LogLevelDesc } from "@hyperledger/cactus-common/";
 import solc from "solc";
+import { OntologyManager } from "../../../../main/typescript/cross-chain-mechanisms/bridge/ontology/ontology-manager";
+import { MonitorService } from "../../../../main/typescript/services/monitoring/monitor";
+import { EthereumLeaf } from "../../../../main/typescript/cross-chain-mechanisms/bridge/leafs/ethereum-leaf";
+
+const TIMEOUT = 900000; // 15 minutes
 describe("ZeroKnowledgeHandler basics", () => {
   const zkcircuitPath = path.join(__dirname, "../../../zkcircuits");
   let handler: ZeroKnowledgeHandler;
@@ -94,94 +103,167 @@ describe("ZeroKnowledgeHandler basics", () => {
   });
 });
 
-describe("ZeroKnowledgeHandler Proof Generation and Verification", async () => {
-  const zkcircuitPath = path.join(__dirname, "../../../zkcircuits");
-  let handler: ZeroKnowledgeHandler;
-  let compiledCircuit: CompilationArtifacts;
-  let witness: ComputationResult;
-  let keypair: SetupKeypair;
-  let ethereumEnv: EthereumTestEnvironment;
-  let verificationSmartContract: string;
-  const logLevel: LogLevelDesc = "DEBUG";
-  const log = LoggerProvider.getOrCreate({
-    level: logLevel,
-    label: "SATP - Hermes",
-  });
-  describe("Generate and Deploy Proof On-Chain", async () => {
-    beforeAll(async () => {
-      handler = new ZeroKnowledgeHandler(
-        {
-          zkcircuitPath,
-        },
-        log,
-      );
-      expect(handler).toBeDefined();
-      await handler.initializeZoKrates();
-      log.info("Zero Knowledge Handler initialized successfully");
-      {
-        const erc20TokenContract = "SATPContract";
-        const erc721TokenContract = "SATPNonFungibleContract";
-        ethereumEnv = await EthereumTestEnvironment.setupTestEnvironment(
+describe(
+  "ZeroKnowledgeHandler Proof Generation and Verification",
+  async () => {
+    const zkcircuitPath = path.join(__dirname, "../../../zkcircuits");
+    let handler: ZeroKnowledgeHandler;
+    let compiledCircuit: CompilationArtifacts;
+    let witness: ComputationResult;
+    let keypair: SetupKeypair;
+    let proof: Proof;
+    let ethereumEnv: EthereumTestEnvironment;
+    let ethereumLeaf: EthereumLeaf;
+    let verificationSmartContract: string;
+    let rawContract: any;
+    let ontologyManager: OntologyManager;
+    let monitorService: MonitorService;
+    const logLevel: LogLevelDesc = "DEBUG";
+    const log = LoggerProvider.getOrCreate({
+      level: logLevel,
+      label: "SATP - Hermes",
+    });
+    describe(
+      "Generate and Deploy Proof On-Chain",
+      async () => {
+        beforeAll(async () => {
+          handler = new ZeroKnowledgeHandler(
+            {
+              zkcircuitPath,
+            },
+            log,
+          );
+          expect(handler).toBeDefined();
+          await handler.initializeZoKrates();
+          log.info("Zero Knowledge Handler initialized successfully");
           {
-            logLevel,
-          },
-          [
-            {
-              assetType: SupportedEthereumContractTypes.FUNGIBLE,
-              contractName: erc20TokenContract,
-            },
-            {
-              assetType: SupportedEthereumContractTypes.NONFUNGIBLE,
-              contractName: erc721TokenContract,
-            },
-          ],
-        );
-        log.info("Ethereum Ledger started successfully");
-        await ethereumEnv.deployAndSetupContracts(ClaimFormat.BUNGEE);
-      }
-    });
-    it("should compile and generate the cryptographic elements", async () => {
-      compiledCircuit = await handler.compileCircuit("c1.zok");
-      expect(compiledCircuit).toBeDefined();
-      witness = await handler.computeWitness(compiledCircuit, ["2", "4"]);
-      expect(witness).toBeDefined();
-      keypair = (await handler.generateProofKeyPair(
-        compiledCircuit,
-      )) as SetupKeypair;
-      expect(keypair).toBeDefined();
-      verificationSmartContract =
-        await handler.generateProofSmartContract(keypair);
-      expect(verificationSmartContract).toBeDefined();
-    });
+            const erc20TokenContract = "SATPContract";
+            const erc721TokenContract = "SATPNonFungibleContract";
+            ethereumEnv = await EthereumTestEnvironment.setupTestEnvironment(
+              {
+                logLevel,
+              },
+              [
+                {
+                  assetType: SupportedEthereumContractTypes.FUNGIBLE,
+                  contractName: erc20TokenContract,
+                },
+                {
+                  assetType: SupportedEthereumContractTypes.NONFUNGIBLE,
+                  contractName: erc721TokenContract,
+                },
+              ],
+            );
+            await ethereumEnv.deployAndSetupContracts(ClaimFormat.BUNGEE);
+            log.info("Ethereum Ledger started successfully");
 
-    it("should compile the smart contract code", async () => {
-      const contractSetup = {
-        language: "Solidity",
-        sources: {
-          "Verification.sol": {
-            content: verificationSmartContract,
+            monitorService = MonitorService.createOrGetMonitorService({
+              enabled: false,
+            });
+            monitorService.init();
+
+            {
+              const ontologiesPath = path.join(
+                __dirname,
+                "../../../ontologies",
+              );
+
+              ontologyManager = new OntologyManager(
+                {
+                  logLevel,
+                  ontologiesPath: ontologiesPath,
+                },
+                monitorService,
+              );
+            }
+          }
+        }, TIMEOUT);
+        it(
+          "should compile and generate the cryptographic elements",
+          async () => {
+            compiledCircuit = await handler.compileCircuit("c1.zok");
+            expect(compiledCircuit).toBeDefined();
+            witness = await handler.computeWitness(compiledCircuit, ["2", "4"]);
+            expect(witness).toBeDefined();
+            keypair = (await handler.generateProofKeyPair(
+              compiledCircuit,
+            )) as SetupKeypair;
+            expect(keypair).toBeDefined();
+            verificationSmartContract =
+              await handler.generateProofSmartContract(keypair);
+            expect(verificationSmartContract).toBeDefined();
+            proof = await handler.generateProof(
+              compiledCircuit,
+              witness,
+              keypair,
+            );
+            expect(proof).toBeDefined();
           },
-        },
-        settings: {
-          outputSelection: {
-            "*": {
-              "*": ["*"],
-            },
+          TIMEOUT,
+        );
+
+        it(
+          "should compile the smart contract",
+          async () => {
+            const contractSetup = {
+              language: "Solidity",
+              sources: {
+                "Verification.sol": {
+                  content: verificationSmartContract,
+                },
+              },
+              settings: {
+                outputSelection: {
+                  "*": {
+                    "*": ["*"],
+                  },
+                },
+              },
+            };
+
+            rawContract = JSON.parse(
+              solc.compile(JSON.stringify(contractSetup)),
+            );
+            expect(rawContract).toBeDefined();
           },
-        },
-      };
-      const rawContract = JSON.parse(
-        solc.compile(JSON.stringify(contractSetup)),
-      );
-      expect(rawContract).toBeDefined();
-      const contractAddress = ethereumEnv.deploySmartContract(
-        "ZKVerification",
-        rawContract,
-      );
-      expect(contractAddress).toBeDefined();
-    });
-  });
-});
+          TIMEOUT,
+        );
+
+        it("should deploy the smart contract on Ethereum", async () => {
+          //log.debug(rawContract.contracts["Verification.sol"].Verifier.abi);
+          ethereumLeaf = new EthereumLeaf(
+            ethereumEnv.createEthereumLeafConfig(ontologyManager, "DEBUG"),
+            ontologyManager,
+            monitorService,
+          );
+          expect(ethereumLeaf).toBeDefined();
+
+          await ethereumLeaf.deployZeroKnowledgeVerifierContract(
+            "ZKVerification",
+            rawContract.contracts["Verification.sol"].Verifier.abi,
+            rawContract.contracts["Verification.sol"].Verifier.evm.bytecode
+              .object,
+          );
+
+          expect(
+            ethereumLeaf.getDeployedZeroKnowledgeAddress("ZKVerification"),
+          ).toBeDefined();
+        });
+
+        it("should verify the proof on-chain", async () => {
+          const transactionResponse =
+            await ethereumLeaf.verifyZeroKnowledgeProof("ZKVerification", [
+              proof.proof,
+              proof.inputs,
+            ]);
+          expect(transactionResponse.transactionReceipt).toBeDefined();
+        });
+      },
+      TIMEOUT,
+    );
+  },
+  TIMEOUT,
+);
 
 /*describe("Zero Knowledge Cryptographic Operations", () => {
   const zkcircuitPath = path.join(__dirname, "../../../zkcircuits");

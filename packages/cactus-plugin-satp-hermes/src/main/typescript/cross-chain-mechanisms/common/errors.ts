@@ -1,8 +1,8 @@
-import { asError } from "@hyperledger/cactus-common";
-import { RuntimeError } from "run-time-error-cjs";
+//import { asError } from "@hyperledger/cactus-common";
+//import { RuntimeError } from "run-time-error-cjs";
 import { OracleTaskModeEnum, OracleTaskTypeEnum } from "../../public-api";
 
-export class BridgeInternalError extends RuntimeError {
+export class BridgeInternalError {
   constructor(
     public message: string,
     public cause: string | Error | null,
@@ -11,8 +11,8 @@ export class BridgeInternalError extends RuntimeError {
     public traceID?: string,
     public trace?: string,
   ) {
-    super(message, asError(cause));
-    this.name = this.constructor.name;
+    //super(message, asError(cause));
+    //this.name = this.constructor.name;
     Object.setPrototypeOf(this, new.target.prototype); // make sure prototype chain is set to error
     //this.stack = trace || new Error().stack;
   }

@@ -8,7 +8,7 @@ import execa from "execa";
 import tar from "tar-stream";
 import fs from "fs-extra";
 import pRetry from "p-retry";
-import { RuntimeError } from "run-time-error-cjs";
+//import { RuntimeError } from "run-time-error-cjs";
 import { Streams } from "../common/streams";
 import {
   Checks,
@@ -105,7 +105,7 @@ export class Containers {
       return response;
     } catch (ex) {
       log.error("Failed to get diagnostics of Docker daemon", ex);
-      throw new RuntimeError("Failed to get diagnostics of Docker daemon", ex);
+      throw new Error("Failed to get diagnostics of Docker daemon", ex);
     }
   }
   /**
@@ -345,11 +345,11 @@ export class Containers {
           clearInterval(timeoutIntervalId);
           const errorMessage = `Docker Engine API Exec Start Failed:`;
           log.error(errorMessage, err);
-          return reject(new RuntimeError(errorMessage, err));
+          return reject(new Error(errorMessage, err));
         }
         if (!stream) {
           const msg = `${fnTag} container engine returned falsy stream object, cannot continue.`;
-          return reject(new RuntimeError(msg));
+          return reject(new Error(msg));
         }
         log.debug(`Obtained output stream of Exec Start OK`);
         let output = "";

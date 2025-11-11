@@ -22,7 +22,11 @@ import {
   Contains,
 } from "class-validator";
 
-import { type GatewayIdentity, type ShutdownHook } from "./core/types";
+import {
+  SupportedSigningAlgorithms,
+  type GatewayIdentity,
+  type ShutdownHook,
+} from "./core/types";
 import {
   GatewayOrchestrator,
   type IGatewayOrchestratorOptions,
@@ -453,7 +457,10 @@ export class SATPGateway implements IPluginWebService, ICactusPlugin {
     if (!pluginOptions.gid) {
       pluginOptions.gid = {
         id: id,
-        pubKey: bufArray2HexStr(pluginOptions.keyPair.publicKey),
+        identificationCredential: {
+          signingAlgorithm: SupportedSigningAlgorithms.SECP256K1,
+          pubKey: bufArray2HexStr(pluginOptions.keyPair.publicKey),
+        },
         name: id,
         version: [
           {
@@ -477,10 +484,11 @@ export class SATPGateway implements IPluginWebService, ICactusPlugin {
         pluginOptions.gid.name = id;
       }
 
-      if (!pluginOptions.gid.pubKey) {
-        pluginOptions.gid.pubKey = bufArray2HexStr(
-          pluginOptions.keyPair.publicKey,
-        );
+      if (!pluginOptions.gid.identificationCredential) {
+        pluginOptions.gid.identificationCredential = {
+          signingAlgorithm: SupportedSigningAlgorithms.SECP256K1,
+          pubKey: bufArray2HexStr(pluginOptions.keyPair.publicKey),
+        };
       }
 
       if (!pluginOptions.gid.version) {

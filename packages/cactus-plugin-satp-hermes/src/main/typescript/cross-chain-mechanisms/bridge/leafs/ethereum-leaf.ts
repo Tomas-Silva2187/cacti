@@ -1,4 +1,4 @@
-import { INetworkOptions, TransactionResponse } from "../bridge-types";
+import { IEthereumLeafOptions, TransactionResponse } from "../bridge-types";
 import {
   EthContractInvocationType,
   GasTransactionConfig,
@@ -7,7 +7,6 @@ import {
   isWeb3SigningCredentialNone,
   PluginLedgerConnectorEthereum,
   RunTransactionResponse,
-  Web3SigningCredential,
   Web3SigningCredentialCactiKeychainRef,
   Web3SigningCredentialGethKeychainPassword,
   Web3SigningCredentialPrivateKeyHex,
@@ -34,7 +33,7 @@ import { OntologyManager } from "../ontology/ontology-manager";
 import { Web3TransactionReceipt } from "@hyperledger/cactus-plugin-ledger-connector-ethereum";
 import { BridgeLeafFungible } from "../bridge-leaf-fungible";
 import { BridgeLeafNonFungible } from "../bridge-leaf-non-fungible";
-import { BridgeLeaf, IBridgeLeafOptions } from "../bridge-leaf";
+import { BridgeLeaf } from "../bridge-leaf";
 import {
   ApproveAddressError,
   BungeeError,
@@ -60,20 +59,6 @@ import { getEnumKeyByValue } from "../../../services/utils";
 import { getUint8Key } from "./leafs-utils";
 import { MonitorService } from "../../../services/monitoring/monitor";
 import { context, SpanStatusCode } from "@opentelemetry/api";
-
-export interface IEthereumLeafNeworkOptions extends INetworkOptions {
-  signingCredential: Web3SigningCredential;
-  connectorOptions: Partial<IPluginLedgerConnectorEthereumOptions>;
-  wrapperContractName?: string;
-  wrapperContractAddress?: string;
-  gasConfig?: GasTransactionConfig;
-  leafId?: string;
-  keyPair?: ISignerKeyPair;
-  claimFormats?: ClaimFormat[];
-}
-export interface IEthereumLeafOptions
-  extends IBridgeLeafOptions,
-    IEthereumLeafNeworkOptions {}
 
 /**
  * Represents the response from an Ethereum transaction.

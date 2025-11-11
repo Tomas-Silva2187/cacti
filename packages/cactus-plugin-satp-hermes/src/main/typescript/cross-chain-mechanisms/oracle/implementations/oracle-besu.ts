@@ -19,6 +19,7 @@ import {
 import { ClaimFormat } from "../../../generated/proto/cacti/satp/v02/common/message_pb";
 import {
   BusinessLogicContract,
+  IBesuNetworkConfig,
   NetworkId,
   OracleOperation,
   OracleResponse,
@@ -26,7 +27,6 @@ import {
 
 import { getUint8Key } from "../../bridge/leafs/leafs-utils";
 import { v4 as uuidv4 } from "uuid";
-import { IBesuLeafNeworkOptions } from "../../bridge/leafs/besu-leaf";
 import {
   EthContractInvocationType,
   IPluginLedgerConnectorBesuOptions,
@@ -47,7 +47,7 @@ export interface IBesuOracleEntry extends IOracleEntryBase {
 
 export interface IOracleBesuOptions
   extends OracleAbstractOptions,
-    IBesuLeafNeworkOptions {}
+    IBesuNetworkConfig {}
 
 export class OracleBesu extends OracleAbstract {
   public static CLASS_NAME = "OracleBesu";
@@ -96,7 +96,7 @@ export class OracleBesu extends OracleAbstract {
     };
 
     this.id = this.options.leafId || this.createId(OracleBesu.CLASS_NAME);
-    this.keyPair = options.keyPair || Secp256k1Keys.generateKeyPairsBuffer();
+    this.keyPair = Secp256k1Keys.generateKeyPairsBuffer();
 
     this.claimFormats = options.claimFormats
       ? options.claimFormats.concat(ClaimFormat.DEFAULT)

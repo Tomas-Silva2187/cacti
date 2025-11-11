@@ -45,9 +45,18 @@ export type Address =
   | `https://${string}`
   | `${number}.${number}.${number}.${number}`;
 
+export enum SupportedSigningAlgorithms {
+  SECP256K1 = "SECP256K1",
+}
+
+export type IdentificationCredential = {
+  signingAlgorithm: SupportedSigningAlgorithms;
+  pubKey: string;
+};
+
 export type GatewayIdentity = {
   id: string;
-  pubKey?: string;
+  identificationCredential?: IdentificationCredential;
   name?: string;
   version: DraftVersions[];
   connectedDLTs?: NetworkId[];

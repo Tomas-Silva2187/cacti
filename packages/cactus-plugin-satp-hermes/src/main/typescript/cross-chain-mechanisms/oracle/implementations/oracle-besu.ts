@@ -96,7 +96,7 @@ export class OracleBesu extends OracleAbstract {
     };
 
     this.id = this.options.leafId || this.createId(OracleBesu.CLASS_NAME);
-    this.keyPair = Secp256k1Keys.generateKeyPairsBuffer();
+    this.keyPair = options.keyPair || Secp256k1Keys.generateKeyPairsBuffer();
 
     this.claimFormats = options.claimFormats
       ? options.claimFormats.concat(ClaimFormat.DEFAULT)

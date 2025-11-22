@@ -59,7 +59,10 @@ export function isGasConfig(obj: unknown, log: Logger) {
       "maxFeePerGas" in obj &&
       typeof objRecord.maxFeePerGas === "string" &&
       "maxPriorityFeePerGas" in obj &&
-      typeof objRecord.maxPriorityFeePerGas === "string")
+      typeof objRecord.maxPriorityFeePerGas === "string") ||
+    (Object.keys(objRecord).length === 1 &&
+      Object.keys(objRecord)[0] === "gasLimit" &&
+      typeof objRecord.gasLimit === "string")
   );
 }
 

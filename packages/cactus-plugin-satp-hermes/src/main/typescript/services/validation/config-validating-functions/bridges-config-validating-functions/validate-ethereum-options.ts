@@ -1,4 +1,5 @@
 import { Logger } from "@hyperledger/cactus-common";
+import { IPluginLedgerConnectorEthereumOptions } from "@hyperledger/cactus-plugin-ledger-connector-ethereum";
 
 export interface EthereumOptionsJSON {
   instanceId: string;
@@ -23,7 +24,7 @@ export function isEthereumOptionsJSON(
 }
 
 // Function to create IPluginLedgerConnectorEthereumOptions from EthereumOptionsJSON
-/*export function createEthereumOptions(
+export function createEthereumOptions(
   options: EthereumOptionsJSON,
 ): Partial<IPluginLedgerConnectorEthereumOptions> {
   if (!options) {
@@ -39,4 +40,4 @@ export function isEthereumOptionsJSON(
   };
 
   return ethereumOptions;
-}*/
+}

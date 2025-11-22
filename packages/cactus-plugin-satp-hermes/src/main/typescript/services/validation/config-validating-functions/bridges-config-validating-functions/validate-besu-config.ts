@@ -16,6 +16,7 @@ import {
 import { LedgerType } from "@hyperledger/cactus-core-api";
 import { IBesuNetworkConfig } from "../../../../cross-chain-mechanisms/bridge/bridge-types";
 import { NetworkId } from "../../../../public-api";
+import { isGasConfig } from "../validate-cc-config";
 
 export interface BesuGasConfig {
   gasLimit?: string;
@@ -97,23 +98,6 @@ function isWeb3SigningCredential(
     isWeb3SigningCredentialPrivateKeyHex(obj) ||
     isWeb3SigningCredentialNone(obj)
   );
-}
-
-function isGasConfig(obj: unknown): obj is BesuGasConfig {
-  if (typeof obj !== "object" || obj === null) {
-    return false;
-  }
-  const objRecord = obj as Record<string, unknown>;
-  if ("gasLimit" in objRecord) {
-    if (
-      typeof objRecord.gasLimit !== "string" &&
-      typeof objRecord.gasLimit !== "undefined"
-    ) {
-      return false;
-    }
-    return true;
-  }
-  return false;
 }
 
 export function isBesuNetworkId(obj: NetworkId) {

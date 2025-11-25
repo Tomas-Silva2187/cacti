@@ -1,0 +1,7 @@
+{
+  "name": "cacti-plugin-zk-provider",
+  "packageManager": "yarn@4.3.1",
+  "dependencies": {
+    "zokrates-js": "^1.1.9"
+  }
+}

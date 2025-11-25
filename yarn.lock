@@ -8523,7 +8523,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/cactus-common@npm:2.1.0, @hyperledger/cactus-common@workspace:packages/cactus-common":
+"@hyperledger/cactus-common@npm:2.1.0, @hyperledger/cactus-common@workspace:^, @hyperledger/cactus-common@workspace:packages/cactus-common":
   version: 0.0.0-use.local
   resolution: "@hyperledger/cactus-common@workspace:packages/cactus-common"
   dependencies:
@@ -23307,6 +23307,15 @@ __metadata:
   checksum: 10/7e7ca628511ab18c86eea1231834d2591de29a13ae771a7d9ab85be8c6e53e45c5a5b0d0d95d4a3274fc4f26c16956a98162e40c191c131204b5d5aa949660b5
   languageName: node
   linkType: hard
+
+"cacti-plugin-zk-provider@workspace:packages/cacti-plugin-zk-provider":
+  version: 0.0.0-use.local
+  resolution: "cacti-plugin-zk-provider@workspace:packages/cacti-plugin-zk-provider"
+  dependencies:
+    "@hyperledger/cactus-common": "workspace:^"
+    zokrates-js: "npm:^1.1.9"
+  languageName: unknown
+  linkType: soft
 
 "call-bind-apply-helpers@npm:^1.0.0, call-bind-apply-helpers@npm:^1.0.1, call-bind-apply-helpers@npm:^1.0.2":
   version: 1.0.2
@@ -59413,6 +59422,15 @@ __metadata:
   version: 4.1.11
   resolution: "zod@npm:4.1.11"
   checksum: 10/5a0f5697dbe86bf40934916d888cfe0ec6f1f767eb0b6f944ffd5573397c8a56ef7d2ebd0f889bfb44ceaf93edcddf021994633747a9a6b0dcbeb57bd0a67442
+  languageName: node
+  linkType: hard
+
+"zokrates-js@npm:^1.1.9":
+  version: 1.1.9
+  resolution: "zokrates-js@npm:1.1.9"
+  dependencies:
+    pako: "npm:^2.1.0"
+  checksum: 10/89c1e3a27172b61a8e746ca04df7320022ecc6459e5651d2f6b8d757953456c072fb44858590454a89872240b6a4f4d25536704eb843b9c5fccb64e69f2b3695
   languageName: node
   linkType: hard
 

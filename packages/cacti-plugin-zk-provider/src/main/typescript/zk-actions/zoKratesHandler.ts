@@ -14,17 +14,28 @@ import {
   Proof,
   initialize,
 } from "zokrates-js";
-import { ZoKratesInitializationError } from "./errors/zk-errors";
+import {
+  ZoKratesComputationError,
+  ZoKratesInitializationError,
+  ZoKratesProviderNotInitializedError,
+} from "./errors/zk-errors";
 
 export interface ZeroKnowledgeProviderOptions {
   // Library to use when computing zk steps
   backend: Backend;
-
   // Elliptic curve to use for zk operations
   curve: Curve;
-
   // Proof scheme to use
   scheme: Scheme;
+}
+
+export interface CircuitSetup {}
+export interface CircuitLoadSetup extends CircuitSetup {
+  circuitName: string;
+  circuitPath?: string;
+}
+export interface RawCircuitSetup extends CircuitSetup {
+  circuitSource: string;
 }
 
 export interface ZeroKnowledgeHandlerOptions {
@@ -81,28 +92,81 @@ export class ZeroKnowledgeHandler {
   }
 
   public async compileCircuit(
-    circuitName: string,
-    circuitPath?: string,
+    circuitSetup: CircuitSetup,
   ): Promise<CompilationArtifacts> {
-    const resolvedCircuitPath = path.resolve(
-      this.defaultCircuitPath || circuitPath || "",
-      circuitName,
-    );
-    const source = fs.readFileSync(resolvedCircuitPath).toString();
-    return this.provider!.compile(source);
+    const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#compileCircuit()`;
+    if (this.provider == undefined) {
+      throw new ZoKratesProviderNotInitializedError();
+    }
+    try {
+      if (
+        "circuitName" in circuitSetup &&
+        typeof circuitSetup.circuitName === "string"
+      ) {
+        let circuitPath;
+        const circuitLoadSetup = circuitSetup as CircuitLoadSetup;
+        if (circuitLoadSetup.circuitPath != undefined) {
+          circuitPath = path.resolve(
+            circuitLoadSetup.circuitPath,
+            circuitLoadSetup.circuitName,
+          );
+        } else if (this.defaultCircuitPath != undefined) {
+          circuitPath = path.resolve(
+            this.defaultCircuitPath,
+            circuitLoadSetup.circuitName,
+          );
+        } else {
+          throw new ZoKratesComputationError(
+            "No valid circuit path provided or set as default",
+            fnTag,
+          );
+        }
+        const source = fs.readFileSync(circuitPath).toString();
+        return this.provider.compile(source);
+      } else if (
+        "circuitSource" in circuitSetup &&
+        typeof circuitSetup.circuitSource === "string"
+      ) {
+        const rawCircuitSetup = circuitSetup as RawCircuitSetup;
+        return this.provider.compile(rawCircuitSetup.circuitSource);
+      } else {
+        throw new ZoKratesComputationError(
+          "Invalid circuit setup provided",
+          fnTag,
+        );
+      }
+    } catch (error) {
+      throw new ZoKratesComputationError(error.message, fnTag);
+    }
   }
 
   public async computeWitness(
     CompilationArtifacts: CompilationArtifacts,
     inputs: string[],
   ): Promise<ComputationResult> {
-    return this.provider!.computeWitness(CompilationArtifacts, inputs);
+    const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#computeWitness()`;
+    if (this.provider == undefined) {
+      throw new ZoKratesProviderNotInitializedError();
+    }
+    try {
+      return this.provider.computeWitness(CompilationArtifacts, inputs);
+    } catch (error) {
+      throw new ZoKratesComputationError(error.message, fnTag);
+    }
   }
 
   public async generateProofKeyPair(
     compiledArtifacts: CompilationArtifacts,
   ): Promise<SetupKeypair> {
-    return this.provider!.setup(compiledArtifacts.program);
+    const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#generateProofKeyPair()`;
+    if (this.provider == undefined) {
+      throw new ZoKratesProviderNotInitializedError();
+    }
+    try {
+      return this.provider.setup(compiledArtifacts.program);
+    } catch (error) {
+      throw new ZoKratesComputationError(error.message, fnTag);
+    }
   }
 
   public async generateProof(
@@ -110,17 +174,33 @@ export class ZeroKnowledgeHandler {
     witness: ComputationResult,
     keypair: SetupKeypair,
   ): Promise<Proof> {
-    return this.provider!.generateProof(
-      compiledArtifacts.program,
-      witness.witness,
-      keypair.pk,
-    );
+    const fntag = `${ZeroKnowledgeHandler.CLASS_NAME}#generateProof()`;
+    if (this.provider == undefined) {
+      throw new ZoKratesProviderNotInitializedError();
+    }
+    try {
+      return this.provider.generateProof(
+        compiledArtifacts.program,
+        witness.witness,
+        keypair.pk,
+      );
+    } catch (error) {
+      throw new ZoKratesComputationError(error.message, fntag);
+    }
   }
 
   public async verifyProof(
     proof: Proof,
     keypair: SetupKeypair,
   ): Promise<boolean> {
-    return this.provider!.verify(keypair.vk, proof);
+    const fntag = `${ZeroKnowledgeHandler.CLASS_NAME}#verifyProof()`;
+    if (this.provider == undefined) {
+      throw new ZoKratesProviderNotInitializedError();
+    }
+    try {
+      return this.provider.verify(keypair.vk, proof);
+    } catch (error) {
+      throw new ZoKratesComputationError(error.message, fntag);
+    }
   }
 }

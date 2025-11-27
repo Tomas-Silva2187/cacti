@@ -1,3 +1,8 @@
+import {
+  BlacklistedServiceError,
+  UnknownServiceError,
+} from "./errors/endpoint-errors";
+
 export interface Service {
   action: string;
   callElements: object;
@@ -19,6 +24,19 @@ export class BasicEndpoint {
     callElements: object,
   ): void {
     this.endpointServices[actionName] = { action, callElements };
+  }
+
+  public executeServiceCall(actionName: string, args: any[]): any {
+    if (this.blackListedServices.includes(actionName)) {
+      throw new BlacklistedServiceError(actionName);
+    } else if (!this.endpointServices[actionName]) {
+      throw new UnknownServiceError(actionName);
+    } else {
+      const answer = (this.serviceProvider as any)[
+        this.endpointServices[actionName].action
+      ](...args);
+      return answer;
+    }
   }
 }
 

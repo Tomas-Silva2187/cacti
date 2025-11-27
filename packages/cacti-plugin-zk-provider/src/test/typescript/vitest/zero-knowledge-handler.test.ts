@@ -26,7 +26,7 @@ describe("ZeroKnowledgeHandler", () => {
 
     it("should compile the zk circuit and generate cryptographic artifacts for it", async () => {
       compiledCircuit = await handler.compileCircuit({
-        circuitName: "c1.zok",
+        circuitName: "proveSquare.zok",
       } as CircuitLoadSetup);
       expect(compiledCircuit).toBeDefined();
       witness = await handler.computeWitness(compiledCircuit, ["2", "4"]);
@@ -57,52 +57,41 @@ describe("ZeroKnowledgeHandler", () => {
     let keypair2: any;
     it("should initialize two handlers with default options", async () => {
       handler1 = new ZeroKnowledgeHandler({
+        logLevel: "INFO",
         zkcircuitPath: path.join(__dirname, "../../zokrates"),
       } as ZeroKnowledgeHandlerOptions);
-
       handler2 = new ZeroKnowledgeHandler({
+        logLevel: "INFO",
         zkcircuitPath: path.join(__dirname, "../../zokrates"),
       } as ZeroKnowledgeHandlerOptions);
       await handler1.initializeZoKrates();
-
       await handler2.initializeZoKrates();
-
-      compiledCircuit = await handler1.compileCircuit("c1.zok");
+      compiledCircuit = await handler1.compileCircuit({
+        circuitName: "proveSquare.zok",
+      } as CircuitLoadSetup);
     });
 
     it("Handler should generate a valid proof and artifacts for another handler", async () => {
       witness1 = await handler1.computeWitness(compiledCircuit, ["2", "4"]);
-
       keypair1 = await handler1.generateProofKeyPair(compiledCircuit);
-
       const proof = await handler1.generateProof(
         compiledCircuit,
-
         witness1,
-
         keypair1,
       );
-
       const isValid = await handler2.verifyProof(proof, keypair1);
-
       expect(isValid).toBe(true);
     });
 
     it("should fail when artifacts do not match with their respective proof", async () => {
       witness2 = await handler2.computeWitness(compiledCircuit, ["3", "9"]);
-
       keypair2 = await handler2.generateProofKeyPair(compiledCircuit);
-
       const proof = await handler1.generateProof(
         compiledCircuit,
-
         witness1,
-
         keypair1,
       );
-
       const isValid = await handler2.verifyProof(proof, keypair2);
-
       expect(isValid).toBe(false);
     });
   });

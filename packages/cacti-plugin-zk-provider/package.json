@@ -2,6 +2,13 @@
   "name": "cacti-plugin-zk-provider",
   "packageManager": "yarn@4.3.1",
   "dependencies": {
+    "@hyperledger/cactus-common": "2.1.0",
     "zokrates-js": "^1.1.9"
+  },
+  "scripts": {
+    "build": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"ZeroKnowledgeHandler\""
+  },
+  "devDependencies": {
+    "vitest": "^4.0.14"
   }
 }

@@ -1,6 +1,6 @@
-import { LogLevelDesc } from "@hyperledger/cactus-common/dist/lib/main/typescript/log-level";
-import { Logger } from "@hyperledger/cactus-common/dist/lib/main/typescript/logging/logger";
-import { LoggerProvider } from "@hyperledger/cactus-common/dist/lib/main/typescript/logging/logger-provider";
+import { LogLevelDesc } from "@hyperledger/cactus-common";
+import { Logger } from "@hyperledger/cactus-common";
+import { LoggerProvider } from "@hyperledger/cactus-common";
 import path from "path";
 import fs from "fs";
 import {

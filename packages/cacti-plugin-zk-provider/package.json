@@ -3,12 +3,16 @@
   "packageManager": "yarn@4.3.1",
   "dependencies": {
     "@hyperledger/cactus-common": "2.1.0",
+    "express": "^5.2.1",
     "zokrates-js": "^1.1.9"
   },
   "scripts": {
-    "build": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"ZeroKnowledgeHandler\""
+    "zk-test": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"ZeroKnowledgeHandler\"",
+    "endpoint-test": "npx vitest run ./src/test/typescript/vitest/endpoint-setup.test.ts -t \"Endpoint Setup\"",
+    "zk-server-test": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"ZK Server Setup and Service Requests\""
   },
   "devDependencies": {
+    "@types/express": "^5",
     "vitest": "^4.0.14"
   }
 }

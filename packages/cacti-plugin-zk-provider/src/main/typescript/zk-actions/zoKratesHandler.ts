@@ -136,11 +136,12 @@ export class ZeroKnowledgeHandler {
         );
       }
     } catch (error) {
+      this.log.error(`${fnTag}: Error during circuit compilation: ${error}`);
       throw new ZoKratesComputationError(error.message, fnTag);
     }
   }
 
-  public async computeWitness(
+  public async safeComputeWitness(
     CompilationArtifacts: CompilationArtifacts,
     inputs: string[],
   ): Promise<ComputationResult> {
@@ -149,6 +150,15 @@ export class ZeroKnowledgeHandler {
       throw new ZoKratesProviderNotInitializedError();
     }
     try {
+      if (
+        CompilationArtifacts &&
+        typeof CompilationArtifacts.program === "object" &&
+        !(CompilationArtifacts.program instanceof Uint8Array)
+      ) {
+        CompilationArtifacts.program = this.uint8ArrayConverter(
+          CompilationArtifacts.program,
+        );
+      }
       return this.provider.computeWitness(CompilationArtifacts, inputs);
     } catch (error) {
       throw new ZoKratesComputationError(error.message, fnTag);
@@ -202,5 +212,12 @@ export class ZeroKnowledgeHandler {
     } catch (error) {
       throw new ZoKratesComputationError(error.message, fntag);
     }
+  }
+
+  private uint8ArrayConverter(programObj: any) {
+    const programArr = Object.keys(programObj)
+      .sort((a, b) => Number(a) - Number(b))
+      .map((k) => programObj[k]);
+    return new Uint8Array(programArr);
   }
 }

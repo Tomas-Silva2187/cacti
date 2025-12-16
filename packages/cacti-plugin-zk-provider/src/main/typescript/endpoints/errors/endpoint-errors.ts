@@ -34,3 +34,25 @@ export class UnknownServiceError extends EndpointError {
     );
   }
 }
+
+export class DuplicateServiceError extends EndpointError {
+  constructor(message: string, cause?: string | Error | null) {
+    super(
+      `Duplicate service ${message}`,
+      "DuplicateServiceError",
+      cause ?? null,
+      500,
+    );
+  }
+}
+
+export class OverwriteServiceError extends EndpointError {
+  constructor(message: string, cause?: string | Error | null) {
+    super(
+      `Overwrite service ${message}`,
+      "OverwriteServiceError",
+      cause ?? null,
+      500,
+    );
+  }
+}

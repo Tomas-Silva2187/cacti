@@ -1,0 +1,110 @@
+import * as path from "path";
+import { describe, expect, it } from "vitest";
+import {
+  CircuitLoadSetup,
+  ZeroKnowledgeHandler,
+  ZeroKnowledgeHandlerOptions,
+} from "../../../main/typescript/zk-actions/zoKratesHandler";
+import {
+  BasicEndpoint,
+  EndpointCallType,
+} from "../../../main/typescript/endpoints/standard-endpoints";
+import {
+  BlacklistedServiceError,
+  OverwriteServiceError,
+} from "../../../main/typescript/endpoints/errors/endpoint-errors";
+
+describe("Endpoint Setup", () => {
+  describe("Basic Endpoint Setup", async () => {
+    const zeroKnowledgeHandler = new ZeroKnowledgeHandler({
+      logLevel: "INFO",
+      zkcircuitPath: path.join(__dirname, "../../zokrates"),
+    } as ZeroKnowledgeHandlerOptions);
+    expect(zeroKnowledgeHandler).toBeDefined();
+    await zeroKnowledgeHandler.initializeZoKrates();
+    let basicEndpoint: BasicEndpoint;
+    it("should successfully setup a Basic Endpoint for ZK circuit compilation", async () => {
+      basicEndpoint = new BasicEndpoint(zeroKnowledgeHandler);
+      expect(basicEndpoint).toBeDefined();
+      basicEndpoint.setupEndpoint({
+        endpointService: {
+          serviceName: "compileCircuit",
+          action: "compileCircuit",
+          callElements: {},
+          endpointCallType: EndpointCallType.POST,
+        },
+      });
+    });
+
+    it("should successfully perform a compile circuit call", async () => {
+      const response = await basicEndpoint.executeServiceCall(
+        "compileCircuit",
+        [
+          {
+            circuitName: "proveSquare.zok",
+          } as CircuitLoadSetup,
+        ],
+      );
+      expect(response).toBeDefined();
+      expect(response).toHaveProperty("program");
+      expect(response).toHaveProperty("abi");
+    });
+  });
+
+  describe("Endpoint Setup Errors", async () => {
+    let basicEndpoint: BasicEndpoint;
+    let basicEndpoint2: BasicEndpoint;
+    const zeroKnowledgeHandler = new ZeroKnowledgeHandler({
+      logLevel: "INFO",
+      zkcircuitPath: path.join(__dirname, "../../zokrates"),
+    } as ZeroKnowledgeHandlerOptions);
+    expect(zeroKnowledgeHandler).toBeDefined();
+    await zeroKnowledgeHandler.initializeZoKrates();
+
+    it("should initialize two endpoints, and avoid endpoint overwrite", async () => {
+      basicEndpoint = new BasicEndpoint(zeroKnowledgeHandler);
+      expect(basicEndpoint).toBeDefined();
+      basicEndpoint.setupEndpoint({
+        endpointService: {
+          serviceName: "computeWitness",
+          action: "computeWitness",
+          callElements: {},
+          endpointCallType: EndpointCallType.POST,
+        },
+        blackListedServices: ["compileCircuit"],
+      });
+
+      expect(() => {
+        basicEndpoint.setupEndpoint({
+          endpointService: {
+            serviceName: "compileCircuit",
+            action: "compileCircuit",
+            callElements: {},
+            endpointCallType: EndpointCallType.POST,
+          },
+        });
+      }).toThrow(OverwriteServiceError);
+
+      basicEndpoint2 = new BasicEndpoint(zeroKnowledgeHandler);
+      expect(basicEndpoint2).toBeDefined();
+      basicEndpoint2.setupEndpoint({
+        endpointService: {
+          serviceName: "compileCircuit",
+          action: "compileCircuit",
+          callElements: {},
+          endpointCallType: EndpointCallType.POST,
+        },
+      });
+    });
+
+    it("should avoid blacklisted service call", async () => {
+      expect(() => {
+        basicEndpoint.executeServiceCall("compileCircuit", [
+          {
+            circuitName: "proveSquare.zok",
+          } as CircuitLoadSetup,
+        ]);
+      }).toThrow(BlacklistedServiceError);
+    });
+  });
+});

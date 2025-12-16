@@ -3,8 +3,6 @@ import {
   ZeroKnowledgeHandler,
   ZeroKnowledgeHandlerOptions,
 } from "../../../main/typescript/zk-actions/zoKratesHandler";
-
-//import * as fs from "fs";
 import * as path from "path";
 import { describe, expect, it } from "vitest";
 
@@ -29,7 +27,7 @@ describe("ZeroKnowledgeHandler", () => {
         circuitName: "proveSquare.zok",
       } as CircuitLoadSetup);
       expect(compiledCircuit).toBeDefined();
-      witness = await handler.computeWitness(compiledCircuit, ["2", "4"]);
+      witness = await handler.safeComputeWitness(compiledCircuit, ["2", "4"]);
       expect(witness).toBeDefined();
       keypair = await handler.generateProofKeyPair(compiledCircuit);
       expect(keypair).toBeDefined();
@@ -53,7 +51,6 @@ describe("ZeroKnowledgeHandler", () => {
     let compiledCircuit: any;
     let witness1: any;
     let keypair1: any;
-    let witness2: any;
     let keypair2: any;
     it("should initialize two handlers with default options", async () => {
       handler1 = new ZeroKnowledgeHandler({
@@ -72,7 +69,7 @@ describe("ZeroKnowledgeHandler", () => {
     });
 
     it("Handler should generate a valid proof and artifacts for another handler", async () => {
-      witness1 = await handler1.computeWitness(compiledCircuit, ["2", "4"]);
+      witness1 = await handler1.safeComputeWitness(compiledCircuit, ["2", "4"]);
       keypair1 = await handler1.generateProofKeyPair(compiledCircuit);
       const proof = await handler1.generateProof(
         compiledCircuit,
@@ -84,7 +81,6 @@ describe("ZeroKnowledgeHandler", () => {
     });
 
     it("should fail when artifacts do not match with their respective proof", async () => {
-      witness2 = await handler2.computeWitness(compiledCircuit, ["3", "9"]);
       keypair2 = await handler2.generateProofKeyPair(compiledCircuit);
       const proof = await handler1.generateProof(
         compiledCircuit,

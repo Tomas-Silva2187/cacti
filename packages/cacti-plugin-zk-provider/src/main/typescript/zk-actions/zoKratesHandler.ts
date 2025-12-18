@@ -141,8 +141,8 @@ export class ZeroKnowledgeHandler {
     }
   }
 
-  public async safeComputeWitness(
-    CompilationArtifacts: CompilationArtifacts,
+  public async computeWitness(
+    compilationArtifacts: CompilationArtifacts,
     inputs: string[],
   ): Promise<ComputationResult> {
     const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#computeWitness()`;
@@ -151,36 +151,45 @@ export class ZeroKnowledgeHandler {
     }
     try {
       if (
-        CompilationArtifacts &&
-        typeof CompilationArtifacts.program === "object" &&
-        !(CompilationArtifacts.program instanceof Uint8Array)
+        compilationArtifacts &&
+        typeof compilationArtifacts.program === "object" &&
+        !(compilationArtifacts.program instanceof Uint8Array)
       ) {
-        CompilationArtifacts.program = this.uint8ArrayConverter(
-          CompilationArtifacts.program,
+        compilationArtifacts.program = this.uint8Deserializer(
+          compilationArtifacts.program,
         );
       }
-      return this.provider.computeWitness(CompilationArtifacts, inputs);
+      return this.provider.computeWitness(compilationArtifacts, inputs);
     } catch (error) {
       throw new ZoKratesComputationError(error.message, fnTag);
     }
   }
 
   public async generateProofKeyPair(
-    compiledArtifacts: CompilationArtifacts,
+    compilationArtifacts: CompilationArtifacts,
   ): Promise<SetupKeypair> {
     const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#generateProofKeyPair()`;
     if (this.provider == undefined) {
       throw new ZoKratesProviderNotInitializedError();
     }
     try {
-      return this.provider.setup(compiledArtifacts.program);
+      if (
+        compilationArtifacts &&
+        typeof compilationArtifacts.program === "object" &&
+        !(compilationArtifacts.program instanceof Uint8Array)
+      ) {
+        compilationArtifacts.program = this.uint8Deserializer(
+          compilationArtifacts.program,
+        );
+      }
+      return this.provider.setup(compilationArtifacts.program);
     } catch (error) {
       throw new ZoKratesComputationError(error.message, fnTag);
     }
   }
 
   public async generateProof(
-    compiledArtifacts: CompilationArtifacts,
+    compilationArtifacts: CompilationArtifacts,
     witness: ComputationResult,
     keypair: SetupKeypair,
   ): Promise<Proof> {
@@ -189,8 +198,31 @@ export class ZeroKnowledgeHandler {
       throw new ZoKratesProviderNotInitializedError();
     }
     try {
+      if (
+        compilationArtifacts &&
+        typeof compilationArtifacts.program === "object" &&
+        !(compilationArtifacts.program instanceof Uint8Array)
+      ) {
+        compilationArtifacts.program = this.uint8Deserializer(
+          compilationArtifacts.program,
+        );
+      }
+      if (
+        witness &&
+        typeof witness.witness === "object" &&
+        !(witness.witness instanceof Uint8Array)
+      ) {
+        witness.witness = this.uint8Deserializer(witness.witness);
+      }
+      if (
+        keypair &&
+        typeof keypair.pk === "object" &&
+        !(keypair.pk instanceof Uint8Array)
+      ) {
+        keypair.pk = this.uint8Deserializer(keypair.pk);
+      }
       return this.provider.generateProof(
-        compiledArtifacts.program,
+        compilationArtifacts.program,
         witness.witness,
         keypair.pk,
       );
@@ -214,7 +246,7 @@ export class ZeroKnowledgeHandler {
     }
   }
 
-  private uint8ArrayConverter(programObj: any) {
+  private uint8Deserializer(programObj: any) {
     const programArr = Object.keys(programObj)
       .sort((a, b) => Number(a) - Number(b))
       .map((k) => programObj[k]);

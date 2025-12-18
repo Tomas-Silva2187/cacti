@@ -13,17 +13,25 @@ import {
   ZeroKnowledgeProviderOptions,
 } from "../zk-actions/zoKratesHandler";
 import express from "express";
+import { RedisDB } from "../database/redisDB";
+import { ZKDatabase } from "../database/zkDatabase";
 
 export enum DatabaseType {
   REDIS = "REDIS",
   MYSQL = "MYSQL",
 }
 
+export interface DatabaseSetup {
+  type: DatabaseType;
+  port: number;
+  local_launch?: boolean;
+}
+
 export interface ServerSetup {
   zeroKnowledgeCircuitPath: string;
   logLevel: LogLevelDesc;
   setupServices: EndpointSetup[];
-  databaseType?: DatabaseType;
+  databaseSetup?: DatabaseSetup;
   zkProviderOptions?: ZeroKnowledgeProviderOptions;
 }
 
@@ -34,6 +42,7 @@ export class ZeroKnowledgeServer {
   private runningPort: number;
   private app = express();
   private serverInstance: any;
+  private dedicatedDatabase: Map<number, ZKDatabase> | undefined;
   private zkProviderOptions?: ZeroKnowledgeProviderOptions;
 
   constructor(
@@ -59,7 +68,7 @@ export class ZeroKnowledgeServer {
 
     this.runningPort = serverRunningPort ?? 3000;
 
-    this.setupServer(setupOptions.setupServices, setupOptions.databaseType);
+    this.setupServer(setupOptions.setupServices, setupOptions.databaseSetup);
   }
 
   public setupEndpoints(setupList: EndpointSetup[]) {
@@ -72,12 +81,12 @@ export class ZeroKnowledgeServer {
 
   private async setupServer(
     setupList: EndpointSetup[],
-    dbSetup?: DatabaseType,
+    dbSetup?: DatabaseSetup,
   ) {
     this.setupEndpoints(setupList);
-    switch (dbSetup) {
+    switch (dbSetup?.type) {
       case DatabaseType.REDIS:
-        this.setupRedisDB();
+        this.setupRedisDB(dbSetup.port);
         break;
       case DatabaseType.MYSQL:
         this.setupMySqlDB();
@@ -87,9 +96,27 @@ export class ZeroKnowledgeServer {
     }
   }
 
-  private setupRedisDB() {
-    // Placeholder for Redis DB setup logic
-    this.log.info("Redis DB setup complete");
+  private setupRedisDB(port?: number) {
+    if (port === undefined) {
+      this.log.debug("No port provided for Redis DB, using REDIS default port");
+      port = 6379;
+    } else {
+      this.log.info(`Setting up Redis DB on port ${port}`);
+    }
+    try {
+      if (this.dedicatedDatabase === undefined) {
+        this.dedicatedDatabase = new Map<number, ZKDatabase>();
+      }
+      if (this.dedicatedDatabase.has(port)) {
+        throw new Error(`Port ${port} is already assigned to another database`);
+      }
+      this.dedicatedDatabase.set(port, new RedisDB(DatabaseType.REDIS, port));
+      this.dedicatedDatabase.get(port)?.connect();
+      this.log.info("Redis DB setup complete");
+    } catch (error) {
+      this.log.error(`Error setting up Redis DB: ${error}`);
+      throw error;
+    }
   }
 
   private setupMySqlDB() {
@@ -148,6 +175,29 @@ export class ZeroKnowledgeServer {
         throw error;
       }
     }
+    this.app.post("/publishCircuit", async (req, res) => {
+      try {
+        const dbClient = await this.dedicatedDatabase?.get(req.body.port);
+        if (dbClient === undefined) {
+          throw new Error(`No database client found for port ${req.body.port}`);
+        }
+        let result;
+        switch (dbClient.getDatabaseType()) {
+          case DatabaseType.REDIS:
+            result = (dbClient as RedisDB).storeCircuit(req.body.circuit);
+            break;
+          case DatabaseType.MYSQL:
+            this.log.info("Using MySQL DB to store circuit");
+            break;
+          default:
+            throw new Error("Unsupported database type");
+        }
+        res.json({ result });
+      } catch (error) {
+        this.log.error(error);
+        throw error;
+      }
+    });
   }
 
   public async serverInit() {

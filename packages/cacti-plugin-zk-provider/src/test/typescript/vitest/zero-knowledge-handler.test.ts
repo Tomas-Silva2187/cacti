@@ -27,7 +27,7 @@ describe("ZeroKnowledgeHandler", () => {
         circuitName: "proveSquare.zok",
       } as CircuitLoadSetup);
       expect(compiledCircuit).toBeDefined();
-      witness = await handler.safeComputeWitness(compiledCircuit, ["2", "4"]);
+      witness = await handler.computeWitness(compiledCircuit, ["2", "4"]);
       expect(witness).toBeDefined();
       keypair = await handler.generateProofKeyPair(compiledCircuit);
       expect(keypair).toBeDefined();
@@ -69,7 +69,7 @@ describe("ZeroKnowledgeHandler", () => {
     });
 
     it("Handler should generate a valid proof and artifacts for another handler", async () => {
-      witness1 = await handler1.safeComputeWitness(compiledCircuit, ["2", "4"]);
+      witness1 = await handler1.computeWitness(compiledCircuit, ["2", "4"]);
       keypair1 = await handler1.generateProofKeyPair(compiledCircuit);
       const proof = await handler1.generateProof(
         compiledCircuit,

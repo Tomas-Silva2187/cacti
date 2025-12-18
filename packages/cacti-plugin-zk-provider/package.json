@@ -4,6 +4,7 @@
   "dependencies": {
     "@hyperledger/cactus-common": "2.1.0",
     "express": "^5.2.1",
+    "redis": "^5.10.0",
     "zokrates-js": "^1.1.9"
   },
   "scripts": {

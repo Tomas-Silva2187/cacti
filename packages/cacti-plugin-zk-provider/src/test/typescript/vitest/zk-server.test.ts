@@ -9,9 +9,15 @@ import {
   ZeroKnowledgeServer,
 } from "../../../main/typescript/server/zeroKnowledgeServer";
 import { describe, expect, it, afterAll } from "vitest";
-import { CompilationArtifacts, ComputationResult } from "zokrates-js";
+import {
+  CompilationArtifacts,
+  ComputationResult,
+  Proof,
+  SetupKeypair,
+} from "zokrates-js";
 
 describe("ZK Server Setup and Service Requests", () => {
+  const PORT = 3000;
   describe("Simplified Zero Knowledge Server Setup", async () => {
     afterAll(() => {
       zkServer.serverStop();
@@ -62,12 +68,12 @@ describe("ZK Server Setup and Service Requests", () => {
     });
 
     it("should successfully perform a GET proof request", async () => {
-      const response = await fetch("http://localhost:3000/generateProof");
+      const response = await fetch(`http://localhost:${PORT}/generateProof`);
       expect((await response.json()).result).toBe("my-mock-proof");
     });
 
     it("should successfully perform a POST to verify a proof", async () => {
-      const response = await fetch("http://localhost:3000/verifyProof", {
+      const response = await fetch(`http://localhost:${PORT}/verifyProof`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -85,6 +91,8 @@ describe("ZK Server Setup and Service Requests", () => {
     let zkServer: ZeroKnowledgeServer;
     let compilationArtifacts: CompilationArtifacts;
     let witness: ComputationResult;
+    let keypair: SetupKeypair;
+    let proof: Proof;
 
     it("should successfully setup a full ZK Server", async () => {
       const compileServiceSetup = {
@@ -95,7 +103,7 @@ describe("ZK Server Setup and Service Requests", () => {
       } as Service;
       const computeWitnessServiceSetup = {
         serviceName: "witness",
-        action: "safeComputeWitness",
+        action: "computeWitness",
         callElements: {},
         endpointCallType: EndpointCallType.POST,
       } as Service;
@@ -134,7 +142,7 @@ describe("ZK Server Setup and Service Requests", () => {
     });
 
     it("should compile a circuit via the endpoint", async () => {
-      const response = await fetch("http://localhost:3000/compile", {
+      const response = await fetch(`http://localhost:${PORT}/compile`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -149,7 +157,7 @@ describe("ZK Server Setup and Service Requests", () => {
     });
 
     it("should compute a witness via the endpoint", async () => {
-      const response = await fetch("http://localhost:3000/witness", {
+      const response = await fetch(`http://localhost:${PORT}/witness`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -161,6 +169,103 @@ describe("ZK Server Setup and Service Requests", () => {
       expect(witness).toBeDefined();
       expect(witness).toHaveProperty("witness");
       expect(witness).toHaveProperty("output");
+    });
+
+    it("should generate a keypair via the endpoint", async () => {
+      const response = await fetch(`http://localhost:${PORT}/keypair`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify([compilationArtifacts]),
+      });
+      const responseData = await response.json();
+      keypair = responseData.result;
+      expect(keypair).toBeDefined();
+      expect(keypair).toHaveProperty("pk");
+      expect(keypair).toHaveProperty("vk");
+    });
+
+    it("should generate a proof via the endpoint", async () => {
+      const response = await fetch(`http://localhost:${PORT}/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify([compilationArtifacts, witness, keypair]),
+      });
+      const responseData = await response.json();
+      proof = responseData.result;
+      expect(proof).toBeDefined();
+      expect(proof).toHaveProperty("proof");
+      expect(proof).toHaveProperty("inputs");
+    });
+
+    it("should verify a proof via the endpoint", async () => {
+      const verifyResponse = await fetch(`http://localhost:${PORT}/verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify([proof, keypair]),
+      });
+      const verifyResponseData = await verifyResponse.json();
+      const isValid = verifyResponseData.result;
+      expect(isValid).toBe(true);
+    });
+  });
+
+  describe("ZK Server With Database", async () => {
+    let zkServer: ZeroKnowledgeServer;
+    it("should successfully setup a full ZK Server with a Redis DB", async () => {
+      const compileServiceSetup = {
+        serviceName: "compile",
+        action: "compileCircuit",
+        callElements: {},
+        endpointCallType: EndpointCallType.POST,
+      } as Service;
+      const computeWitnessServiceSetup = {
+        serviceName: "witness",
+        action: "computeWitness",
+        callElements: {},
+        endpointCallType: EndpointCallType.POST,
+      } as Service;
+      const keyPairGenServiceSetup = {
+        serviceName: "keypair",
+        action: "generateProofKeyPair",
+        callElements: {},
+        endpointCallType: EndpointCallType.POST,
+      } as Service;
+      const proofGenServiceSetup = {
+        serviceName: "generate",
+        action: "generateProof",
+        callElements: {},
+        endpointCallType: EndpointCallType.POST,
+      } as Service;
+      const proofVerServiceSetup = {
+        serviceName: "verify",
+        action: "verifyProof",
+        callElements: {},
+        endpointCallType: EndpointCallType.POST,
+      } as Service;
+
+      zkServer = new ZeroKnowledgeServer({
+        zeroKnowledgeCircuitPath: path.join(__dirname, "../../zokrates"),
+        logLevel: "INFO",
+        setupServices: [
+          { endpointService: compileServiceSetup } as EndpointSetup,
+          { endpointService: computeWitnessServiceSetup } as EndpointSetup,
+          { endpointService: keyPairGenServiceSetup } as EndpointSetup,
+          { endpointService: proofGenServiceSetup } as EndpointSetup,
+          { endpointService: proofVerServiceSetup } as EndpointSetup,
+        ],
+        databaseSetup: {
+          type: "REDIS",
+          local_launch: true,
+        },
+      } as ServerSetup);
+      await zkServer.serverInit();
+      expect(zkServer).toBeDefined();
     });
   });
 });

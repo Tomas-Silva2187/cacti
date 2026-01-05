@@ -2,9 +2,11 @@ import path from "path";
 import {
   EndpointCallType,
   EndpointSetup,
-  Service,
-} from "../../../main/typescript/endpoints/standard-endpoints";
+  EndpointService,
+  Endpoint,
+} from "../../../main/typescript/endpoints/endpoint";
 import {
+  DatabaseType,
   ServerSetup,
   ZeroKnowledgeServer,
 } from "../../../main/typescript/server/zeroKnowledgeServer";
@@ -15,14 +17,25 @@ import {
   Proof,
   SetupKeypair,
 } from "zokrates-js";
+import { spawn } from "child_process";
+import { createClient, RedisClientType } from "redis";
+import { readFileSync } from "fs";
 
 describe("ZK Server Setup and Service Requests", () => {
   const PORT = 3000;
+  //const TIMEOUT = 15000;
+  class TestingZeroKnowledgeServer extends ZeroKnowledgeServer {
+    setupSingleEndpoint(endpointSetup: EndpointSetup, customclass: any) {
+      const endpoint = new Endpoint(customclass);
+      endpoint.setupEndpoint(endpointSetup);
+      this.serverEndpoints.push(endpoint);
+    }
+  }
   describe("Simplified Zero Knowledge Server Setup", async () => {
     afterAll(() => {
       zkServer.serverStop();
     });
-    let zkServer: ZeroKnowledgeServer;
+    let zkServer: TestingZeroKnowledgeServer;
     class MockZeroKnowledgehandler {
       private mockProof: string;
       constructor(proofName: string) {
@@ -41,18 +54,16 @@ describe("ZK Server Setup and Service Requests", () => {
 
     it("should successfully setup a ZK Server with a GET and POST endpoints", async () => {
       const getServiceSetup = {
-        serviceName: "generateProof",
-        action: "getMockProof",
-        callElements: {},
+        endpointName: "generateProof",
+        executeFunction: "getMockProof",
         endpointCallType: EndpointCallType.GET,
-      } as Service;
+      } as EndpointService;
       const postServiceSetup = {
-        serviceName: "verifyProof",
-        action: "isCorrectProof",
-        callElements: {},
+        endpointName: "verifyProof",
+        executeFunction: "isCorrectProof",
         endpointCallType: EndpointCallType.POST,
-      } as Service;
-      zkServer = new ZeroKnowledgeServer(
+      } as EndpointService;
+      zkServer = new TestingZeroKnowledgeServer(
         {
           zeroKnowledgeCircuitPath: "mock/path",
           logLevel: "INFO",
@@ -86,9 +97,11 @@ describe("ZK Server Setup and Service Requests", () => {
 
   describe("ZK Server Setup", async () => {
     afterAll(() => {
-      zkServer.serverStop();
+      if (zkServer) {
+        zkServer.serverStop();
+      }
     });
-    let zkServer: ZeroKnowledgeServer;
+    let zkServer: TestingZeroKnowledgeServer;
     let compilationArtifacts: CompilationArtifacts;
     let witness: ComputationResult;
     let keypair: SetupKeypair;
@@ -96,37 +109,31 @@ describe("ZK Server Setup and Service Requests", () => {
 
     it("should successfully setup a full ZK Server", async () => {
       const compileServiceSetup = {
-        serviceName: "compile",
-        action: "compileCircuit",
-        callElements: {},
+        endpointName: "compile",
+        executeFunction: "compileCircuit",
         endpointCallType: EndpointCallType.POST,
-      } as Service;
+      } as EndpointService;
       const computeWitnessServiceSetup = {
-        serviceName: "witness",
-        action: "computeWitness",
-        callElements: {},
+        endpointName: "witness",
+        executeFunction: "computeWitness",
         endpointCallType: EndpointCallType.POST,
-      } as Service;
+      } as EndpointService;
       const keyPairGenServiceSetup = {
-        serviceName: "keypair",
-        action: "generateProofKeyPair",
-        callElements: {},
+        endpointName: "keypair",
+        executeFunction: "generateProofKeyPair",
         endpointCallType: EndpointCallType.POST,
-      } as Service;
+      } as EndpointService;
       const proofGenServiceSetup = {
-        serviceName: "generate",
-        action: "generateProof",
-        callElements: {},
+        endpointName: "generate",
+        executeFunction: "generateProof",
         endpointCallType: EndpointCallType.POST,
-      } as Service;
+      } as EndpointService;
       const proofVerServiceSetup = {
-        serviceName: "verify",
-        action: "verifyProof",
-        callElements: {},
+        endpointName: "verify",
+        executeFunction: "verifyProof",
         endpointCallType: EndpointCallType.POST,
-      } as Service;
-
-      zkServer = new ZeroKnowledgeServer({
+      } as EndpointService;
+      zkServer = new TestingZeroKnowledgeServer({
         zeroKnowledgeCircuitPath: path.join(__dirname, "../../zokrates"),
         logLevel: "INFO",
         setupServices: [
@@ -217,37 +224,87 @@ describe("ZK Server Setup and Service Requests", () => {
 
   describe("ZK Server With Database", async () => {
     let zkServer: ZeroKnowledgeServer;
-    it("should successfully setup a full ZK Server with a Redis DB", async () => {
+    let redisProcess: any;
+    let redisClient: RedisClientType;
+    const redisPort = "6379";
+    afterAll(() => {
+      if (zkServer) {
+        zkServer.serverStop();
+      }
+      if (redisProcess) {
+        redisProcess.kill();
+      }
+    });
+
+    it("should launch a local Redis server instance", async () => {
+      try {
+        redisProcess = spawn("redis-server", ["--port", redisPort], {
+          stdio: "inherit",
+        });
+        redisProcess.on("error", (error: Error) => {
+          throw error;
+        });
+        redisProcess.on("exit", () => {
+          redisProcess = undefined;
+        });
+      } catch (error) {
+        throw new Error(`Error with Redis server: ${error}`);
+      }
+      redisClient = await createClient({
+        url: `redis://localhost:${redisPort}`,
+      });
+      await redisClient.connect();
+      let retries = 10;
+      for (retries; retries > 0; retries--) {
+        try {
+          const pong = await redisClient.ping();
+          if (pong === "PONG") break;
+        } catch (e) {
+          continue;
+        }
+        console.log(`Retry ${retries} to connect to Redis...`);
+      }
+      expect(await redisClient.ping()).toBe("PONG");
+    });
+
+    it("should upload a circuit to the Redis DB", async () => {
+      const circuitCode = readFileSync(
+        path.join(__dirname, "../../zokrates/proveSquare.zok"),
+        "utf-8",
+      );
+      expect(
+        await redisClient.hSet(`circuit:proveSquare`, {
+          code: circuitCode,
+        }),
+      ).toBeGreaterThan(0);
+    });
+
+    it("should successfully setup a full ZK Server with a Redis DB Client", async () => {
       const compileServiceSetup = {
-        serviceName: "compile",
-        action: "compileCircuit",
-        callElements: {},
+        endpointName: "compile",
+        executeFunction: "compileCircuit",
         endpointCallType: EndpointCallType.POST,
-      } as Service;
+      } as EndpointService;
       const computeWitnessServiceSetup = {
-        serviceName: "witness",
-        action: "computeWitness",
-        callElements: {},
+        endpointName: "witness",
+        executeFunction: "computeWitness",
         endpointCallType: EndpointCallType.POST,
-      } as Service;
+      } as EndpointService;
       const keyPairGenServiceSetup = {
-        serviceName: "keypair",
-        action: "generateProofKeyPair",
-        callElements: {},
+        endpointName: "keypair",
+        executeFunction: "generateProofKeyPair",
         endpointCallType: EndpointCallType.POST,
-      } as Service;
+      } as EndpointService;
       const proofGenServiceSetup = {
-        serviceName: "generate",
-        action: "generateProof",
-        callElements: {},
+        endpointName: "generate",
+        executeFunction: "generateProof",
         endpointCallType: EndpointCallType.POST,
-      } as Service;
+      } as EndpointService;
       const proofVerServiceSetup = {
-        serviceName: "verify",
-        action: "verifyProof",
-        callElements: {},
+        endpointName: "verify",
+        executeFunction: "verifyProof",
         endpointCallType: EndpointCallType.POST,
-      } as Service;
+      } as EndpointService;
 
       zkServer = new ZeroKnowledgeServer({
         zeroKnowledgeCircuitPath: path.join(__dirname, "../../zokrates"),
@@ -260,8 +317,7 @@ describe("ZK Server Setup and Service Requests", () => {
           { endpointService: proofVerServiceSetup } as EndpointSetup,
         ],
         databaseSetup: {
-          type: "REDIS",
-          local_launch: true,
+          type: DatabaseType.REDIS,
         },
       } as ServerSetup);
       await zkServer.serverInit();

@@ -4,27 +4,27 @@ import {
   LogLevelDesc,
 } from "@hyperledger/cactus-common";
 import {
-  BasicEndpoint,
+  Endpoint,
   EndpointCallType,
   EndpointSetup,
-} from "../endpoints/standard-endpoints";
+} from "../endpoints/endpoint";
 import {
   ZeroKnowledgeHandler,
   ZeroKnowledgeProviderOptions,
 } from "../zk-actions/zoKratesHandler";
 import express from "express";
-import { RedisDB } from "../database/redisDB";
-import { ZKDatabase } from "../database/zkDatabase";
+import { RedisDBClient } from "../database/redisDBClient";
+import { ZKDatabaseClient } from "../database/zkDatabase";
 
 export enum DatabaseType {
-  REDIS = "REDIS",
-  MYSQL = "MYSQL",
+  REDIS = 1,
+  MYSQL = 2,
 }
 
 export interface DatabaseSetup {
   type: DatabaseType;
-  port: number;
-  local_launch?: boolean;
+  port?: number;
+  ipAddress?: string;
 }
 
 export interface ServerSetup {
@@ -37,12 +37,12 @@ export interface ServerSetup {
 
 export class ZeroKnowledgeServer {
   private zeroknowledgehandler: ZeroKnowledgeHandler | any;
-  private serverEndpoints: BasicEndpoint[] = [];
+  protected serverEndpoints: Endpoint[] = [];
   private log: Logger;
   private runningPort: number;
   private app = express();
   private serverInstance: any;
-  private dedicatedDatabase: Map<number, ZKDatabase> | undefined;
+  private dedicatedDatabase: Map<number, ZKDatabaseClient> | undefined;
   private zkProviderOptions?: ZeroKnowledgeProviderOptions;
 
   constructor(
@@ -71,46 +71,47 @@ export class ZeroKnowledgeServer {
     this.setupServer(setupOptions.setupServices, setupOptions.databaseSetup);
   }
 
-  public setupEndpoints(setupList: EndpointSetup[]) {
-    for (const setupItem of setupList) {
-      const endpoint = new BasicEndpoint(this.zeroknowledgehandler);
-      endpoint.setupEndpoint(setupItem);
-      this.serverEndpoints.push(endpoint);
-    }
-  }
-
   private async setupServer(
-    setupList: EndpointSetup[],
+    endpointSetupList: EndpointSetup[],
     dbSetup?: DatabaseSetup,
   ) {
-    this.setupEndpoints(setupList);
+    for (const endpointData of endpointSetupList) {
+      const endpoint = new Endpoint(this.zeroknowledgehandler);
+      endpoint.setupEndpoint(endpointData);
+      this.serverEndpoints.push(endpoint);
+    }
     switch (dbSetup?.type) {
       case DatabaseType.REDIS:
-        this.setupRedisDB(dbSetup.port);
+        this.setupRedisDBClient(dbSetup);
         break;
       case DatabaseType.MYSQL:
-        this.setupMySqlDB();
+        this.setupMySqlDBClient();
         break;
       default:
         this.log.warn("No database setup selected");
     }
   }
 
-  private setupRedisDB(port?: number) {
-    if (port === undefined) {
-      this.log.debug("No port provided for Redis DB, using REDIS default port");
-      port = 6379;
-    } else {
-      this.log.info(`Setting up Redis DB on port ${port}`);
-    }
+  private setupRedisDBClient(dbSetup?: DatabaseSetup) {
+    const port = dbSetup?.port ?? 6379;
+    const ipAddress = dbSetup?.ipAddress ?? "localhost";
     try {
       if (this.dedicatedDatabase === undefined) {
-        this.dedicatedDatabase = new Map<number, ZKDatabase>();
+        this.dedicatedDatabase = new Map<number, ZKDatabaseClient>();
       }
       if (this.dedicatedDatabase.has(port)) {
-        throw new Error(`Port ${port} is already assigned to another database`);
+        const storedClient = this.dedicatedDatabase.get(port);
+        if (
+          storedClient !== undefined &&
+          storedClient.checkClientId(ipAddress, port)
+        ) {
+          throw new Error(`A client for this Redis DB already exists`);
+        }
       }
-      this.dedicatedDatabase.set(port, new RedisDB(DatabaseType.REDIS, port));
+      this.dedicatedDatabase.set(
+        port,
+        new RedisDBClient(DatabaseType.REDIS, port, "DEBUG", ipAddress),
+      );
       this.dedicatedDatabase.get(port)?.connect();
       this.log.info("Redis DB setup complete");
     } catch (error) {
@@ -119,56 +120,61 @@ export class ZeroKnowledgeServer {
     }
   }
 
-  private setupMySqlDB() {
+  private setupMySqlDBClient() {
     // Placeholder for MySQL DB setup logic
     this.log.info("MySQL DB setup complete");
   }
 
-  public endpointInit(endpointSelection?: BasicEndpoint[]) {
+  public exposeEndpoints(endpointSelection?: Endpoint[]) {
     const endpointsToSetup =
       endpointSelection != undefined ? endpointSelection : this.serverEndpoints;
     for (const endpoint of endpointsToSetup) {
       try {
         const endpointProperties = endpoint.getEndpointServiceCallProperties();
-        switch (endpointProperties?.endpointCallType) {
-          case EndpointCallType.GET:
-            this.app.get(
-              "/" + endpointProperties.serviceName,
-              async (req, res) => {
-                try {
-                  const result = await endpoint.executeServiceCall(
-                    endpointProperties.serviceName,
-                    [],
-                  );
-                  res.json({ result });
-                } catch (error) {
-                  throw error;
-                }
-              },
-            );
-            break;
-          case EndpointCallType.POST:
-            this.app.post(
-              "/" + endpointProperties.serviceName,
-              async (req, res) => {
-                try {
-                  const result = await endpoint.executeServiceCall(
-                    endpointProperties.serviceName,
-                    req.body,
-                  );
-                  console.log(result);
-                  res.json({ result });
-                } catch (error) {
-                  this.log.error(error);
-                  throw error;
-                }
-              },
-            );
-            break;
-          default:
-            this.log.warn(
-              `Unknown endpoint call type for service ${endpoint["endpointService"]?.serviceName}`,
-            );
+        if (
+          endpointProperties != undefined &&
+          endpointProperties.endpointName != undefined &&
+          endpointProperties.endpointCallType != undefined
+        ) {
+          switch (endpointProperties.endpointCallType) {
+            case EndpointCallType.GET:
+              this.app.get(
+                "/" + endpointProperties.endpointName!,
+                async (req, res) => {
+                  try {
+                    const result = await endpoint.executeService(
+                      endpointProperties.endpointName!,
+                      [],
+                    );
+                    res.json({ result });
+                  } catch (error) {
+                    throw error;
+                  }
+                },
+              );
+              break;
+            case EndpointCallType.POST:
+              this.app.post(
+                "/" + endpointProperties.endpointName!,
+                async (req, res) => {
+                  try {
+                    const result = await endpoint.executeService(
+                      endpointProperties.endpointName!,
+                      req.body,
+                    );
+                    res.json({ result });
+                  } catch (error) {
+                    this.log.error(error);
+                    throw error;
+                  }
+                },
+              );
+              break;
+            default:
+              this.log.warn(
+                `Unknown endpoint call type for service ${endpoint["endpointService"]?.endpointName}`,
+              );
+          }
         }
       } catch (error) {
         this.log.error(error);
@@ -184,7 +190,7 @@ export class ZeroKnowledgeServer {
         let result;
         switch (dbClient.getDatabaseType()) {
           case DatabaseType.REDIS:
-            result = (dbClient as RedisDB).storeCircuit(req.body.circuit);
+            result = (dbClient as RedisDBClient).storeCircuit(req.body.circuit);
             break;
           case DatabaseType.MYSQL:
             this.log.info("Using MySQL DB to store circuit");
@@ -207,7 +213,7 @@ export class ZeroKnowledgeServer {
       );
     }
     this.app.use(express.json());
-    this.endpointInit();
+    this.exposeEndpoints();
     this.serverInstance = this.app.listen(this.runningPort, () => {
       this.log.info(
         `ZeroKnowledgeServer is listening on port ${this.runningPort}`,

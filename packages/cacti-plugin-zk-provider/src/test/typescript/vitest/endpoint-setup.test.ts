@@ -6,9 +6,9 @@ import {
   ZeroKnowledgeHandlerOptions,
 } from "../../../main/typescript/zk-actions/zoKratesHandler";
 import {
-  BasicEndpoint,
+  Endpoint,
   EndpointCallType,
-} from "../../../main/typescript/endpoints/standard-endpoints";
+} from "../../../main/typescript/endpoints/endpoint";
 import {
   BlacklistedServiceError,
   OverwriteServiceError,
@@ -22,29 +22,25 @@ describe("Endpoint Setup", () => {
     } as ZeroKnowledgeHandlerOptions);
     expect(zeroKnowledgeHandler).toBeDefined();
     await zeroKnowledgeHandler.initializeZoKrates();
-    let basicEndpoint: BasicEndpoint;
+    let basicEndpoint: Endpoint;
     it("should successfully setup a Basic Endpoint for ZK circuit compilation", async () => {
-      basicEndpoint = new BasicEndpoint(zeroKnowledgeHandler);
+      basicEndpoint = new Endpoint(zeroKnowledgeHandler);
       expect(basicEndpoint).toBeDefined();
       basicEndpoint.setupEndpoint({
         endpointService: {
-          serviceName: "compileCircuit",
-          action: "compileCircuit",
-          callElements: {},
+          endpointName: "compileCircuit",
+          executeFunction: "compileCircuit",
           endpointCallType: EndpointCallType.POST,
         },
       });
     });
 
     it("should successfully perform a compile circuit call", async () => {
-      const response = await basicEndpoint.executeServiceCall(
-        "compileCircuit",
-        [
-          {
-            circuitName: "proveSquare.zok",
-          } as CircuitLoadSetup,
-        ],
-      );
+      const response = await basicEndpoint.executeService("compileCircuit", [
+        {
+          circuitName: "proveSquare.zok",
+        } as CircuitLoadSetup,
+      ]);
       expect(response).toBeDefined();
       expect(response).toHaveProperty("program");
       expect(response).toHaveProperty("abi");
@@ -52,8 +48,8 @@ describe("Endpoint Setup", () => {
   });
 
   describe("Endpoint Setup Errors", async () => {
-    let basicEndpoint: BasicEndpoint;
-    let basicEndpoint2: BasicEndpoint;
+    let basicEndpoint: Endpoint;
+    let basicEndpoint2: Endpoint;
     const zeroKnowledgeHandler = new ZeroKnowledgeHandler({
       logLevel: "INFO",
       zkcircuitPath: path.join(__dirname, "../../zokrates"),
@@ -62,13 +58,12 @@ describe("Endpoint Setup", () => {
     await zeroKnowledgeHandler.initializeZoKrates();
 
     it("should initialize two endpoints, and avoid endpoint overwrite", async () => {
-      basicEndpoint = new BasicEndpoint(zeroKnowledgeHandler);
+      basicEndpoint = new Endpoint(zeroKnowledgeHandler);
       expect(basicEndpoint).toBeDefined();
       basicEndpoint.setupEndpoint({
         endpointService: {
-          serviceName: "computeWitness",
-          action: "computeWitness",
-          callElements: {},
+          endpointName: "computeWitness",
+          executeFunction: "computeWitness",
           endpointCallType: EndpointCallType.POST,
         },
         blackListedServices: ["compileCircuit"],
@@ -77,21 +72,19 @@ describe("Endpoint Setup", () => {
       expect(() => {
         basicEndpoint.setupEndpoint({
           endpointService: {
-            serviceName: "compileCircuit",
-            action: "compileCircuit",
-            callElements: {},
+            endpointName: "compileCircuit",
+            executeFunction: "compileCircuit",
             endpointCallType: EndpointCallType.POST,
           },
         });
       }).toThrow(OverwriteServiceError);
 
-      basicEndpoint2 = new BasicEndpoint(zeroKnowledgeHandler);
+      basicEndpoint2 = new Endpoint(zeroKnowledgeHandler);
       expect(basicEndpoint2).toBeDefined();
       basicEndpoint2.setupEndpoint({
         endpointService: {
-          serviceName: "compileCircuit",
-          action: "compileCircuit",
-          callElements: {},
+          endpointName: "compileCircuit",
+          executeFunction: "compileCircuit",
           endpointCallType: EndpointCallType.POST,
         },
       });
@@ -99,7 +92,7 @@ describe("Endpoint Setup", () => {
 
     it("should avoid blacklisted service call", async () => {
       expect(() => {
-        basicEndpoint.executeServiceCall("compileCircuit", [
+        basicEndpoint.executeService("compileCircuit", [
           {
             circuitName: "proveSquare.zok",
           } as CircuitLoadSetup,

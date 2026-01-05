@@ -4,9 +4,10 @@ import {
   LogLevelDesc,
 } from "@hyperledger/cactus-common";
 import { createClient, RedisClientType } from "redis";
-import { spawn, ChildProcess } from "child_process";
-import { ZKDatabase } from "./zkDatabase";
+//import { spawn, ChildProcess } from "child_process";
+//import { ZKDatabase } from "./zkDatabase";
 import { DatabaseType } from "../server/zeroKnowledgeServer";
+import { ZKDatabaseClient } from "./zkDatabase";
 
 export interface RedisDBSetupOptions {
   port: number;
@@ -25,32 +26,33 @@ export interface ZKSnarkCircuit {
   source_code: string;
 }
 
-export class RedisDB extends ZKDatabase {
-  public static readonly CLASS_NAME = "RedisDB";
+export class RedisDBClient extends ZKDatabaseClient {
+  public static readonly CLASS_NAME = "RedisDBClient";
   private client: RedisClientType;
   private log: Logger;
-  private redisProcess?: ChildProcess;
-  private port: number;
 
   constructor(
     dbType: DatabaseType,
     port: number = 6379,
     logLevel: LogLevelDesc = "DEBUG",
-    launch: boolean = false,
+    ipAddress?: string,
   ) {
-    super(dbType);
+    super(dbType, port ?? 6379, ipAddress ? ipAddress : "localhost");
     this.log = LoggerProvider.getOrCreate({
-      label: RedisDB.CLASS_NAME,
+      label: RedisDBClient.CLASS_NAME,
       level: logLevel,
     });
-    this.port = port;
-    this.client = createClient({ url: `redis://localhost:${port}` });
-    if (launch) {
-      this.startServer();
-    }
+    this.client = createClient({
+      url: `redis://${this.ipAddress}:${this.port}`,
+    });
   }
 
-  async startServer(): Promise<void> {
+  public checkClientId(ip: string, port: number): boolean {
+    const id = this.ipAddress + ":" + this.port.toString();
+    return id === ip + ":" + port.toString();
+  }
+
+  /*async startServer(): Promise<void> {
     const fnTag = `${RedisDB.CLASS_NAME}#startServer()`;
     this.log.debug(`${fnTag}: Launching Redis server on port ${this.port}...`);
     if (this.redisProcess) {
@@ -77,7 +79,7 @@ export class RedisDB extends ZKDatabase {
     this.log.info(`${fnTag}: Redis server launched.`);
   }
   async stopServer(): Promise<void> {
-    const fnTag = `${RedisDB.CLASS_NAME}#stopServer()`;
+    const fnTag = `${RedisDBClient.CLASS_NAME}#stopServer()`;
     if (this.redisProcess) {
       this.log.debug(`${fnTag}: Stopping Redis server...`);
       this.redisProcess.kill();
@@ -86,10 +88,10 @@ export class RedisDB extends ZKDatabase {
     } else {
       this.log.debug(`${fnTag}: No Redis server process to stop.`);
     }
-  }
+  }*/
 
   async connect(): Promise<void> {
-    const fnTag = `${RedisDB.CLASS_NAME}#connect()`;
+    const fnTag = `${RedisDBClient.CLASS_NAME}#connect()`;
     this.log.debug(`${fnTag}: Connecting to Redis server...`);
     try {
       await this.client.connect();
@@ -101,12 +103,11 @@ export class RedisDB extends ZKDatabase {
   }
 
   async disconnect(): Promise<void> {
-    const fnTag = `${RedisDB.CLASS_NAME}#disconnect()`;
+    const fnTag = `${RedisDBClient.CLASS_NAME}#disconnect()`;
     this.log.debug(`${fnTag}: Disconnecting from Redis server...`);
     try {
       await this.client.quit();
       this.log.info(`${fnTag}: Disconnected from Redis server successfully.`);
-      await this.stopServer();
     } catch (error) {
       this.log.error(
         `${fnTag}: Error disconnecting from Redis server: ${error}`,
@@ -116,7 +117,7 @@ export class RedisDB extends ZKDatabase {
   }
 
   async storeCircuit(circuit: ZKSnarkCircuit): Promise<string> {
-    const fnTag = `${RedisDB.CLASS_NAME}#storeCircuit()`;
+    const fnTag = `${RedisDBClient.CLASS_NAME}#storeCircuit()`;
     this.log.debug(`${fnTag}: Storing circuit ${circuit.name}...`);
     try {
       await this.client.hSet(`circuit: ${circuit.name}`, {
@@ -131,7 +132,7 @@ export class RedisDB extends ZKDatabase {
   }
 
   async getCircuit(name: string): Promise<string> {
-    const fnTag = `${RedisDB.CLASS_NAME}#getCircuit()`;
+    const fnTag = `${RedisDBClient.CLASS_NAME}#getCircuit()`;
     this.log.debug(`${fnTag}: Retrieving circuit ${name}...`);
     try {
       const data = await this.client.hGet(`circuit: ${name}`, "code");

@@ -8,7 +8,7 @@ import { createClient, RedisClientType } from "redis";
 //import { ZKDatabase } from "./zkDatabase";
 import { DatabaseType } from "../server/zeroKnowledgeServer";
 import { ZKDatabaseClient } from "./zkDatabase";
-
+import { createHash } from "crypto";
 export interface RedisDBSetupOptions {
   port: number;
   logLevel?: LogLevelDesc;
@@ -129,6 +129,29 @@ export class RedisDBClient extends ZKDatabaseClient {
       this.log.error(`${fnTag}: Error storing circuit: ${error}`);
       throw error;
     }
+  }
+
+  async storeObject(objectToStore: string) {
+    const fnTag = `${RedisDBClient.CLASS_NAME}#storeObject()`;
+    const key = createHash("sha256").update(objectToStore).digest("hex");
+    try {
+      this.log.info(`${fnTag}: Storing endpoint result with key ${key}...`);
+      this.log.info(`${fnTag}: Object to store: ${objectToStore}`);
+      const r = await this.client.hSet(`sha256: ${key}`, {
+        result: objectToStore,
+      });
+      this.log.info(`${fnTag}: HSET result: ${r}`);
+      this.log.info(`${fnTag}: endpoint result stored successfully.`);
+      return key;
+    } catch (error) {
+      this.log.error(`${fnTag}: Error storing circuit: ${error}`);
+      throw error;
+    }
+  }
+
+  async getObject(key: string): Promise<string | null> {
+    const data = await this.client.hGet(`sha256: ${key}`, "result");
+    return data ?? null;
   }
 
   async getCircuit(name: string): Promise<string> {

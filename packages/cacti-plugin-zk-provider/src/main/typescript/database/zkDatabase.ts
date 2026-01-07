@@ -18,4 +18,6 @@ export abstract class ZKDatabaseClient {
   }
   abstract connect(): Promise<void>;
   abstract disconnect(): Promise<void>;
+  abstract storeObject(objectToStore: string): Promise<string>;
+  abstract getObject(key: string): Promise<string | null>;
 }

@@ -125,6 +125,22 @@ export class ZeroKnowledgeServer {
     this.log.info("MySQL DB setup complete");
   }
 
+  private async prepareParams(params: any[]): Promise<any[]> {
+    const preparedParams: any[] = [];
+    for (const element of params) {
+      if ("fetchAt" in element && "key" in element) {
+        const client = await this.dedicatedDatabase?.get(
+          Number(element.fetchAt),
+        );
+        const el = await client?.getObject(element.key);
+        preparedParams.push(JSON.parse(el!));
+      } else {
+        preparedParams.push(element);
+      }
+    }
+    return preparedParams;
+  }
+
   public exposeEndpoints(endpointSelection?: Endpoint[]) {
     const endpointsToSetup =
       endpointSelection != undefined ? endpointSelection : this.serverEndpoints;
@@ -158,11 +174,20 @@ export class ZeroKnowledgeServer {
                 "/" + endpointProperties.endpointName!,
                 async (req, res) => {
                   try {
-                    const result = await endpoint.executeService(
-                      endpointProperties.endpointName!,
-                      req.body,
-                    );
-                    res.json({ result });
+                    if (req.body.params) {
+                      let result;
+                      const params = await this.prepareParams(req.body.params);
+                      result = await endpoint.executeService(
+                        endpointProperties.endpointName!,
+                        params,
+                      );
+                      if (req.body.store) {
+                        result = await this.dedicatedDatabase
+                          ?.get(req.body.store)
+                          ?.storeObject(JSON.stringify(result));
+                      }
+                      res.json({ result });
+                    }
                   } catch (error) {
                     this.log.error(error);
                     throw error;
@@ -181,29 +206,6 @@ export class ZeroKnowledgeServer {
         throw error;
       }
     }
-    this.app.post("/publishCircuit", async (req, res) => {
-      try {
-        const dbClient = await this.dedicatedDatabase?.get(req.body.port);
-        if (dbClient === undefined) {
-          throw new Error(`No database client found for port ${req.body.port}`);
-        }
-        let result;
-        switch (dbClient.getDatabaseType()) {
-          case DatabaseType.REDIS:
-            result = (dbClient as RedisDBClient).storeCircuit(req.body.circuit);
-            break;
-          case DatabaseType.MYSQL:
-            this.log.info("Using MySQL DB to store circuit");
-            break;
-          default:
-            throw new Error("Unsupported database type");
-        }
-        res.json({ result });
-      } catch (error) {
-        this.log.error(error);
-        throw error;
-      }
-    });
   }
 
   public async serverInit() {

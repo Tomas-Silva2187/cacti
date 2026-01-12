@@ -15,6 +15,7 @@ import {
 import express from "express";
 import { RedisDBClient } from "../database/redisDBClient";
 import { ZKDatabaseClient } from "../database/zkDatabase";
+import { DuplicateDatabaseClientError } from "./serverErrors";
 
 export enum DatabaseType {
   REDIS = 1,
@@ -50,95 +51,114 @@ export class ZeroKnowledgeServer {
     serverProviderClass?: any,
     serverRunningPort?: number,
   ) {
-    this.log = LoggerProvider.getOrCreate({
-      label: "ZeroKnowledgeServer",
-      level: setupOptions.logLevel,
-    });
-    if (serverProviderClass == undefined) {
-      this.zeroknowledgehandler = new ZeroKnowledgeHandler({
-        logLevel: setupOptions.logLevel,
-        zkcircuitPath: setupOptions.zeroKnowledgeCircuitPath,
-        providerOptions: setupOptions.zkProviderOptions,
+    try {
+      this.log = LoggerProvider.getOrCreate({
+        label: "ZeroKnowledgeServer",
+        level: setupOptions.logLevel,
       });
-      this.zkProviderOptions = setupOptions.zkProviderOptions;
-    } else {
-      this.log.info("Setting Server with Custom Class");
-      this.zeroknowledgehandler = serverProviderClass;
+      if (serverProviderClass == undefined) {
+        this.log.info("Setting Server with Default ZoKrates class");
+        this.zeroknowledgehandler = new ZeroKnowledgeHandler({
+          logLevel: setupOptions.logLevel,
+          zkcircuitPath: setupOptions.zeroKnowledgeCircuitPath,
+          providerOptions: setupOptions.zkProviderOptions,
+        });
+        this.zkProviderOptions = setupOptions.zkProviderOptions;
+      } else {
+        this.log.info("Setting Server with Custom Class");
+        this.zeroknowledgehandler = serverProviderClass;
+      }
+
+      this.runningPort = serverRunningPort ?? 3000;
+
+      this.setupServer(setupOptions.setupServices, setupOptions.databaseSetup);
+    } catch (error) {
+      throw error;
     }
-
-    this.runningPort = serverRunningPort ?? 3000;
-
-    this.setupServer(setupOptions.setupServices, setupOptions.databaseSetup);
   }
 
   private async setupServer(
     endpointSetupList: EndpointSetup[],
     dbSetup?: DatabaseSetup,
   ) {
-    for (const endpointData of endpointSetupList) {
-      const endpoint = new Endpoint(this.zeroknowledgehandler);
-      endpoint.setupEndpoint(endpointData);
-      this.serverEndpoints.push(endpoint);
-    }
-    switch (dbSetup?.type) {
-      case DatabaseType.REDIS:
-        this.setupRedisDBClient(dbSetup);
-        break;
-      case DatabaseType.MYSQL:
-        this.setupMySqlDBClient();
-        break;
-      default:
-        this.log.warn("No database setup selected");
+    const tag: string = "ZeroKnowledgeServer#setupServer()";
+    try {
+      for (const endpointData of endpointSetupList) {
+        const endpoint = new Endpoint(this.zeroknowledgehandler);
+        endpoint.setupEndpoint(endpointData);
+        this.serverEndpoints.push(endpoint);
+      }
+      switch (dbSetup?.type) {
+        case DatabaseType.REDIS:
+          this.setupRedisDBClient(dbSetup);
+          break;
+        case DatabaseType.MYSQL:
+          this.setupMySqlDBClient();
+          break;
+        default:
+          this.log.warn(`${tag}: No database setup provided`);
+      }
+    } catch (error) {
+      throw error;
     }
   }
 
   private setupRedisDBClient(dbSetup?: DatabaseSetup) {
     const port = dbSetup?.port ?? 6379;
     const ipAddress = dbSetup?.ipAddress ?? "localhost";
+    const tag: string = "ZeroKnowledgeServer#setupRedisDBClient()";
     try {
       if (this.dedicatedDatabase === undefined) {
         this.dedicatedDatabase = new Map<number, ZKDatabaseClient>();
       }
       if (this.dedicatedDatabase.has(port)) {
-        const storedClient = this.dedicatedDatabase.get(port);
-        if (
-          storedClient !== undefined &&
-          storedClient.checkClientId(ipAddress, port)
-        ) {
-          throw new Error(`A client for this Redis DB already exists`);
-        }
+        //const storedClient = this.dedicatedDatabase.get(port);
+        //if (
+        //  storedClient !== undefined &&
+        //  storedClient.checkClientId(ipAddress, port)
+        //) {
+        throw new DuplicateDatabaseClientError("Redis", port.toString());
+        //}
       }
       this.dedicatedDatabase.set(
         port,
         new RedisDBClient(DatabaseType.REDIS, port, "DEBUG", ipAddress),
       );
       this.dedicatedDatabase.get(port)?.connect();
-      this.log.info("Redis DB setup complete");
+      this.log.info(
+        `${tag}: Redis DB client connection to port ${port} complete`,
+      );
     } catch (error) {
-      this.log.error(`Error setting up Redis DB: ${error}`);
       throw error;
     }
   }
 
   private setupMySqlDBClient() {
     // Placeholder for MySQL DB setup logic
-    this.log.info("MySQL DB setup complete");
+    throw new Error("MySQL DB setup not implemented yet");
   }
 
-  private async prepareParams(params: any[]): Promise<any[]> {
-    const preparedParams: any[] = [];
-    for (const element of params) {
-      if ("fetchAt" in element && "key" in element) {
-        const client = await this.dedicatedDatabase?.get(
-          Number(element.fetchAt),
-        );
-        const el = await client?.getObject(element.key);
-        preparedParams.push(JSON.parse(el!));
-      } else {
-        preparedParams.push(element);
+  private async setAndFetchRequestInputs(
+    receivedInputs: any[],
+  ): Promise<any[]> {
+    try {
+      const preparedParams: any[] = [];
+      for (const element of receivedInputs) {
+        if ("fetchAt" in element && "key" in element) {
+          const client = await this.dedicatedDatabase?.get(
+            Number(element.fetchAt),
+          );
+          console.log(client!.toString());
+          const el = await client?.getObject(element.key);
+          preparedParams.push(JSON.parse(el!));
+        } else {
+          preparedParams.push(element);
+        }
       }
+      return preparedParams;
+    } catch (error) {
+      throw error;
     }
-    return preparedParams;
   }
 
   public exposeEndpoints(endpointSelection?: Endpoint[]) {
@@ -176,7 +196,10 @@ export class ZeroKnowledgeServer {
                   try {
                     if (req.body.params) {
                       let result;
-                      const params = await this.prepareParams(req.body.params);
+                      const params = await this.setAndFetchRequestInputs(
+                        req.body.params,
+                      );
+                      console.log(params);
                       result = await endpoint.executeService(
                         endpointProperties.endpointName!,
                         params,

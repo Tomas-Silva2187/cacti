@@ -2,17 +2,18 @@ import {
   CircuitLoadSetup,
   ZeroKnowledgeHandler,
   ZeroKnowledgeHandlerOptions,
+  ZeroKnowledgeProviderOptions,
 } from "../../../main/typescript/zk-actions/zoKratesHandler";
 import * as path from "path";
 import { describe, expect, it } from "vitest";
+import { createHash } from "crypto";
 
 describe("ZeroKnowledgeHandler", () => {
-  let handler: ZeroKnowledgeHandler;
-  let compiledCircuit: any;
-  let witness: any;
-  let keypair: any;
-
   describe("Single handler testing", () => {
+    let handler: ZeroKnowledgeHandler;
+    let compiledCircuit: any;
+    let witness: any;
+    let keypair: any;
     it("should initialize with default options", async () => {
       handler = new ZeroKnowledgeHandler({
         logLevel: "INFO",
@@ -89,6 +90,78 @@ describe("ZeroKnowledgeHandler", () => {
       );
       const isValid = await handler2.verifyProof(proof, keypair2);
       expect(isValid).toBe(false);
+    });
+  });
+
+  describe("Hash function testing", () => {
+    it("should hash inputs correctly", async () => {
+      const handler = new ZeroKnowledgeHandler({
+        logLevel: "INFO",
+        zkcircuitPath: path.join(__dirname, "../../zokrates"),
+        providerOptions: {
+          backend: "bellman",
+          curve: "bn128",
+          scheme: "g16",
+        } as ZeroKnowledgeProviderOptions,
+      } as ZeroKnowledgeHandlerOptions);
+      expect(handler).toBeDefined();
+      await handler.initializeZoKrates();
+      const compiledCircuit = await handler.compileCircuit({
+        circuitName: "hashCompute.zok",
+      } as CircuitLoadSetup);
+      expect(compiledCircuit).toBeDefined();
+      const witness = await handler.computeWitness(compiledCircuit, [
+        "0",
+        "0",
+        "0",
+        "1",
+        "1",
+        "0",
+        "1",
+        "0",
+        "0",
+        "1",
+        "0",
+        "0",
+        "0",
+        "1",
+        "1",
+        "0",
+        "1",
+        "0",
+        "0",
+        "1",
+        "0",
+        "0",
+        "0",
+        "1",
+        "1",
+        "0",
+        "1",
+        "0",
+        "0",
+        "1",
+        "0",
+        "0",
+        "0",
+        "1",
+        "1",
+        "0",
+        "1",
+        "0",
+        "0",
+        "1",
+      ]);
+      console.log("zokrates:");
+      expect(witness).toBeDefined();
+      console.log(witness.output);
+
+      const bytes = Uint8Array.from([104, 101, 108, 108, 111]);
+
+      const hash = createHash("sha256").update(bytes).digest("hex");
+
+      console.log("typescript hash:");
+      console.log(hash);
     });
   });
 });

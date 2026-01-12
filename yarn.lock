@@ -20268,6 +20268,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@zkpassport/poseidon2@npm:^0.6.2":
+  version: 0.6.2
+  resolution: "@zkpassport/poseidon2@npm:0.6.2"
+  checksum: 10/8648756b306442e666b84639f8ae8a573835e77bde1ab612bd358c84202fb234e43834670a0792cc21138740557d6ca6b471a27b72c47fd8f394c1790824a7ad
+  languageName: node
+  linkType: hard
+
 "JSONStream@npm:^1.3.5":
   version: 1.3.5
   resolution: "JSONStream@npm:1.3.5"
@@ -20814,6 +20821,13 @@ __metadata:
     json-schema-traverse: "npm:^0.4.1"
     uri-js: "npm:^4.2.2"
   checksum: 10/48d6ad21138d12eb4d16d878d630079a2bda25a04e745c07846a4ad768319533031e28872a9b3c5790fa1ec41aabdf2abed30a56e5a03ebc2cf92184b8ee306c
+  languageName: node
+  linkType: hard
+
+"amdefine@npm:>=0.0.4":
+  version: 1.0.1
+  resolution: "amdefine@npm:1.0.1"
+  checksum: 10/517df65fc33d3ff14fe5c0057e041b03d603a2254dea7968b05dfbfa3041eb8430ea6729e305bc428c03fad03f162de91a4b256692d27d7b81d3ee691312cffe
   languageName: node
   linkType: hard
 
@@ -22709,6 +22723,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bluebird@npm:2.3.11":
+  version: 2.3.11
+  resolution: "bluebird@npm:2.3.11"
+  checksum: 10/bb4106d11394527e5783d315caf9e75a989d43805c972b880fda658dda4259f81cf6a9c33eb49a02d6767ba930cb21ca66cfddfee2ffc7662b9d4da39af00131
+  languageName: node
+  linkType: hard
+
 "bluebird@npm:3.7.2, bluebird@npm:^3.4.1, bluebird@npm:^3.5.0, bluebird@npm:^3.5.2, bluebird@npm:^3.7.2":
   version: 3.7.2
   resolution: "bluebird@npm:3.7.2"
@@ -23477,7 +23498,9 @@ __metadata:
   dependencies:
     "@hyperledger/cactus-common": "npm:2.1.0"
     "@types/express": "npm:^5"
+    "@zkpassport/poseidon2": "npm:^0.6.2"
     express: "npm:^5.2.1"
+    poseidon: "npm:^0.3.2"
     redis: "npm:^5.10.0"
     vitest: "npm:^4.0.14"
     zokrates-js: "npm:^1.1.9"
@@ -29445,6 +29468,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"escodegen@npm:~1.1.0":
+  version: 1.1.0
+  resolution: "escodegen@npm:1.1.0"
+  dependencies:
+    esprima: "npm:~1.0.4"
+    estraverse: "npm:~1.5.0"
+    esutils: "npm:~1.0.0"
+    source-map: "npm:~0.1.30"
+  dependenciesMeta:
+    source-map:
+      optional: true
+  bin:
+    escodegen: ./bin/escodegen.js
+    esgenerate: ./bin/esgenerate.js
+  checksum: 10/43595b243d50e21ae9d9ee258aab27bd17cdb45a7f23da32d6d56bd531e48e56563159adfcb42f46be3df4cd1b2b57744e0e067fc5ce65d89ad0520b6e64a0bc
+  languageName: node
+  linkType: hard
+
 "escope@npm:^3.6.0":
   version: 3.6.0
   resolution: "escope@npm:3.6.0"
@@ -30256,6 +30297,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"esprima@npm:~1.0.4":
+  version: 1.0.4
+  resolution: "esprima@npm:1.0.4"
+  bin:
+    esparse: ./bin/esparse.js
+    esvalidate: ./bin/esvalidate.js
+  checksum: 10/968f923484e6dd9d6f8dd1e737efb5d85c1b1580cd1e43bbf5db4fc92a4973cf444dbf8c31d01abac4a93ff751acaaaeb74a0daef0b7dc0bf785ae6f0ebf8a95
+  languageName: node
+  linkType: hard
+
 "esquery@npm:^1.0.0, esquery@npm:^1.4.2, esquery@npm:^1.5.0":
   version: 1.6.0
   resolution: "esquery@npm:1.6.0"
@@ -30288,6 +30339,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"estraverse@npm:~1.5.0":
+  version: 1.5.1
+  resolution: "estraverse@npm:1.5.1"
+  checksum: 10/69701ea5e0c539938ecc033c12d267c64dd2acacfcfd6de34efddb602bf36b763f0d8c737e86893d1fba73958cc77c41ad3fa7427a3ff4fefec5297c88a4cc1a
+  languageName: node
+  linkType: hard
+
 "estree-walker@npm:^1.0.1":
   version: 1.0.1
   resolution: "estree-walker@npm:1.0.1"
@@ -30315,6 +30373,13 @@ __metadata:
   version: 2.0.3
   resolution: "esutils@npm:2.0.3"
   checksum: 10/b23acd24791db11d8f65be5ea58fd9a6ce2df5120ae2da65c16cfc5331ff59d5ac4ef50af66cd4bde238881503ec839928a0135b99a036a9cdfa22d17fd56cdb
+  languageName: node
+  linkType: hard
+
+"esutils@npm:~1.0.0":
+  version: 1.0.0
+  resolution: "esutils@npm:1.0.0"
+  checksum: 10/107ee3c7ee6cb47073ea3c54e86a1cf96b0ab27f1daecf93e53107d27d60a15267abcc07ca6e38a1f3ff18cae25305a1b9c633c81cc5204dd20dff0a58f21965
   languageName: node
   linkType: hard
 
@@ -45768,6 +45833,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"poseidon@npm:^0.3.2":
+  version: 0.3.2
+  resolution: "poseidon@npm:0.3.2"
+  dependencies:
+    bluebird: "npm:2.3.11"
+    escodegen: "npm:~1.1.0"
+    esprima: "npm:~1.0.4"
+  checksum: 10/e5ee6859074fed9809400330d45330181a7e90a3f09405ed4d304789a36df2d9befb9aca1d9f0c6187368eb36a9396ca5da780d410a0e250f4522976a175fa40
+  languageName: node
+  linkType: hard
+
 "posix-character-classes@npm:^0.1.0":
   version: 0.1.1
   resolution: "posix-character-classes@npm:0.1.1"
@@ -51446,6 +51522,15 @@ __metadata:
   dependencies:
     whatwg-url: "npm:^7.0.0"
   checksum: 10/c02e22ab9f8b8e38655ba1e9abae9fe1f8ba216cbbea922718d5e2ea45821606a74f10edec1db9055e7f7cfd1e6a62e5eade67ec30c017a02f4c8e990accbc1c
+  languageName: node
+  linkType: hard
+
+"source-map@npm:~0.1.30":
+  version: 0.1.43
+  resolution: "source-map@npm:0.1.43"
+  dependencies:
+    amdefine: "npm:>=0.0.4"
+  checksum: 10/6fe101dc2745bd75700636144a71ef4d2819f37cfa0a3ee9c8f2b1c3f6799f5c2f8f8d64e5e2ba3af4db447bf72eaf09b3964da9804d58b06cf6fe1fb9f093f5
   languageName: node
   linkType: hard
 

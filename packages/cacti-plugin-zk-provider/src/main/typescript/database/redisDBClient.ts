@@ -150,7 +150,10 @@ export class RedisDBClient extends ZKDatabaseClient {
   }
 
   async getObject(key: string): Promise<string | null> {
+    console.log(`Getting object with key in redis client: ${key}`);
     const data = await this.client.hGet(`sha256: ${key}`, "result");
+    console.log(data);
+    console.log("---");
     return data ?? null;
   }
 

@@ -1,0 +1,5 @@
+import "hashes/sha256/sha256" as sha256;
+
+def main(private bool[40] bits) -> bool[256] {
+    return sha256(bits);
+}

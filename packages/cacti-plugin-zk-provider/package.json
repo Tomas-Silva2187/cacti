@@ -1,6 +1,15 @@
 {
   "name": "cacti-plugin-zk-provider",
   "packageManager": "yarn@4.3.1",
+  "main": "dist/lib/main/typescript/index.js",
+  "module": "dist/lib/main/typescript/index.js",
+  "types": "dist/lib/main/typescript/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist/lib/main/**/*.js",
+    "dist/lib/main/**/*.d.ts",
+    "dist/lib/main/**/*.json"
+  ],
   "dependencies": {
     "@hyperledger/cactus-common": "2.1.0",
     "@zkpassport/poseidon2": "^0.6.2",
@@ -10,6 +19,7 @@
     "zokrates-js": "^1.1.9"
   },
   "scripts": {
+    "build": "tsc --project ./tsconfig.json",
     "zk-test": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"ZeroKnowledgeHandler\"",
     "zk-test2": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"Hash function testing\"",
     "endpoint-test": "npx vitest run ./src/test/typescript/vitest/endpoint-setup.test.ts -t \"Endpoint Setup\"",
@@ -20,6 +30,7 @@
   },
   "devDependencies": {
     "@types/express": "^5",
+    "typescript": "^5.9.3",
     "vitest": "^4.0.14"
   }
 }

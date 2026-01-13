@@ -1,0 +1,34 @@
+{
+    "zeroKnowledgeCircuitPath": "src/test/zokrates",
+    "logLevel": "INFO",
+    "setupServices": [
+        { 
+            "endpointName": "compile",
+            "executeFunction": "compileCircuit",
+            "endpointCallType": "POST"
+        },
+        { 
+            "endpointName": "witness",
+            "executeFunction": "computeWitness",
+            "endpointCallType": "POST" 
+        },
+        {
+            "endpointName": "keypair",
+            "executeFunction": "generateProofKeyPair",
+            "endpointCallType": "POST"
+        },
+        {
+            "endpointName": "generate",
+            "executeFunction": "generateProof",
+            "endpointCallType": "POST"
+        },
+        {
+            "endpointName": "verify",
+            "executeFunction": "verifyProof",
+            "endpointCallType": "POST"
+        }
+    ],
+    "databaseSetup": {
+        "type": 1
+    }
+}

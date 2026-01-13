@@ -6,20 +6,21 @@
     "declarationDir": "dist/lib",
     "allowJs": false,
     "rootDir": "./src/",
-    "tsBuildInfoFile": "../../.build-cache/cactus-plugin-satp-hermes.tsbuildinfo",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "target": "esnext",
+    "skipLibCheck": true,
+    "noImplicitAny": false
   },
   "ts-node": {
     "files": true
   },
   "include": [
-    "./src",
-    "src/**/*.json"
+    "src",
   ],
   "exclude": [
-    "./src/main/typescript/cross-chain-mechanisms/bridge/fabric-contracts",
-    "./src/test/typescript/fabric/**/*.ts",
-    "./public/**/*"
+    "node_modules"
   ]
 }

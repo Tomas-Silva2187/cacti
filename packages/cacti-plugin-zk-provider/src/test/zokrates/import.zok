@@ -1,0 +1,7 @@
+import "mystd/square" as square
+
+def main(private field a, field b) {
+    field c = square(a);
+    assert(c == b);
+    return;
+}

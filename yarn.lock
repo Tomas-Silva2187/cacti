@@ -19808,6 +19808,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vercel/ncc@npm:^0.38.4":
+  version: 0.38.4
+  resolution: "@vercel/ncc@npm:0.38.4"
+  dependencies:
+    node-gyp: "npm:latest"
+  bin:
+    ncc: dist/ncc/cli.js
+  checksum: 10/06561fb3fd46c4db525ea1c9f39b7982e449e9a1995e94d8f5b876c939147c31dba0ca5ffaed4b30ebc6782ffbde531b3f01658996bdaaecb3928df5b1aec155
+  languageName: node
+  linkType: hard
+
 "@vitejs/plugin-basic-ssl@npm:1.0.1":
   version: 1.0.1
   resolution: "@vitejs/plugin-basic-ssl@npm:1.0.1"
@@ -23498,10 +23509,13 @@ __metadata:
   dependencies:
     "@hyperledger/cactus-common": "npm:2.1.0"
     "@types/express": "npm:^5"
+    "@vercel/ncc": "npm:^0.38.4"
     "@zkpassport/poseidon2": "npm:^0.6.2"
     express: "npm:^5.2.1"
+    ncc: "npm:^0.3.6"
     poseidon: "npm:^0.3.2"
     redis: "npm:^5.10.0"
+    typescript: "npm:^5.9.3"
     vitest: "npm:^4.0.14"
     zokrates-js: "npm:^1.1.9"
   languageName: unknown
@@ -24752,6 +24766,13 @@ __metadata:
   version: 1.0.3
   resolution: "colors@npm:1.0.3"
   checksum: 10/8d81835f217ffca6de6665c8dd9ed132c562d108d4ba842d638c7cb5f8127cff47cb1b54c6bbea49e22eaa7b56caee6b85278dde9c2564f8a0eaef161e028ae0
+  languageName: node
+  linkType: hard
+
+"colors@npm:1.2.3":
+  version: 1.2.3
+  resolution: "colors@npm:1.2.3"
+  checksum: 10/bf707bda857c4cb27a6a73fa418f4f494d9e2ea0454f127f56a29570c99a85211ff2b1dc253ca2628f22d65847621fcfac26953b1397b3de8a39a332f37676ad
   languageName: node
   linkType: hard
 
@@ -27070,6 +27091,13 @@ __metadata:
   version: 4.0.14
   resolution: "date-format@npm:4.0.14"
   checksum: 10/6b07fd1df247439c53b71244e3468b93e6dfebb5d409b9328dd7b7e9ed0d2e875018e20fb1a95ae6b677dea708ec06aaa5058a7a5faa1a7f649338aabf04991a
+  languageName: node
+  linkType: hard
+
+"dateformat@npm:3.0.3":
+  version: 3.0.3
+  resolution: "dateformat@npm:3.0.3"
+  checksum: 10/0504baf50c3777ad333c96c37d1673d67efcb7dd071563832f70b5cbf7f3f4753f18981d44bfd8f665d5e5a511d2fc0af8e0ead8b585b9b3ddaa90067864d3f0
   languageName: node
   linkType: hard
 
@@ -42532,6 +42560,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ncc@npm:^0.3.6":
+  version: 0.3.6
+  resolution: "ncc@npm:0.3.6"
+  dependencies:
+    mkdirp: "npm:^0.5.1"
+    rimraf: "npm:^2.6.1"
+    tracer: "npm:^0.8.7"
+    ws: "npm:^2.3.1"
+  checksum: 10/f6668537d2845f13eba292c362e46575a278d3680ed4c0f49c46804e61953342407464a45d05327e7bd7e87f403182245efd0976fbdb668e5191a57e0b2b8977
+  languageName: node
+  linkType: hard
+
 "nconf@npm:^0.12.0":
   version: 0.12.1
   resolution: "nconf@npm:0.12.1"
@@ -53733,6 +53773,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tinytim@npm:0.1.1":
+  version: 0.1.1
+  resolution: "tinytim@npm:0.1.1"
+  checksum: 10/4bb372336f0ec2cd14d7ebb375660bc0a6a3bc14d937dbd0b5768486a0b87bec45e2f8766b4c06edcbd5534872f0a2965cbb81aabf1dad3c712a35f1728a1fad
+  languageName: node
+  linkType: hard
+
 "title-case@npm:^2.1.0, title-case@npm:^2.1.1":
   version: 2.1.1
   resolution: "title-case@npm:2.1.1"
@@ -53902,6 +53949,18 @@ __metadata:
   version: 0.0.3
   resolution: "tr46@npm:0.0.3"
   checksum: 10/8f1f5aa6cb232f9e1bdc86f485f916b7aa38caee8a778b378ffec0b70d9307873f253f5cbadbe2955ece2ac5c83d0dc14a77513166ccd0a0c7fe197e21396695
+  languageName: node
+  linkType: hard
+
+"tracer@npm:^0.8.7":
+  version: 0.8.15
+  resolution: "tracer@npm:0.8.15"
+  dependencies:
+    colors: "npm:1.2.3"
+    dateformat: "npm:3.0.3"
+    mkdirp: "npm:^0.5.1"
+    tinytim: "npm:0.1.1"
+  checksum: 10/38746ed4f5df713968e8d3be05acd529ff2f259fa64f751ad1bf8cffd530b3e7a302b3d128dc5fd0a83554ec40dd7183a4370ed297a314b05724b7fa14076549
   languageName: node
   linkType: hard
 
@@ -54904,7 +54963,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^4.6.4 || ^5.2.2, typescript@npm:^5.0.4, typescript@npm:^5.4.4":
+"typescript@npm:^4.6.4 || ^5.2.2, typescript@npm:^5.0.4, typescript@npm:^5.4.4, typescript@npm:^5.9.3":
   version: 5.9.3
   resolution: "typescript@npm:5.9.3"
   bin:
@@ -54974,7 +55033,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A^4.6.4 || ^5.2.2#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.0.4#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.4.4#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A^4.6.4 || ^5.2.2#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.0.4#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.4.4#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.9.3#optional!builtin<compat/typescript>":
   version: 5.9.3
   resolution: "typescript@patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>::version=5.9.3&hash=379a07"
   bin:

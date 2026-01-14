@@ -19,6 +19,19 @@ export class ZeroKnowledgeClient {
     this.server_url = `http://${ip}:${port}`;
   }
 
+  public getCompilation() {
+    return JSON.stringify(this.circuitCompilation);
+  }
+  public getWitness() {
+    return JSON.stringify(this.circuitWitness);
+  }
+  public getKeypair() {
+    return JSON.stringify(this.circuitKeypair);
+  }
+  public getProof() {
+    return JSON.stringify(this.circuitProof);
+  }
+
   public async requestCompile(store: boolean, circuitName: string) {
     let requestBody;
     const requestUrl = `${this.server_url}/compile`;

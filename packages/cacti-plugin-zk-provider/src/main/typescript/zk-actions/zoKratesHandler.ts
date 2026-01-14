@@ -18,7 +18,7 @@ import {
   ZoKratesComputationError,
   ZoKratesInitializationError,
   ZoKratesProviderNotInitializedError,
-} from "./errors/zk-errors";
+} from "./errors/zk-errors.js";
 
 export interface ZeroKnowledgeProviderOptions {
   // Library to use when computing zk steps

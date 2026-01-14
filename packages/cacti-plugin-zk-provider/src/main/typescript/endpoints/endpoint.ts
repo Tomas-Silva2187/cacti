@@ -2,7 +2,7 @@ import {
   BlacklistedServiceError,
   OverwriteServiceError,
   UnknownServiceError,
-} from "./errors/endpoint-errors";
+} from "./errors/endpoint-errors.js";
 
 export enum EndpointCallType {
   GET = "GET",

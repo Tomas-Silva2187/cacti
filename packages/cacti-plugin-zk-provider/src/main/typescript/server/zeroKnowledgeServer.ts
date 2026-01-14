@@ -7,15 +7,15 @@ import {
   Endpoint,
   EndpointCallType,
   EndpointSetup,
-} from "../endpoints/endpoint";
+} from "../endpoints/endpoint.js";
 import {
   ZeroKnowledgeHandler,
   ZeroKnowledgeProviderOptions,
-} from "../zk-actions/zoKratesHandler";
+} from "../zk-actions/zoKratesHandler.js";
 import express from "express";
-import { RedisDBClient } from "../database/redisDBClient";
-import { ZKDatabaseClient } from "../database/zkDatabase";
-import { DuplicateDatabaseClientError } from "./serverErrors";
+import { RedisDBClient } from "../database/redisDBClient.js";
+import { ZKDatabaseClient } from "../database/zkDatabase.js";
+import { DuplicateDatabaseClientError } from "./serverErrors.js";
 
 export enum DatabaseType {
   REDIS = 1,
@@ -45,6 +45,8 @@ export class ZeroKnowledgeServer {
   private serverInstance: any;
   private dedicatedDatabase: Map<number, ZKDatabaseClient> | undefined;
   private zkProviderOptions?: ZeroKnowledgeProviderOptions;
+  private servicesSetup: EndpointSetup[];
+  private dbSetup: DatabaseSetup | undefined;
 
   constructor(
     setupOptions: ServerSetup,
@@ -71,7 +73,8 @@ export class ZeroKnowledgeServer {
 
       this.runningPort = serverRunningPort ?? 3000;
 
-      this.setupServer(setupOptions.setupServices, setupOptions.databaseSetup);
+      this.servicesSetup = setupOptions.setupServices;
+      this.dbSetup = setupOptions.databaseSetup;
     } catch (error) {
       throw error;
     }
@@ -90,7 +93,7 @@ export class ZeroKnowledgeServer {
       }
       switch (dbSetup?.type) {
         case DatabaseType.REDIS:
-          this.setupRedisDBClient(dbSetup);
+          await this.setupRedisDBClient(dbSetup);
           break;
         case DatabaseType.MYSQL:
           this.setupMySqlDBClient();
@@ -103,7 +106,7 @@ export class ZeroKnowledgeServer {
     }
   }
 
-  private setupRedisDBClient(dbSetup?: DatabaseSetup) {
+  private async setupRedisDBClient(dbSetup?: DatabaseSetup) {
     const port = dbSetup?.port ?? 6379;
     const ipAddress = dbSetup?.ipAddress ?? "localhost";
     const tag: string = "ZeroKnowledgeServer#setupRedisDBClient()";
@@ -120,11 +123,11 @@ export class ZeroKnowledgeServer {
         throw new DuplicateDatabaseClientError("Redis", port.toString());
         //}
       }
-      this.dedicatedDatabase.set(
+      await this.dedicatedDatabase.set(
         port,
         new RedisDBClient(DatabaseType.REDIS, port, "DEBUG", ipAddress),
       );
-      this.dedicatedDatabase.get(port)?.connect();
+      await this.dedicatedDatabase.get(port)?.connect();
       this.log.info(
         `${tag}: Redis DB client connection to port ${port} complete`,
       );
@@ -194,12 +197,14 @@ export class ZeroKnowledgeServer {
                 "/" + endpointProperties.endpointName!,
                 async (req, res) => {
                   try {
+                    this.log.info(
+                      `Received request for endpoint ${endpointProperties.endpointName!}`,
+                    );
                     if (req.body.params) {
                       let result;
                       const params = await this.setAndFetchRequestInputs(
                         req.body.params,
                       );
-                      console.log(params);
                       result = await endpoint.executeService(
                         endpointProperties.endpointName!,
                         params,
@@ -209,6 +214,7 @@ export class ZeroKnowledgeServer {
                           ?.get(req.body.store)
                           ?.storeObject(JSON.stringify(result));
                       }
+                      this.log.info(`Returning result ${result}`);
                       res.json({ result });
                     }
                   } catch (error) {
@@ -232,6 +238,7 @@ export class ZeroKnowledgeServer {
   }
 
   public async serverInit() {
+    await this.setupServer(this.servicesSetup, this.dbSetup);
     if (this.zeroknowledgehandler instanceof ZeroKnowledgeHandler) {
       await this.zeroknowledgehandler.initializeZoKrates(
         this.zkProviderOptions,

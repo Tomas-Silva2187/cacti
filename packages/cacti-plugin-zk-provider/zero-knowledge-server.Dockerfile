@@ -3,12 +3,15 @@ FROM node:18
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    docker-ce \
-    docker-ce-cli \
-    containerd.io \
-    docker-buildx-plugin \
-    docker-compose-plugin \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get install -y redis-server
 
-RUN ln -s /usr/bin/dockerd /usr/local/bin/dockerd
+RUN mkdir -p /zk-server
+RUN mkdir -p /zk-server/build
+WORKDIR /zk-server
+
+COPY build /zk-server/build/
+COPY ./serverSetupConfig.json /zk-server/
+
+#RUN npm install --only=production
+
+ENTRYPOINT ["node", "build/index.js"]

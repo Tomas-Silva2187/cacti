@@ -4,29 +4,35 @@
   "main": "dist/lib/main/typescript/index.js",
   "module": "dist/lib/main/typescript/index.js",
   "types": "dist/lib/main/typescript/index.d.ts",
-  "type": "module",
   "files": [
     "dist/lib/main/**/*.js",
     "dist/lib/main/**/*.d.ts",
     "dist/lib/main/**/*.json"
   ],
+  "type": "module",
   "dependencies": {
     "@hyperledger/cactus-common": "2.1.0",
+    "@vercel/ncc": "^0.38.4",
     "@zkpassport/poseidon2": "^0.6.2",
     "express": "^5.2.1",
+    "ncc": "^0.3.6",
     "poseidon": "^0.3.2",
     "redis": "^5.10.0",
     "zokrates-js": "^1.1.9"
   },
   "scripts": {
-    "build": "tsc --project ./tsconfig.json",
+    "build": "tsc",
+    "build-bundle": "ncc build dist/lib/index.js -o build",
+    "start": "node ./dist/lib/index.js",
     "zk-test": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"ZeroKnowledgeHandler\"",
     "zk-test2": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"Hash function testing\"",
     "endpoint-test": "npx vitest run ./src/test/typescript/vitest/endpoint-setup.test.ts -t \"Endpoint Setup\"",
     "zk-server-test": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"ZK Server With Endpoints\"",
     "zk-server-db-test": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"ZK Server Storing and Fetching from Database\"",
     "zk-server-db-test2": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"ZK Server automatically Fetching from Database\"",
-    "zk-client-test": "npx vitest run ./src/test/typescript/vitest/zk-client.test.ts -t \"Client to Server\""
+    "zk-client-test": "npx vitest run ./src/test/typescript/vitest/zk-client.test.ts -t \"Client to Server\"",
+    "docker-build": "docker build -f zero-knowledge-server.Dockerfile -t zkserver .",
+    "docker-run": "docker run --name myserver zkserver"
   },
   "devDependencies": {
     "@types/express": "^5",

@@ -6,8 +6,8 @@ import {
 import { createClient, RedisClientType } from "redis";
 //import { spawn, ChildProcess } from "child_process";
 //import { ZKDatabase } from "./zkDatabase";
-import { DatabaseType } from "../server/zeroKnowledgeServer";
-import { ZKDatabaseClient } from "./zkDatabase";
+import { DatabaseType } from "../server/zeroKnowledgeServer.js";
+import { ZKDatabaseClient } from "./zkDatabase.js";
 import { createHash } from "crypto";
 export interface RedisDBSetupOptions {
   port: number;
@@ -96,6 +96,7 @@ export class RedisDBClient extends ZKDatabaseClient {
     try {
       await this.client.connect();
       this.log.info(`${fnTag}: Connected to Redis server successfully.`);
+      return;
     } catch (error) {
       this.log.error(`${fnTag}: Error connecting to Redis server: ${error}`);
       throw error;

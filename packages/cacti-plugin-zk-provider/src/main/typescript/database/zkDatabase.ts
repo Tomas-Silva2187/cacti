@@ -1,4 +1,4 @@
-import { DatabaseType } from "../server/zeroKnowledgeServer";
+import { DatabaseType } from "../server/zeroKnowledgeServer.js";
 
 export abstract class ZKDatabaseClient {
   protected databaseType: DatabaseType;

@@ -10,9 +10,11 @@
     "emitDecoratorMetadata": true,
     "module": "esnext",
     "moduleResolution": "node",
-    "target": "esnext",
+    "target": "es2020",
     "skipLibCheck": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "esModuleInterop": true,
+    "strict": true
   },
   "ts-node": {
     "files": true

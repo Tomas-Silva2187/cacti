@@ -6,20 +6,8 @@ import {
 import { createClient, RedisClientType } from "redis";
 //import { spawn, ChildProcess } from "child_process";
 //import { ZKDatabase } from "./zkDatabase";
-import { DatabaseType } from "../server/zeroKnowledgeServer.js";
-import { ZKDatabaseClient } from "./zkDatabase.js";
+import { DatabaseType, ZKDatabaseClient } from "./zkDatabase.js";
 import { createHash } from "crypto";
-export interface RedisDBSetupOptions {
-  port: number;
-  logLevel?: LogLevelDesc;
-}
-
-export interface SNARKGeneratedArtifacts {
-  compilationArtifacts?: string;
-  witness?: string;
-  keypair?: string;
-  proof?: string;
-}
 
 export interface ZKSnarkCircuit {
   name: string;
@@ -45,11 +33,6 @@ export class RedisDBClient extends ZKDatabaseClient {
     this.client = createClient({
       url: `redis://${this.ipAddress}:${this.port}`,
     });
-  }
-
-  public checkClientId(ip: string, port: number): boolean {
-    const id = this.ipAddress + ":" + this.port.toString();
-    return id === ip + ":" + port.toString();
   }
 
   /*async startServer(): Promise<void> {
@@ -132,30 +115,36 @@ export class RedisDBClient extends ZKDatabaseClient {
     }
   }
 
+  /**
+   * Stores a data object in Redis with hash as key, and returns the key.
+   */
   async storeObject(objectToStore: string) {
     const fnTag = `${RedisDBClient.CLASS_NAME}#storeObject()`;
-    const key = createHash("sha256").update(objectToStore).digest("hex");
     try {
-      this.log.info(`${fnTag}: Storing endpoint result with key ${key}...`);
-      this.log.info(`${fnTag}: Object to store: ${objectToStore}`);
-      const r = await this.client.hSet(`sha256: ${key}`, {
+      const key = createHash("sha256").update(objectToStore).digest("hex");
+      this.log.info(`${fnTag}: Storing operation result with key ${key}...`);
+      await this.client.hSet(`sha256: ${key}`, {
         result: objectToStore,
       });
-      this.log.info(`${fnTag}: HSET result: ${r}`);
-      this.log.info(`${fnTag}: endpoint result stored successfully.`);
+      this.log.info(`${fnTag}: Operation result stored successfully.`);
       return key;
     } catch (error) {
-      this.log.error(`${fnTag}: Error storing circuit: ${error}`);
       throw error;
     }
   }
 
+  /**
+   * Retrieves a data object from Redis using the provided key.
+   */
   async getObject(key: string): Promise<string | null> {
-    console.log(`Getting object with key in redis client: ${key}`);
-    const data = await this.client.hGet(`sha256: ${key}`, "result");
-    console.log(data);
-    console.log("---");
-    return data ?? null;
+    const fnTag = `${RedisDBClient.CLASS_NAME}#getObject()`;
+    this.log.info(`${fnTag}: Fetching data with key: ${key}`);
+    try {
+      const data = await this.client.hGet(`sha256: ${key}`, "result");
+      return data ?? null;
+    } catch (error) {
+      throw error;
+    }
   }
 
   async getCircuit(name: string): Promise<string> {

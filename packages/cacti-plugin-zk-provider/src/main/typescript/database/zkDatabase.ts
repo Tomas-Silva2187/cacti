@@ -1,4 +1,7 @@
-import { DatabaseType } from "../server/zeroKnowledgeServer.js";
+export enum DatabaseType {
+  REDIS = 1,
+  MYSQL = 2,
+}
 
 export abstract class ZKDatabaseClient {
   protected databaseType: DatabaseType;
@@ -12,10 +15,7 @@ export abstract class ZKDatabaseClient {
   public getDatabaseType(): DatabaseType {
     return this.databaseType;
   }
-  public checkClientId(ip: string, port: number): boolean {
-    const id = this.ipAddress + ":" + this.port.toString();
-    return id === ip + ":" + port.toString();
-  }
+
   abstract connect(): Promise<void>;
   abstract disconnect(): Promise<void>;
   abstract storeObject(objectToStore: string): Promise<string>;

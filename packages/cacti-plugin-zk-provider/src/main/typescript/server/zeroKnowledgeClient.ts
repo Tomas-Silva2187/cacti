@@ -213,4 +213,23 @@ export class ZeroKnowledgeClient {
     });
     return (await verifyResponse.json()).result;
   }
+
+  public async requestCircuitLoad(
+    circuitID: string,
+    circuitCredentials: string,
+  ) {
+    const requestUrl = `${this.server_url}/loadCircuit`;
+    const requestBody = JSON.stringify({
+      circuitID: circuitID,
+      circuitCredentials: circuitCredentials,
+    });
+    const loadResponse = await fetch(requestUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: requestBody,
+    });
+    return (await loadResponse.json()).result;
+  }
 }

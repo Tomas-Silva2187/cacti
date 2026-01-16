@@ -14,13 +14,16 @@ import {
 } from "../zk-actions/zoKratesHandler.js";
 import express from "express";
 import { RedisDBClient } from "../database/redisDBClient.js";
-import { ZKDatabaseClient } from "../database/zkDatabase.js";
-import { DuplicateDatabaseClientError } from "./serverErrors.js";
-
-export enum DatabaseType {
-  REDIS = 1,
-  MYSQL = 2,
-}
+import { DatabaseType, ZKDatabaseClient } from "../database/zkDatabase.js";
+import {
+  DuplicateDatabaseClientError,
+  FailedToLoadCircuitError,
+  IncompleteEndpointDataError,
+  NoRequestCallDataError,
+  OverwritingDefinedCircuitError,
+} from "./serverErrors.js";
+import { join } from "path";
+import { existsSync, writeFileSync, mkdirSync } from "fs";
 
 export interface DatabaseSetup {
   type: DatabaseType;
@@ -32,75 +35,61 @@ export interface ServerSetup {
   zeroKnowledgeCircuitPath: string;
   logLevel: LogLevelDesc;
   setupServices: EndpointSetup[];
+  serverPort?: number;
   databaseSetup?: DatabaseSetup;
   zkProviderOptions?: ZeroKnowledgeProviderOptions;
 }
 
+export interface ZeroKnowledgeProvider {
+  zeroKnowledgeProviderClass: ZeroKnowledgeHandler;
+  circuitFileExtension: string;
+}
+
 export class ZeroKnowledgeServer {
-  private zeroknowledgehandler: ZeroKnowledgeHandler | any;
+  private zeroknowledgehandler: ZeroKnowledgeHandler;
   protected serverEndpoints: Endpoint[] = [];
   private log: Logger;
   private runningPort: number;
   private app = express();
   private serverInstance: any;
-  private dedicatedDatabase: Map<number, ZKDatabaseClient> | undefined;
-  private zkProviderOptions?: ZeroKnowledgeProviderOptions;
+  private dedicatedDatabases: Map<number, ZKDatabaseClient> | undefined;
   private servicesSetup: EndpointSetup[];
   private dbSetup: DatabaseSetup | undefined;
+  private readonly CLASS_TAG = "#ZeroKnowledgeServer";
+  private circuitStoragePath: string;
+  private circuitExtension: string;
+
+  private zkProviderOptions?: ZeroKnowledgeProviderOptions;
 
   constructor(
     setupOptions: ServerSetup,
-    serverProviderClass?: any,
-    serverRunningPort?: number,
+    serverProviderClass?: ZeroKnowledgeProvider,
   ) {
     try {
+      const fnTag = "ZeroKnowledgeServer#constructor()";
       this.log = LoggerProvider.getOrCreate({
         label: "ZeroKnowledgeServer",
         level: setupOptions.logLevel,
       });
+
       if (serverProviderClass == undefined) {
-        this.log.info("Setting Server with Default ZoKrates class");
+        this.log.info(`${fnTag} Setting Server with Default ZoKrates Handler`);
         this.zeroknowledgehandler = new ZeroKnowledgeHandler({
           logLevel: setupOptions.logLevel,
           zkcircuitPath: setupOptions.zeroKnowledgeCircuitPath,
           providerOptions: setupOptions.zkProviderOptions,
         });
-        this.zkProviderOptions = setupOptions.zkProviderOptions;
+        this.circuitExtension = ".zok";
       } else {
-        this.log.info("Setting Server with Custom Class");
-        this.zeroknowledgehandler = serverProviderClass;
+        this.log.info(`${fnTag} Setting Server with Custom Class`);
+        this.zeroknowledgehandler =
+          serverProviderClass.zeroKnowledgeProviderClass;
+        this.circuitExtension = serverProviderClass.circuitFileExtension;
       }
-
-      this.runningPort = serverRunningPort ?? 3000;
-
+      this.circuitStoragePath = setupOptions.zeroKnowledgeCircuitPath;
+      this.runningPort = setupOptions.serverPort ?? 3000;
       this.servicesSetup = setupOptions.setupServices;
       this.dbSetup = setupOptions.databaseSetup;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  private async setupServer(
-    endpointSetupList: EndpointSetup[],
-    dbSetup?: DatabaseSetup,
-  ) {
-    const tag: string = "ZeroKnowledgeServer#setupServer()";
-    try {
-      for (const endpointData of endpointSetupList) {
-        const endpoint = new Endpoint(this.zeroknowledgehandler);
-        endpoint.setupEndpoint(endpointData);
-        this.serverEndpoints.push(endpoint);
-      }
-      switch (dbSetup?.type) {
-        case DatabaseType.REDIS:
-          await this.setupRedisDBClient(dbSetup);
-          break;
-        case DatabaseType.MYSQL:
-          this.setupMySqlDBClient();
-          break;
-        default:
-          this.log.warn(`${tag}: No database setup provided`);
-      }
     } catch (error) {
       throw error;
     }
@@ -109,27 +98,21 @@ export class ZeroKnowledgeServer {
   private async setupRedisDBClient(dbSetup?: DatabaseSetup) {
     const port = dbSetup?.port ?? 6379;
     const ipAddress = dbSetup?.ipAddress ?? "localhost";
-    const tag: string = "ZeroKnowledgeServer#setupRedisDBClient()";
+    const fnTag: string = "ZeroKnowledgeServer#setupRedisDBClient()";
     try {
-      if (this.dedicatedDatabase === undefined) {
-        this.dedicatedDatabase = new Map<number, ZKDatabaseClient>();
-      }
-      if (this.dedicatedDatabase.has(port)) {
-        //const storedClient = this.dedicatedDatabase.get(port);
-        //if (
-        //  storedClient !== undefined &&
-        //  storedClient.checkClientId(ipAddress, port)
-        //) {
+      if (this.dedicatedDatabases === undefined) {
+        this.dedicatedDatabases = new Map<number, ZKDatabaseClient>();
+      } else if (this.dedicatedDatabases.has(port)) {
         throw new DuplicateDatabaseClientError("Redis", port.toString());
-        //}
       }
-      await this.dedicatedDatabase.set(
+
+      await this.dedicatedDatabases.set(
         port,
         new RedisDBClient(DatabaseType.REDIS, port, "DEBUG", ipAddress),
       );
-      await this.dedicatedDatabase.get(port)?.connect();
+      await this.dedicatedDatabases.get(port)!.connect();
       this.log.info(
-        `${tag}: Redis DB client connection to port ${port} complete`,
+        `${fnTag}: Redis DB client connection to port ${port} complete`,
       );
     } catch (error) {
       throw error;
@@ -141,21 +124,20 @@ export class ZeroKnowledgeServer {
     throw new Error("MySQL DB setup not implemented yet");
   }
 
-  private async setAndFetchRequestInputs(
-    receivedInputs: any[],
-  ): Promise<any[]> {
+  private async gatherDBInputs(requestParameters: any[]): Promise<any[]> {
     try {
       const preparedParams: any[] = [];
-      for (const element of receivedInputs) {
-        if ("fetchAt" in element && "key" in element) {
-          const client = await this.dedicatedDatabase?.get(
-            Number(element.fetchAt),
+      for (const reqElement of requestParameters) {
+        if ("fetchAt" in reqElement && "key" in reqElement) {
+          const dbClient = await this.dedicatedDatabases?.get(
+            Number(reqElement.fetchAt),
           );
-          console.log(client!.toString());
-          const el = await client?.getObject(element.key);
-          preparedParams.push(JSON.parse(el!));
+          const element = await dbClient?.getObject(reqElement.key);
+          if (element != null) {
+            preparedParams.push(JSON.parse(element!));
+          }
         } else {
-          preparedParams.push(element);
+          preparedParams.push(reqElement);
         }
       }
       return preparedParams;
@@ -164,9 +146,60 @@ export class ZeroKnowledgeServer {
     }
   }
 
-  public exposeEndpoints(endpointSelection?: Endpoint[]) {
-    const endpointsToSetup =
-      endpointSelection != undefined ? endpointSelection : this.serverEndpoints;
+  private verifyCircuitCredential(circuitCredentials: string): boolean {
+    this.log.warn(`Verify Credentials not implemented: ${circuitCredentials}`);
+    // Placeholder for actual credential verification logic
+    return true;
+  }
+
+  private async loadCircuit(circuitID: string, circuitCredentials: string) {
+    const dbClient = await this.dedicatedDatabases?.get(Number("6379"));
+    const circuitCode = await dbClient?.getObject(circuitID);
+    if (circuitCode === undefined || circuitCode === null) {
+      throw new FailedToLoadCircuitError(circuitID);
+    }
+    if (!existsSync(this.circuitStoragePath)) {
+      mkdirSync(this.circuitStoragePath, { recursive: true });
+    }
+    const validateCircuit = this.verifyCircuitCredential(circuitCredentials);
+    if (
+      !existsSync(
+        join(this.circuitStoragePath, `${circuitID}${this.circuitExtension}`),
+      ) &&
+      validateCircuit
+    ) {
+      writeFileSync(
+        join(this.circuitStoragePath, `${circuitID}${this.circuitExtension}`),
+        circuitCode!,
+      );
+      return "ACK";
+    } else {
+      if (validateCircuit) {
+        this.log.warn(`Circuit file ${circuitID}.zok already loaded.`);
+      } else {
+        throw new OverwritingDefinedCircuitError(circuitID);
+      }
+    }
+  }
+
+  public exposeEndpoints() {
+    const endpointsToSetup = this.serverEndpoints;
+    this.app.post("/loadCircuit", async (req, res) => {
+      try {
+        if (req.body.circuitID && req.body.circuitCredentials) {
+          this.log.info(
+            `${this.CLASS_TAG} Received request to load circuit ${req.body.circuitID}`,
+          );
+          const result = await this.loadCircuit(
+            req.body.circuitID,
+            req.body.circuitCredentials,
+          );
+          res.json({ result });
+        }
+      } catch (error) {
+        throw error;
+      }
+    });
     for (const endpoint of endpointsToSetup) {
       try {
         const endpointProperties = endpoint.getEndpointServiceCallProperties();
@@ -181,6 +214,9 @@ export class ZeroKnowledgeServer {
                 "/" + endpointProperties.endpointName!,
                 async (req, res) => {
                   try {
+                    this.log.info(
+                      `${this.CLASS_TAG} Received request for endpoint ${endpointProperties.endpointName!}`,
+                    );
                     const result = await endpoint.executeService(
                       endpointProperties.endpointName!,
                       [],
@@ -198,24 +234,28 @@ export class ZeroKnowledgeServer {
                 async (req, res) => {
                   try {
                     this.log.info(
-                      `Received request for endpoint ${endpointProperties.endpointName!}`,
+                      `${this.CLASS_TAG} Received request for endpoint ${endpointProperties.endpointName!}`,
                     );
                     if (req.body.params) {
                       let result;
-                      const params = await this.setAndFetchRequestInputs(
-                        req.body.params,
-                      );
+                      const params = await this.gatherDBInputs(req.body.params);
                       result = await endpoint.executeService(
                         endpointProperties.endpointName!,
                         params,
                       );
                       if (req.body.store) {
-                        result = await this.dedicatedDatabase
+                        result = await this.dedicatedDatabases
                           ?.get(req.body.store)
                           ?.storeObject(JSON.stringify(result));
                       }
-                      this.log.info(`Returning result ${result}`);
+                      this.log.info(
+                        `${this.CLASS_TAG} Returning result ${result} to caller`,
+                      );
                       res.json({ result });
+                    } else {
+                      throw new NoRequestCallDataError(
+                        endpointProperties.endpointName!,
+                      );
                     }
                   } catch (error) {
                     this.log.error(error);
@@ -225,15 +265,43 @@ export class ZeroKnowledgeServer {
               );
               break;
             default:
-              this.log.warn(
-                `Unknown endpoint call type for service ${endpoint["endpointService"]?.endpointName}`,
-              );
+              this.log.warn(`${this.CLASS_TAG} Unsupported call format`);
           }
+        } else {
+          throw new IncompleteEndpointDataError(
+            endpointProperties?.endpointName ?? "Null",
+            endpointProperties?.endpointCallType ?? "Null",
+          );
         }
       } catch (error) {
-        this.log.error(error);
         throw error;
       }
+    }
+  }
+
+  private async setupServer(
+    endpointSetupList: EndpointSetup[],
+    dbSetup?: DatabaseSetup,
+  ) {
+    const fnTag: string = "ZeroKnowledgeServer#setupServer()";
+    try {
+      for (const endpointParameters of endpointSetupList) {
+        const endpoint = new Endpoint(this.zeroknowledgehandler);
+        endpoint.setupEndpoint(endpointParameters);
+        this.serverEndpoints.push(endpoint);
+      }
+      switch (dbSetup?.type) {
+        case DatabaseType.REDIS:
+          await this.setupRedisDBClient(dbSetup);
+          break;
+        case DatabaseType.MYSQL:
+          this.setupMySqlDBClient();
+          break;
+        default:
+          this.log.warn(`${fnTag}: No database setup provided`);
+      }
+    } catch (error) {
+      throw error;
     }
   }
 

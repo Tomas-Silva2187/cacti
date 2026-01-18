@@ -6,6 +6,7 @@ import {
   RunTransactionResponse,
   Web3SigningCredentialCactusKeychainRef,
   Web3SigningCredentialPrivateKeyHex,
+  Web3SigningCredentialType,
   Web3TransactionReceipt,
 } from "@hyperledger/cactus-plugin-ledger-connector-besu";
 import { stringify as safeStableStringify } from "safe-stable-stringify";
@@ -314,7 +315,25 @@ export class BesuLeaf
         `${BesuLeaf.CLASS_NAME}#constructor, options.signingCredential`,
       );
     }
-    this.signingCredential = options.signingCredential;
+
+    if (
+      "transactionSignerEthAccount" in options.signingCredential &&
+      "secret" in options.signingCredential &&
+      "type" in options.signingCredential
+    ) {
+      const ethSigningCredential = options.signingCredential as {
+        transactionSignerEthAccount: string;
+        secret: string;
+        type: Web3SigningCredentialType;
+      };
+      this.signingCredential = {
+        ethAccount: ethSigningCredential.transactionSignerEthAccount,
+        secret: ethSigningCredential.secret,
+        type: ethSigningCredential.type,
+      };
+    } else {
+      this.signingCredential = options.signingCredential;
+    }
 
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
 

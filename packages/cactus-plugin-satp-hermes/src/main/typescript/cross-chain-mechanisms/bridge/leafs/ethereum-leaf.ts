@@ -101,6 +101,7 @@ import {
   Web3SigningCredentialCactiKeychainRef,
   Web3SigningCredentialGethKeychainPassword,
   Web3SigningCredentialPrivateKeyHex,
+  Web3SigningCredentialType,
 } from "@hyperledger/cactus-plugin-ledger-connector-ethereum";
 import { stringify as safeStableStringify } from "safe-stable-stringify";
 
@@ -557,7 +558,25 @@ export class EthereumLeaf
         `${EthereumLeaf.CLASS_NAME}#constructor, options.signingCredential`,
       );
     }
-    this.signingCredential = options.signingCredential;
+
+    if (
+      "transactionSignerEthAccount" in options.signingCredential &&
+      "secret" in options.signingCredential &&
+      "type" in options.signingCredential
+    ) {
+      const ethSigningCredential = options.signingCredential as {
+        transactionSignerEthAccount: string;
+        secret: string;
+        type: Web3SigningCredentialType;
+      };
+      this.signingCredential = {
+        ethAccount: ethSigningCredential.transactionSignerEthAccount,
+        secret: ethSigningCredential.secret,
+        type: ethSigningCredential.type,
+      };
+    } else {
+      this.signingCredential = options.signingCredential;
+    }
 
     this.gasConfig = options.gasConfig;
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
@@ -854,6 +873,8 @@ export class EthereumLeaf
           LedgerType.Ethereum,
           evmAsset.referenceId,
         );
+
+        this.log.debug(`${fnTag}, CHECKING THAT WRAPPER CONTRACT IS DEPLOYED`);
 
         switch (asset.type) {
           case TokenType.NONSTANDARD_FUNGIBLE:

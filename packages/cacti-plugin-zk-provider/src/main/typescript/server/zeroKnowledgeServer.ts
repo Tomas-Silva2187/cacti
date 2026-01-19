@@ -21,14 +21,22 @@ import {
   IncompleteEndpointDataError,
   NoRequestCallDataError,
   OverwritingDefinedCircuitError,
+  VerificationMethodNotSupportedError,
 } from "./serverErrors.js";
 import { join } from "path";
 import { existsSync, writeFileSync, mkdirSync } from "fs";
+import { createHash } from "crypto";
 
 export interface DatabaseSetup {
   type: DatabaseType;
   port?: number;
   ipAddress?: string;
+}
+
+export enum VerificationMethod {
+  HASH = "HASH",
+  SIGNATURE = "SIGNATURE",
+  CERTIFICATE = "CERTIFICATE",
 }
 
 export interface ServerSetup {
@@ -146,31 +154,40 @@ export class ZeroKnowledgeServer {
     }
   }
 
-  private verifyCircuitCredential(circuitCredentials: string): boolean {
-    this.log.warn(`Verify Credentials not implemented: ${circuitCredentials}`);
-    // Placeholder for actual credential verification logic
-    return true;
+  private verifyCircuitCredential(verificationMethod: VerificationMethod, credentials: string, data: string): boolean {
+    switch (verificationMethod) {
+      case VerificationMethod.HASH:
+        this.log.info("Verifying loaded circuit using HASH method");
+        const hash = createHash("sha256")
+                .update(data)
+                .digest("hex");
+        return hash == credentials;
+      default:
+        throw new VerificationMethodNotSupportedError(verificationMethod);
+    }
   }
 
-  private async loadCircuit(circuitID: string, circuitCredentials: string) {
+  private async loadCircuit(circuitID: string, verificationMethod: VerificationMethod = VerificationMethod.HASH) {
     const dbClient = await this.dedicatedDatabases?.get(Number("6379"));
-    const circuitCode = await dbClient?.getObject(circuitID);
+    const circuitCode = await dbClient?.getCircuit(circuitID);
     if (circuitCode === undefined || circuitCode === null) {
       throw new FailedToLoadCircuitError(circuitID);
     }
     if (!existsSync(this.circuitStoragePath)) {
       mkdirSync(this.circuitStoragePath, { recursive: true });
     }
-    const validateCircuit = this.verifyCircuitCredential(circuitCredentials);
+    const validateCircuit = this.verifyCircuitCredential(verificationMethod, circuitCode.circuitCredentials, circuitCode.circuitCode);
+    this.log.info(`Circuit validity: ${validateCircuit}`);
     if (
       !existsSync(
-        join(this.circuitStoragePath, `${circuitID}${this.circuitExtension}`),
+        join(this.circuitStoragePath, `${circuitID.split(":")[0]}${this.circuitExtension}`),
       ) &&
       validateCircuit
     ) {
+      this.log.info(`Storing circuit file ${circuitID.split(":")[0]}${this.circuitExtension}...`);
       writeFileSync(
-        join(this.circuitStoragePath, `${circuitID}${this.circuitExtension}`),
-        circuitCode!,
+        join(this.circuitStoragePath, `${circuitID.split(":")[0]}${this.circuitExtension}`),
+        circuitCode!.circuitCode,
       );
       return "ACK";
     } else {
@@ -186,13 +203,13 @@ export class ZeroKnowledgeServer {
     const endpointsToSetup = this.serverEndpoints;
     this.app.post("/loadCircuit", async (req, res) => {
       try {
-        if (req.body.circuitID && req.body.circuitCredentials) {
+        if (req.body.circuitID && req.body.verificationMethod) {
           this.log.info(
             `${this.CLASS_TAG} Received request to load circuit ${req.body.circuitID}`,
           );
           const result = await this.loadCircuit(
             req.body.circuitID,
-            req.body.circuitCredentials,
+            req.body.verificationMethod,
           );
           res.json({ result });
         }

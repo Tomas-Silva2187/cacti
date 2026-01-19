@@ -47,3 +47,9 @@ export class FailedToLoadCircuitError extends ServerError {
     super(`Failed to load circuit ${circuitID}`, "FailedToLoadCircuitError");
   }
 }
+
+export class VerificationMethodNotSupportedError extends ServerError {
+  constructor(verificationMethod: string) {
+    super(`Trying to verify data validity with unsupported method ${verificationMethod}`, "VerificationMethodNotSupportedError");
+  }
+}

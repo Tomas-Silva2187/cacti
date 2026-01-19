@@ -3,6 +3,11 @@ export enum DatabaseType {
   MYSQL = 2,
 }
 
+export interface ZKSnarkCircuit {
+  circuitCode: string;
+  circuitCredentials: string;
+}
+
 export abstract class ZKDatabaseClient {
   protected databaseType: DatabaseType;
   protected port: number;
@@ -20,4 +25,5 @@ export abstract class ZKDatabaseClient {
   abstract disconnect(): Promise<void>;
   abstract storeObject(objectToStore: string): Promise<string>;
   abstract getObject(key: string): Promise<string | null>;
+  abstract getCircuit(key: string): Promise<ZKSnarkCircuit>;
 }

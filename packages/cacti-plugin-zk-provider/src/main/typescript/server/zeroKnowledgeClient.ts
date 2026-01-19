@@ -216,12 +216,12 @@ export class ZeroKnowledgeClient {
 
   public async requestCircuitLoad(
     circuitID: string,
-    circuitCredentials: string,
+    verificationMethod: string,
   ) {
     const requestUrl = `${this.server_url}/loadCircuit`;
     const requestBody = JSON.stringify({
       circuitID: circuitID,
-      circuitCredentials: circuitCredentials,
+      verificationMethod: verificationMethod,
     });
     const loadResponse = await fetch(requestUrl, {
       method: "POST",

@@ -6,13 +6,9 @@ import {
 import { createClient, RedisClientType } from "redis";
 //import { spawn, ChildProcess } from "child_process";
 //import { ZKDatabase } from "./zkDatabase";
-import { DatabaseType, ZKDatabaseClient } from "./zkDatabase.js";
+import { DatabaseType, ZKDatabaseClient, ZKSnarkCircuit } from "./zkDatabase.js";
 import { createHash } from "crypto";
-
-export interface ZKSnarkCircuit {
-  name: string;
-  source_code: string;
-}
+import { UnformattedCircuitError } from "./databaseErrors.js";
 
 export class RedisDBClient extends ZKDatabaseClient {
   public static readonly CLASS_NAME = "RedisDBClient";
@@ -100,21 +96,6 @@ export class RedisDBClient extends ZKDatabaseClient {
     }
   }
 
-  async storeCircuit(circuit: ZKSnarkCircuit): Promise<string> {
-    const fnTag = `${RedisDBClient.CLASS_NAME}#storeCircuit()`;
-    this.log.debug(`${fnTag}: Storing circuit ${circuit.name}...`);
-    try {
-      await this.client.hSet(`circuit: ${circuit.name}`, {
-        code: circuit.source_code,
-      });
-      this.log.info(`${fnTag}: Circuit ${circuit.name} stored successfully.`);
-      return "ACK";
-    } catch (error) {
-      this.log.error(`${fnTag}: Error storing circuit: ${error}`);
-      throw error;
-    }
-  }
-
   /**
    * Stores a data object in Redis with hash as key, and returns the key.
    */
@@ -147,19 +128,16 @@ export class RedisDBClient extends ZKDatabaseClient {
     }
   }
 
-  async getCircuit(name: string): Promise<string> {
+  async getCircuit(key: string): Promise<ZKSnarkCircuit> {
     const fnTag = `${RedisDBClient.CLASS_NAME}#getCircuit()`;
-    this.log.debug(`${fnTag}: Retrieving circuit ${name}...`);
+    this.log.info(`${fnTag}: Fetching data with key: ${key}`);
     try {
-      const data = await this.client.hGet(`circuit: ${name}`, "code");
-      if (!data) {
-        this.log.warn(`${fnTag}: Circuit ${name} not found.`);
-        return "";
+      const data = await this.client.hGetAll(key);
+      if (!data || !data.circuitCode || !data.circuitCredentials) {
+        throw new UnformattedCircuitError("REDIS");
       }
-      this.log.info(`${fnTag}: Circuit ${name} retrieved successfully.`);
-      return data;
+      return {circuitCode: data.circuitCode, circuitCredentials: data.circuitCredentials} as ZKSnarkCircuit;
     } catch (error) {
-      this.log.error(`${fnTag}: Error retrieving circuit: ${error}`);
       throw error;
     }
   }

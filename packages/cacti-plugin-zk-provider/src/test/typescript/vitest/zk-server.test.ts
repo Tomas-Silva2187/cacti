@@ -6,9 +6,10 @@ import {
 } from "../../../main/typescript/endpoints/endpoint";
 import {
   ServerSetup,
+  VerificationMethod,
   ZeroKnowledgeServer,
 } from "../../../main/typescript/server/zeroKnowledgeServer";
-import { describe, expect, it, afterAll } from "vitest";
+import { describe, expect, it, afterAll, beforeAll } from "vitest";
 import {
   CompilationArtifacts,
   ComputationResult,
@@ -19,7 +20,7 @@ import { spawn } from "child_process";
 import { createClient, RedisClientType } from "redis";
 import { DatabaseType } from "../../../main/typescript/database/zkDatabase";
 import { ZeroKnowledgeClient } from "../../../main/typescript/server/zeroKnowledgeClient";
-import { mkdtemp, rm } from "fs/promises";
+import { mkdir, mkdtemp, rm } from "fs/promises";
 import { readFileSync } from "fs";
 import { createHash } from "crypto";
 
@@ -580,8 +581,11 @@ describe("ZK Client-Server Interaction", async () => {
   });
   describe("ZK Server circuit load and validation", async () => {
     let tempCircuitDir: string;
+    let circuitID: string;
+    let circuitHash: string;
     beforeAll(async () => {
-      tempCircuitDir = await mkdtemp(path.join(__dirname, "/test-zk-circuits"));
+      tempCircuitDir = path.join(__dirname, "/test-zk-circuits");
+      await mkdir(path.join(__dirname, "/test-zk-circuits"));
     });
     afterAll(async () => {
       await rm(tempCircuitDir, { recursive: true, force: true });
@@ -643,10 +647,10 @@ describe("ZK Client-Server Interaction", async () => {
         path.join(circuitPath, "proveSquare.zok"),
         "utf-8",
       );
-      const circuitHash = createHash("sha256")
+      circuitHash = createHash("sha256")
         .update(circuitCode)
         .digest("hex");
-      const circuitID = `proveSquare${circuitHash}`;
+      circuitID = `proveSquare:${circuitHash}`;
       const circuitValue = {
         circuitCode: circuitCode,
         circuitCredentials: circuitHash,
@@ -655,13 +659,19 @@ describe("ZK Client-Server Interaction", async () => {
     });
 
     it("should successfully request a circuit load and validation", async () => {
-      const circuitID = "testCircuit";
-      const circuitCredentials = "validCredentials";
       const loadAck = await zkClient.requestCircuitLoad(
         circuitID,
-        circuitCredentials,
+        VerificationMethod.HASH,
       );
       expect(loadAck).toBe("ACK");
+    });
+
+    it("should successfully generate all elements for a valid proof", async () => {
+     expect(await zkClient.requestCompile(true, "proveSquare.zok")).toBe("ACK");
+     expect(await zkClient.requestWitness(true, ["2", "4"])).toBe("ACK");
+     expect(await zkClient.requestKeypair(true)).toBe("ACK");
+     expect(await zkClient.requestProof(true)).toBe("ACK");
+     expect(await zkClient.requestProofVerification()).toBe(true);
     });
   });
 });

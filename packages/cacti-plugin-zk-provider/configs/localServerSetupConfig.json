@@ -1,0 +1,57 @@
+{
+    "zeroKnowledgeCircuitPath": "src/test/zokrates",
+    "logLevel": "INFO",
+    "setupServices": [
+        {
+            "endpointService": { 
+                "endpointName": "compile",
+                "executeFunction": "compileCircuit",
+                "endpointCallType": "POST"
+            },
+            "redirectURL": {
+                "ip": "localhost",
+                "port": 3001
+            }
+        },
+        {
+            "endpointService":{ 
+                "endpointName": "witness",
+                "executeFunction": "computeWitness",
+                "endpointCallType": "POST" 
+            }
+        },
+        {
+            "endpointService":{ 
+                "endpointName": "keypair",
+                "executeFunction": "generateProofKeyPair",
+                "endpointCallType": "POST"
+            }
+        },
+        {
+            "endpointService":{ 
+                "endpointName": "generate",
+                "executeFunction": "generateProof",
+                "endpointCallType": "POST"
+            },
+            "redirectURL": {
+                "ip": "localhost",
+                "port": 3001
+            }
+        },
+        {
+            "endpointService":{ 
+                "endpointName": "verify",
+                "executeFunction": "verifyProof",
+                "endpointCallType": "POST"
+            },
+            "redirectURL": {
+                "ip": "localhost",
+                "port": 3001
+            }
+        }
+    ],
+    "serverPort": 3000,
+    "databaseSetup": {
+        "type": 1
+    }
+}

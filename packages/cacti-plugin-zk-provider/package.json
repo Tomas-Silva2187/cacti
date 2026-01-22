@@ -32,6 +32,7 @@
     "zk-server-db-test2": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"ZK Server automatically Fetching from Database\"",
     "zk-client-test": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"Client to Server\"",
     "zk-client-test2": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"ZK Server circuit load and validation\"",
+    "zk-client-test3": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"Client and 2 Server interaction\"",
     "docker-build": "docker build -f zero-knowledge-server.Dockerfile -t zkserver .",
     "docker-run": "docker run --name myserver zkserver"
   },

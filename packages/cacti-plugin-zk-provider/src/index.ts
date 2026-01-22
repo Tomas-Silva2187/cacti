@@ -34,9 +34,9 @@ async function main() {
 
     console.log("Starting Server");
     const serverConfig = JSON.parse(
-      s_read(__dirname + "/../../serverSetupConfig.json", "utf-8"),
+      s_read(__dirname + "/../../configs/serverSetupConfig.json", "utf-8"),
     );
-    const server = new ZeroKnowledgeServer(serverConfig, undefined, 3000);
+    const server = new ZeroKnowledgeServer(serverConfig, undefined);
     await server.serverInit();
   } catch (error) {
     throw error;

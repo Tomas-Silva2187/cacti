@@ -10,7 +10,7 @@ RUN mkdir -p /zk-server/build
 WORKDIR /zk-server
 
 COPY build /zk-server/build/
-COPY ./serverSetupConfig.json /zk-server/
+COPY ./configs/serverSetupConfig.json /zk-server/
 
 #RUN npm install --only=production
 

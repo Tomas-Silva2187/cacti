@@ -28,6 +28,7 @@
             "endpointCallType": "POST"
         }}
     ],
+    "serverPort": 3001,
     "databaseSetup": {
         "type": 1
     }

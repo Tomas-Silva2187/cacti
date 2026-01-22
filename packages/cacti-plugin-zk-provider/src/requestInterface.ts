@@ -14,6 +14,7 @@ try {
   const client = new ZeroKnowledgeClient(3000, "localhost");
   while (true) {
     console.log("Client Services:");
+    console.log("0. Select Circuit");
     console.log("1. Compile Circuit");
     console.log("2. Generate Witness");
     console.log("3. Generate Keypair");
@@ -24,14 +25,24 @@ try {
     const in1 = await expectInput("Select Service: ");
     const in2 = await expectInput("Store Result on Server DB (y/n): ");
     let storeFlag;
+    let circuitName;
     if (in2.toLowerCase() === "y") {
       storeFlag = true;
     } else {
       storeFlag = false;
     }
     switch (in1) {
+      case "0":
+        circuitName = await expectInput(
+          "Enter Circuit Name (e.g., <circuit name>.zok): ",
+        );
+        break;
       case "1":
-        const r1 = await client.requestCompile(storeFlag, "proveSquare.zok");
+        if (circuitName === undefined) {
+          console.log("Please select a circuit first (option 0).");
+          break;
+        }
+        const r1 = await client.requestCompile(storeFlag, circuitName);
         if (r1 == "ACK") {
           console.log("Circuit Compiled. Return: ");
           //console.log("->" + client.getCompilation());

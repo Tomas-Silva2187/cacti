@@ -4,6 +4,7 @@ import {
   Proof,
   SetupKeypair,
 } from "zokrates-js";
+import { FetchData } from "../utils";
 
 export class ZeroKnowledgeClient {
   private server_port: number;
@@ -30,6 +31,21 @@ export class ZeroKnowledgeClient {
   }
   public getProof() {
     return JSON.stringify(this.circuitProof);
+  }
+
+  public async blindRequest(endpointName: string, inputs: any[]) {
+    const requestUrl = `${this.server_url}/${endpointName}`;
+    const requestBody = JSON.stringify({
+      params: inputs,
+    });
+    const response = await fetch(requestUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: requestBody,
+    });
+    return (await response.json()).result;
   }
 
   public async requestCompile(store: boolean, circuitName: string) {
@@ -217,11 +233,13 @@ export class ZeroKnowledgeClient {
   public async requestCircuitLoad(
     circuitID: string,
     verificationMethod: string,
+    fetchData?: FetchData,
   ) {
     const requestUrl = `${this.server_url}/loadCircuit`;
     const requestBody = JSON.stringify({
       circuitID: circuitID,
       verificationMethod: verificationMethod,
+      fetchData: fetchData,
     });
     const loadResponse = await fetch(requestUrl, {
       method: "POST",
@@ -231,5 +249,20 @@ export class ZeroKnowledgeClient {
       body: requestBody,
     });
     return (await loadResponse.json()).result;
+  }
+
+  public async fetchCircuit(circuitID: string) {
+    const requestUrl = `${this.server_url}/fetchCircuit`;
+    const requestBody = JSON.stringify({
+      circuitID: circuitID,
+    });
+    const fetchResponse = await fetch(requestUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: requestBody,
+    });
+    return (await fetchResponse.json()).result;
   }
 }

@@ -1,3 +1,4 @@
+import { ServerUrl } from "../utils.js";
 import {
   BlacklistedServiceError,
   OverwriteServiceError,
@@ -25,6 +26,8 @@ export interface EndpointSetup {
   // Service provided by the Endpoint
   endpointService: EndpointService;
 
+  redirectURL?: ServerUrl;
+
   // Blacklisted services for this Endpoint
   blackListedServices?: string[];
 }
@@ -34,6 +37,7 @@ export class Endpoint {
   private serviceProviderClass: any;
   private endpointService?: EndpointService;
   private blackListedServices?: string[] = [];
+  private redirectURL?: ServerUrl;
 
   constructor(endpointServiceProvider: any) {
     this.serviceProviderClass = endpointServiceProvider;
@@ -51,12 +55,17 @@ export class Endpoint {
     } as Partial<EndpointService>;
   }
 
+  public getRedirectURL(): ServerUrl | undefined {
+    return this.redirectURL;
+  }
+
   public setupEndpoint(setupElements: EndpointSetup): void {
     try {
       if (this.endpointService != undefined) {
         throw new OverwriteServiceError(this.endpointService.endpointName);
       }
       this.blackListedServices = setupElements.blackListedServices;
+      this.redirectURL = (setupElements.redirectURL) as ServerUrl;
       const endpointName = setupElements.endpointService.endpointName;
       const executeFunction = setupElements.endpointService.executeFunction;
       const serviceEndpointType =
@@ -99,6 +108,8 @@ export class Endpoint {
         this.endpointService.endpointName !== actionName
       ) {
         throw new UnknownServiceError(actionName);
+      } else if (this.redirectURL != undefined) {
+        return;
       } else {
         const answer = (this.serviceProviderClass as any)[
           this.endpointService.executeFunction

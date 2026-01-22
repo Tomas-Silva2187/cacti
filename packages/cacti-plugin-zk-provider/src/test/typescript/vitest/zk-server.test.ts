@@ -23,6 +23,7 @@ import { ZeroKnowledgeClient } from "../../../main/typescript/server/zeroKnowled
 import { mkdir, mkdtemp, rm } from "fs/promises";
 import { readFileSync } from "fs";
 import { createHash } from "crypto";
+import { FetchData, RequestTarget, ServerUrl } from "../../../main/typescript/utils";
 
 describe("ZK Server Setup and Service Requests", () => {
   const PORT = 3000;
@@ -535,14 +536,14 @@ describe("ZK Client-Server Interaction", async () => {
         console.log(`Retry ${retries} to connect to Redis...`);
       }
       expect(await redisClient.ping()).toBe("PONG");
-    });
+    }, 20000);
     it("should successfully setup a full ZK Server with a Redis DB Client", async () => {
       zkServer = new ZeroKnowledgeServer({
         zeroKnowledgeCircuitPath: path.join(__dirname, "../../zokrates"),
         logLevel: "INFO",
         setupServices: [
           { endpointService: compileServiceSetup } as EndpointSetup,
-          { endpointService: computeWitnessServiceSetup } as EndpointSetup,
+          { endpointService: computeWitnessServiceSetup} as EndpointSetup,
           { endpointService: keyPairGenServiceSetup } as EndpointSetup,
           { endpointService: proofGenServiceSetup } as EndpointSetup,
           { endpointService: proofVerServiceSetup } as EndpointSetup,
@@ -553,23 +554,23 @@ describe("ZK Client-Server Interaction", async () => {
       } as ServerSetup);
       await zkServer.serverInit();
       expect(zkServer).toBeDefined();
-    });
+    }, 20000);
     it("should successfully start a client for the server", async () => {
       zkClient = new ZeroKnowledgeClient(3000, "localhost");
       expect(zkClient).toBeDefined();
-    });
+    }, 20000);
     it("should compile a circuit and store it", async () => {
       const compileAck = await zkClient.requestCompile(true, "proveSquare.zok");
       expect(compileAck).toBe("ACK");
-    });
+    }, 20000);
     it("should perform all steps and obtain a valid proof", async () => {
       const witnessAck = await zkClient.requestWitness(true, ["2", "4"]);
       expect(witnessAck).toBe("ACK");
-    });
+    }, 20000);
     it("should generate a keypair for proof generation and verification", async () => {
       const keypairAck = await zkClient.requestKeypair(true);
       expect(keypairAck).toBe("ACK");
-    });
+    }, 20000);
     it("should generate a proof", async () => {
       const proofAck = await zkClient.requestProof(true);
       expect(proofAck).toBe("ACK");
@@ -577,7 +578,7 @@ describe("ZK Client-Server Interaction", async () => {
     it("should verify a proof successfully", async () => {
       const verifyAck = await zkClient.requestProofVerification();
       expect(verifyAck).toBe(true);
-    });
+    }, 20000);
   });
   describe("ZK Server circuit load and validation", async () => {
     let tempCircuitDir: string;
@@ -641,7 +642,7 @@ describe("ZK Client-Server Interaction", async () => {
       expect(zkClient).toBeDefined();
     });
 
-    it("should load a new circuit into the server Database", async () => {
+    it("should load a new circuit into the Database", async () => {
       const circuitPath = path.join(__dirname, "../../zokrates");
       const circuitCode = readFileSync(
         path.join(circuitPath, "proveSquare.zok"),
@@ -673,5 +674,170 @@ describe("ZK Client-Server Interaction", async () => {
      expect(await zkClient.requestProof(true)).toBe("ACK");
      expect(await zkClient.requestProofVerification()).toBe(true);
     });
+  });
+  describe("Client and 2 Server interaction", async () => {
+    let localZkServer: ZeroKnowledgeServer;
+    let offLoadZkServer: ZeroKnowledgeServer;
+    let redisProcess1: any;
+    let redisProcess2: any;
+    let redisClient1: RedisClientType;
+    let redisClient2: RedisClientType;
+    const redisPort1 = "6379";
+    const redisPort2 = "6380";
+    let tempCircuitDir: string;
+    let circuitID: string;
+    let circuitHash: string;
+    let zkClient: ZeroKnowledgeClient;
+    beforeAll(async () => {
+      tempCircuitDir = path.join(__dirname, "/test-zk-circuits");
+      await mkdir(path.join(__dirname, "/test-zk-circuits"));
+    });
+    afterAll(async () => {
+      await rm(tempCircuitDir, { recursive: true, force: true });
+      if (localZkServer) {
+        localZkServer.serverStop();
+      }
+      if (redisProcess1) {
+        redisProcess1.kill();
+      }
+      if (offLoadZkServer) {
+        offLoadZkServer.serverStop();
+      }
+      if (redisProcess2) {
+        redisProcess2.kill();
+      }
+    });
+    const compileServiceSetup = {
+      endpointName: "compile",
+      executeFunction: "compileCircuit",
+      endpointCallType: EndpointCallType.POST,
+    } as EndpointService;
+    const computeWitnessServiceSetup = {
+      endpointName: "witness",
+      executeFunction: "computeWitness",
+      endpointCallType: EndpointCallType.POST,
+    } as EndpointService;
+    const keyPairGenServiceSetup = {
+      endpointName: "keypair",
+      executeFunction: "generateProofKeyPair",
+      endpointCallType: EndpointCallType.POST,
+    } as EndpointService;
+    const proofGenServiceSetup = {
+      endpointName: "generate",
+      executeFunction: "generateProof",
+      endpointCallType: EndpointCallType.POST,
+    } as EndpointService;
+    const proofVerServiceSetup = {
+      endpointName: "verify",
+      executeFunction: "verifyProof",
+      endpointCallType: EndpointCallType.POST,
+    } as EndpointService;
+    const redirectionUrl = { ip: "localhost", port: 3001 } as ServerUrl;
+
+    it("should launch a 2 local Redis server instances", async () => {
+      try {
+        redisProcess1 = spawn("redis-server", ["--port", redisPort1], {
+          stdio: "inherit",
+        });
+        redisProcess1.on("error", (error: Error) => {
+          throw error;
+        });
+        redisProcess1.on("exit", () => {
+          redisProcess1 = undefined;
+        });
+        redisProcess2 = spawn("redis-server", ["--port", redisPort2], {
+          stdio: "inherit",
+        });
+        redisProcess2.on("error", (error: Error) => {
+          throw error;
+        });
+        redisProcess2.on("exit", () => {
+          redisProcess2 = undefined;
+        });
+      } catch (error) {
+        throw new Error(`Error with Redis server: ${error}`);
+      }
+      redisClient1 = await createClient({
+        url: `redis://localhost:${redisPort1}`,
+      });
+      redisClient2 = await createClient({
+        url: `redis://localhost:${redisPort2}`,
+      });
+      await redisClient1.connect();
+      await redisClient2.connect();
+      expect(await redisClient1.ping()).toBe("PONG");
+      expect(await redisClient2.ping()).toBe("PONG");
+    }, 20000);
+    it("should successfully setup 2 full ZK Servers with a Redis DB each and a Client", async () => {
+      localZkServer = new ZeroKnowledgeServer({
+        zeroKnowledgeCircuitPath: tempCircuitDir,
+        logLevel: "INFO",
+        setupServices: [
+          { endpointService: compileServiceSetup } as EndpointSetup,
+          { endpointService: computeWitnessServiceSetup } as EndpointSetup,
+          { endpointService: keyPairGenServiceSetup } as EndpointSetup,
+          { 
+            endpointService: proofGenServiceSetup,
+            redirectURL: redirectionUrl,
+          } as EndpointSetup,
+          { endpointService: proofVerServiceSetup } as EndpointSetup,
+        ],
+        serverPort: 3000,
+        databaseSetup: {
+          type: DatabaseType.REDIS,
+          port: parseInt(redisPort1),
+          ipAddress: "localhost",
+        },
+        serverId: "LOCAL",
+      } as ServerSetup);
+      offLoadZkServer = new ZeroKnowledgeServer({
+        zeroKnowledgeCircuitPath: tempCircuitDir,
+        logLevel: "INFO",
+        setupServices: [
+          { endpointService: proofGenServiceSetup } as EndpointSetup,
+        ],
+        serverPort: 3001,
+        databaseSetup: {
+          type: DatabaseType.REDIS,
+          port: parseInt(redisPort2),
+          ipAddress: "localhost",
+        },
+        serverId: "OFFLOAD",
+      } as ServerSetup);
+      await localZkServer.serverInit();
+      expect(localZkServer).toBeDefined();
+      await offLoadZkServer.serverInit();
+      expect(offLoadZkServer).toBeDefined();
+      zkClient = new ZeroKnowledgeClient(3000, "localhost");
+      expect(zkClient).toBeDefined();
+    }, 20000);
+    it("should load a new circuit into the Database for Server 2", async () => {
+      const circuitPath = path.join(__dirname, "../../zokrates");
+      const circuitCode = readFileSync(
+        path.join(circuitPath, "proveSquare.zok"),
+        "utf-8",
+      );
+      circuitHash = createHash("sha256")
+        .update(circuitCode)
+        .digest("hex");
+      circuitID = `proveSquare:${circuitHash}`;
+      const circuitValue = {
+        circuitCode: circuitCode,
+        circuitCredentials: circuitHash,
+      };
+      await redisClient2.hSet(circuitID, circuitValue);
+    }, 20000);
+    it("should proceed with the steps for a valid proof", async() => {
+      const fetchData = {
+        infrastructureElement: RequestTarget.SERVER,
+        url: { ip: "localhost", port: 3001 } as ServerUrl,
+      } as FetchData;
+      expect(await zkClient.requestCircuitLoad(circuitID, VerificationMethod.HASH, fetchData)).toBe("ACK");
+      expect(await zkClient.requestCompile(true, "proveSquare.zok")).toBe("ACK");
+      expect(await zkClient.requestWitness(true, ["2", "4"])).toBe("ACK");
+      expect(await zkClient.requestKeypair(true)).toBe("ACK");
+      expect(await zkClient.requestProof(true)).toBe("ACK");
+      expect(await zkClient.requestProofVerification()).toBe(true);
+    }, 20000);
   });
 });

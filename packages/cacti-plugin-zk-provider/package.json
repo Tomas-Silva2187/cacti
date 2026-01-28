@@ -25,7 +25,7 @@
     "build-bundle": "ncc build dist/lib/index.js -o build",
     "start": "node ./dist/lib/index.js",
     "zk-test": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"ZeroKnowledgeHandler\"",
-    "zk-test2": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"Hash function testing\"",
+    "zk-test2": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"Import testing\"",
     "endpoint-test": "npx vitest run ./src/test/typescript/vitest/endpoint-setup.test.ts -t \"Endpoint Setup\"",
     "zk-server-test": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"ZK Server With Endpoints\"",
     "zk-server-db-test": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"ZK Server Storing and Fetching from Database\"",
@@ -34,7 +34,9 @@
     "zk-client-test2": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"ZK Server circuit load and validation\"",
     "zk-client-test3": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"Client and 2 Server interaction\"",
     "docker-build": "docker build -f zero-knowledge-server.Dockerfile -t zkserver .",
-    "docker-run": "docker run --name myserver zkserver"
+    "docker-network-setup": "docker network create zknet",
+    "docker-run-local": "docker run -p 3000:3000 --name localserver1 --network zknet zkserver 0",
+    "docker-run-offserver": "docker run -p 6379:6379 -p 3001:3001 --name offserver1 --network zknet zkserver 1"
   },
   "devDependencies": {
     "@types/express": "^5",

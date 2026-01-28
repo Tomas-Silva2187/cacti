@@ -407,7 +407,7 @@ export class ZeroKnowledgeServer {
       }
       this.app.use(express.json());
       this.exposeEndpoints();
-      this.serverInstance = this.app.listen(this.runningPort, () => {
+      this.serverInstance = this.app.listen(this.runningPort, "0.0.0.0", () => {
         this.log.info(
           `${fnTag}: Listening on port ${this.runningPort}`,
         );

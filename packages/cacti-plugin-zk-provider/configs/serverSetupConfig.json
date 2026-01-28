@@ -1,5 +1,5 @@
 {
-    "zeroKnowledgeCircuitPath": "src/test/zokrates",
+    "zeroKnowledgeCircuitPath": "zkserver/zokrates",
     "logLevel": "INFO",
     "setupServices": [
         {"endpointService": { 
@@ -30,6 +30,9 @@
     ],
     "serverPort": 3001,
     "databaseSetup": {
-        "type": 1
-    }
+        "type": 1,
+        "port": 6379,
+        "ipAddress": "localhost"
+    },
+    "serverId": "zokrates-on-demand-server"
 }

@@ -1,17 +1,45 @@
 import { ZeroKnowledgeClient } from "./main/typescript/server/zeroKnowledgeClient.js";
 import * as readline from "readline";
-
+import { createHash } from "crypto";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { readFileSync as s_read } from "fs";
+import { createClient } from "redis";
+import { RequestTarget } from "./main/typescript/utils.js";
+ 
 const input = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
+const circuitIdMap = new Map<string, string>();
 
 function expectInput(query: string): Promise<string> {
   return new Promise((resolve) => input.question(query, resolve));
 }
 
+async function populateDatabase() {
+  const redisClient = await createClient({url: `redis://localhost:6379`});
+  await redisClient.connect();
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  console.log("Populating database with sample circuits...");
+  console.log(__dirname);
+  const circuitsPath = __dirname + "/../../src/test/zokrates/";
+  const circuitCode1 = s_read(circuitsPath + "proveSquare.zok", "utf-8");
+  const circuitHash1 = createHash("sha256").update(circuitCode1).digest("hex");
+  const circuitId1 = `proveSquare:${circuitHash1}`;
+  const circuit1Value = {
+    circuitCode: circuitCode1,
+    circuitCredentials: circuitHash1,
+  };
+  await redisClient.hSet(circuitId1, circuit1Value);
+  circuitIdMap.set("proveSquare.zok", circuitId1);
+}
+
 try {
   const client = new ZeroKnowledgeClient(3000, "localhost");
+  await populateDatabase();
+  let circuitName;
   while (true) {
     console.log("Client Services:");
     console.log("0. Select Circuit");
@@ -23,10 +51,13 @@ try {
     console.log("6. Exit");
 
     const in1 = await expectInput("Select Service: ");
-    const in2 = await expectInput("Store Result on Server DB (y/n): ");
+    let in2;
+    if (["1", "2", "3", "4"].includes(in1)) {
+      in2 = await expectInput("Store Result on Server DB (y/n): ");
+    }
+    
     let storeFlag;
-    let circuitName;
-    if (in2.toLowerCase() === "y") {
+    if (in2 !== undefined && in2.toLowerCase() === "y") {
       storeFlag = true;
     } else {
       storeFlag = false;
@@ -34,8 +65,13 @@ try {
     switch (in1) {
       case "0":
         circuitName = await expectInput(
-          "Enter Circuit Name (e.g., <circuit name>.zok): ",
+          "Enter Circuit Name (e.g., <circuit name>.zok):\nOptions\n- proveSquare.zok\n -> ",
         );
+        const fetchData = {
+          infrastructureElement: RequestTarget.SERVER,
+          url: { ip: "offserver1", port: 3001 },
+        }
+        await client.requestCircuitLoad(circuitIdMap.get(circuitName)!, "HASH", fetchData);
         break;
       case "1":
         if (circuitName === undefined) {

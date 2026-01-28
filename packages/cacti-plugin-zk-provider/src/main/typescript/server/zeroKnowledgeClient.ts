@@ -252,10 +252,13 @@ export class ZeroKnowledgeClient {
   }
 
   public async fetchCircuit(circuitID: string) {
+    console.log(`Performing a fetch request for circuit ID: ${circuitID} to ${this.server_url}/fetchCircuit...`);
     const requestUrl = `${this.server_url}/fetchCircuit`;
     const requestBody = JSON.stringify({
       circuitID: circuitID,
     });
+    console.log("url: ", requestUrl);
+    console.log("body: ", requestBody);
     const fetchResponse = await fetch(requestUrl, {
       method: "POST",
       headers: {

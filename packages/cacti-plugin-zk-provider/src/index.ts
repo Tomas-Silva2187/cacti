@@ -10,15 +10,42 @@ const __dirname = dirname(__filename);
 
 async function main() {
   try {
-    const redisProcess = spawn("redis-server", ["--port", "6379"], {
+    const arg = process.argv.slice(2)[0];
+    let serverConfig;
+    let redisProcess;
+    let redisPort;
+    if (arg !== undefined && arg == "0") {
+      serverConfig = JSON.parse(
+        s_read(__dirname + "/../../configs/localServerSetupConfig.json", "utf-8"),
+      );
+      console.log("Creating local server with config: ", serverConfig);
+      redisPort = serverConfig.databaseSetup.port;
+      redisProcess = await spawn("redis-server", ["--port", redisPort.toString()], {
       stdio: "inherit",
     });
     redisProcess.on("error", (error: Error) => {
       throw error;
     });
+    }
+    else if (arg !== undefined && arg == "1") {
+      serverConfig = JSON.parse(
+        s_read(__dirname + "/../../configs/serverSetupConfig.json", "utf-8"),
+      );
+      console.log("Creating offload server with config: ", serverConfig);
+      redisPort = serverConfig.databaseSetup.port;
+      redisProcess = await spawn("redis-server", ["--port", redisPort.toString(), "--bind", "0.0.0.0", "--protected-mode", "no"], {
+      stdio: "inherit",
+    });
+    redisProcess.on("error", (error: Error) => {
+      throw error;
+    });
+    }
+    else {
+      throw new Error("No selection for server type: 0- local, 1- offload")
+    }
 
     const redisClient = await createClient({
-      url: `redis://localhost:6379`,
+      url: `redis://localhost:${redisPort}`,
     });
     await redisClient.connect();
     let retries = 10;
@@ -33,9 +60,6 @@ async function main() {
     }
 
     console.log("Starting Server");
-    const serverConfig = JSON.parse(
-      s_read(__dirname + "/../../configs/serverSetupConfig.json", "utf-8"),
-    );
     const server = new ZeroKnowledgeServer(serverConfig, undefined);
     await server.serverInit();
   } catch (error) {

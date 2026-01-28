@@ -164,4 +164,37 @@ describe("ZeroKnowledgeHandler", () => {
       console.log(hash);
     });
   });
+
+  describe("Import testing", () => {
+    let handler: ZeroKnowledgeHandler;
+    let compiledCircuit: any;
+    let witness: any;
+    let keypair: any;
+    it("should initialize with default options", async () => {
+      console.log("WOrking at dir:", __dirname);
+      handler = new ZeroKnowledgeHandler({
+        logLevel: "INFO",
+        zkcircuitPath: path.join(__dirname, "../../zokrates"),
+      } as ZeroKnowledgeHandlerOptions);
+      expect(handler).toBeDefined();
+      await handler.initializeZoKrates();
+      compiledCircuit = await handler.compileCircuit({
+        circuitName: "hashCompute.zok",
+      } as CircuitLoadSetup);
+      expect(compiledCircuit).toBeDefined();
+      witness = await handler.computeWitness(compiledCircuit, ["97", "98", "99"]);
+      expect(witness).toBeDefined();
+      console.log("Witness output:", witness.output);
+      keypair = await handler.generateProofKeyPair(compiledCircuit);
+      expect(keypair).toBeDefined();
+      const proof = await handler.generateProof(
+        compiledCircuit,
+        witness,
+        keypair,
+      );
+      expect(proof).toBeDefined();
+      const isValid = await handler.verifyProof(proof, keypair);
+      expect(isValid).toBe(true);
+    }, 150000);
+  }, 150000);
 });

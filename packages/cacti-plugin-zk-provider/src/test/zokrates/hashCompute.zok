@@ -1,5 +1,5 @@
-import "hashes/sha256/sha256" as sha256;
+import "./stdlib/hashes/sha256/sha256Padded.zok" as sha256;
 
-def main(private bool[40] bits) -> bool[256] {
-    return sha256(bits);
+def main(private u8 inputs1, private u8 inputs2, private u8 inputs3) -> u32[8] {
+    return sha256([inputs1, inputs2, inputs3]);
 }

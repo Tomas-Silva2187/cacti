@@ -9,7 +9,7 @@
                 "endpointCallType": "POST"
             },
             "redirectURL": {
-                "ip": "localhost",
+                "ip": "offserver1",
                 "port": 3001
             }
         },
@@ -34,7 +34,7 @@
                 "endpointCallType": "POST"
             },
             "redirectURL": {
-                "ip": "localhost",
+                "ip": "offserver1",
                 "port": 3001
             }
         },
@@ -45,13 +45,16 @@
                 "endpointCallType": "POST"
             },
             "redirectURL": {
-                "ip": "localhost",
+                "ip": "offserver1",
                 "port": 3001
             }
         }
     ],
     "serverPort": 3000,
     "databaseSetup": {
-        "type": 1
-    }
+        "type": 1,
+        "port": 6380,
+        "ipAddress": "localhost"
+    },
+    "serverId": "local-zk-server"
 }

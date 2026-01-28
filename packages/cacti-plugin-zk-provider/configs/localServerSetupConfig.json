@@ -1,5 +1,5 @@
 {
-    "zeroKnowledgeCircuitPath": "src/test/zokrates",
+    "zeroKnowledgeCircuitPath": "zkserver/zokrates",
     "logLevel": "INFO",
     "setupServices": [
         {

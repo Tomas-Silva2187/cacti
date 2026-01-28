@@ -8,16 +8,18 @@ import { FetchData } from "../utils";
 
 export class ZeroKnowledgeClient {
   private server_port: number;
+  private dbPort: number;
   private server_ip: string;
   private server_url: string;
   private circuitCompilation: CompilationArtifacts | string | undefined;
   private circuitWitness: ComputationResult | string | undefined;
   private circuitKeypair: string | SetupKeypair | undefined;
   private circuitProof: string | Proof | undefined;
-  constructor(port: number, ip: string) {
+  constructor(port: number, ip: string, dbPort?: number) {
     this.server_port = port;
     this.server_ip = ip;
     this.server_url = `http://${ip}:${port}`;
+    this.dbPort = dbPort || 6379;
   }
 
   public getCompilation() {
@@ -31,6 +33,30 @@ export class ZeroKnowledgeClient {
   }
   public getProof() {
     return JSON.stringify(this.circuitProof);
+  }
+
+  private formatInput(data: any) {
+    if (typeof data === "string") {
+      return {
+        fetchAt: this.dbPort.toString(),
+        key: data,
+      };
+    } else {
+      return data;
+    }
+  }
+
+  private formatRequestBody(store: boolean, params: any[]) {
+    if (store) {
+      return JSON.stringify({
+        params: params,
+        store: this.dbPort,
+      });
+    } else {
+      return JSON.stringify({
+        params: params,
+      });
+    }
   }
 
   public async blindRequest(endpointName: string, inputs: any[]) {
@@ -49,18 +75,8 @@ export class ZeroKnowledgeClient {
   }
 
   public async requestCompile(store: boolean, circuitName: string) {
-    let requestBody;
     const requestUrl = `${this.server_url}/compile`;
-    if (store) {
-      requestBody = JSON.stringify({
-        params: [{ circuitName: circuitName }],
-        store: 6379,
-      });
-    } else {
-      requestBody = JSON.stringify({
-        params: [{ circuitName: circuitName }],
-      });
-    }
+    const requestBody = this.formatRequestBody(store, [{ circuitName: circuitName }]);
     const compilationResponse = await fetch(requestUrl, {
       method: "POST",
       headers: {
@@ -73,28 +89,9 @@ export class ZeroKnowledgeClient {
   }
 
   public async requestWitness(store: boolean, inputs: any[] | undefined) {
-    let requestBody;
-    let compForm;
     const requestUrl = `${this.server_url}/witness`;
-    if (typeof this.circuitCompilation === "string") {
-      compForm = {
-        fetchAt: "6379",
-        key: this.circuitCompilation,
-      };
-    } else {
-      compForm = this.circuitCompilation;
-    }
-
-    if (store) {
-      requestBody = JSON.stringify({
-        params: [compForm, inputs],
-        store: 6379,
-      });
-    } else {
-      requestBody = JSON.stringify({
-        params: [compForm, inputs],
-      });
-    }
+    const compilationArtifacts = this.formatInput(this.circuitCompilation);
+    const requestBody = this.formatRequestBody(store, [compilationArtifacts, inputs]);
     const witnessResponse = await fetch(requestUrl, {
       method: "POST",
       headers: {
@@ -107,28 +104,9 @@ export class ZeroKnowledgeClient {
   }
 
   public async requestKeypair(store: boolean) {
-    let requestBody;
-    let compForm;
     const requestUrl = `${this.server_url}/keypair`;
-    if (typeof this.circuitCompilation === "string") {
-      compForm = {
-        fetchAt: "6379",
-        key: this.circuitCompilation,
-      };
-    } else {
-      compForm = this.circuitCompilation;
-    }
-
-    if (store) {
-      requestBody = JSON.stringify({
-        params: [compForm],
-        store: 6379,
-      });
-    } else {
-      requestBody = JSON.stringify({
-        params: [compForm],
-      });
-    }
+    const compilationArtifacts = this.formatInput(this.circuitCompilation);
+    const requestBody = this.formatRequestBody(store, [compilationArtifacts]);
     const keypairResponse = await fetch(requestUrl, {
       method: "POST",
       headers: {
@@ -141,48 +119,12 @@ export class ZeroKnowledgeClient {
   }
 
   public async requestProof(store: boolean) {
-    let requestBody;
-    let compForm;
-    let witnessForm;
-    let keypairForm;
     const requestUrl = `${this.server_url}/generate`;
-    if (typeof this.circuitCompilation === "string") {
-      compForm = {
-        fetchAt: "6379",
-        key: this.circuitCompilation,
-      };
-    } else {
-      compForm = this.circuitCompilation;
-    }
+    const compilationArtifacts = this.formatInput(this.circuitCompilation);
+    const witnessArtifacts = this.formatInput(this.circuitWitness);
+    const keypairArtifacts = this.formatInput(this.circuitKeypair);
+    const requestBody = this.formatRequestBody(store, [compilationArtifacts, witnessArtifacts, keypairArtifacts]);
 
-    if (typeof this.circuitWitness === "string") {
-      witnessForm = {
-        fetchAt: "6379",
-        key: this.circuitWitness,
-      };
-    } else {
-      witnessForm = this.circuitWitness;
-    }
-
-    if (typeof this.circuitKeypair === "string") {
-      keypairForm = {
-        fetchAt: "6379",
-        key: this.circuitKeypair,
-      };
-    } else {
-      keypairForm = this.circuitKeypair;
-    }
-
-    if (store) {
-      requestBody = JSON.stringify({
-        params: [compForm, witnessForm, keypairForm],
-        store: 6379,
-      });
-    } else {
-      requestBody = JSON.stringify({
-        params: [compForm, witnessForm, keypairForm],
-      });
-    }
     const proofResponse = await fetch(requestUrl, {
       method: "POST",
       headers: {
@@ -195,29 +137,11 @@ export class ZeroKnowledgeClient {
   }
 
   public async requestProofVerification() {
-    let proofForm;
-    let keypairForm;
     const requestUrl = `${this.server_url}/verify`;
-    if (typeof this.circuitProof === "string") {
-      proofForm = {
-        fetchAt: "6379",
-        key: this.circuitProof,
-      };
-    } else {
-      proofForm = this.circuitProof;
-    }
-
-    if (typeof this.circuitKeypair === "string") {
-      keypairForm = {
-        fetchAt: "6379",
-        key: this.circuitKeypair,
-      };
-    } else {
-      keypairForm = this.circuitKeypair;
-    }
-
+    const proofArtifacts = this.formatInput(this.circuitProof);
+    const keypairArtifacts = this.formatInput(this.circuitKeypair);
     const requestBody = JSON.stringify({
-      params: [proofForm, keypairForm],
+      params: [proofArtifacts, keypairArtifacts],
     });
 
     const verifyResponse = await fetch(requestUrl, {

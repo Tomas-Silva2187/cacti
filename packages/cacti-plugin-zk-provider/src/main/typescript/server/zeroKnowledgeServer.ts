@@ -24,7 +24,7 @@ import {
   VerificationMethodNotSupportedError,
 } from "./serverErrors.js";
 import { join } from "path";
-import { existsSync, writeFileSync, mkdirSync } from "fs";
+import { existsSync, writeFileSync, mkdirSync, readFileSync } from "fs";
 
 import { createHash } from "crypto";
 import { ZeroKnowledgeClient } from "./zeroKnowledgeClient.js";
@@ -141,7 +141,7 @@ export class ZeroKnowledgeServer {
     throw new Error("MySQL DB setup not implemented yet");
   }
 
-  private async gatherDBInputs(requestParameters: any[]): Promise<any[]> {
+  private async gatherDBInputs(requestParameters: any[], redirecting: boolean = false): Promise<any[]> {
     try {
       const preparedParams: any[] = [];
       for (const reqElement of requestParameters) {
@@ -153,7 +153,15 @@ export class ZeroKnowledgeServer {
           if (element != null) {
             preparedParams.push(JSON.parse(element!));
           }
-        } else {
+        } 
+        else if ("circuitName" in reqElement && redirecting) {
+          const circuitCode = readFileSync(
+            join(this.circuitStoragePath, `${reqElement.circuitName}${this.circuitExtension}`),
+            "utf-8",
+          );
+          preparedParams.push({ circuitSource: circuitCode });
+        }
+        else {
           preparedParams.push(reqElement);
         }
       }
@@ -235,9 +243,14 @@ export class ZeroKnowledgeServer {
     }
   }
 
+  /**
+   * Perform a request to a specific server to which the provided client connects to.
+   * @param client A ZeroKnowledgeClient connected to a server whose ip:port was defined in the request
+   * @param actionName The endpoint that should be called by the client
+   * @param params The necessary parameters for the endpoint call
+   * @returns The result provided by the server for the call
+   */
   private redirectRequest(client: ZeroKnowledgeClient, actionName: string, params: any[]) {
-    const fnTag = `${this.CLASS_TAG}#redirectRequest()`;
-    this.log.info(`${fnTag}: Redirecting request ${actionName} to ${client}`);
     try {
       const result = client.blindRequest(actionName, params);
       return result;
@@ -317,20 +330,25 @@ export class ZeroKnowledgeServer {
                     );
                     if (req.body.params) {
                       let result;
-                      const params = await this.gatherDBInputs(req.body.params);
-                      console.log(endpoint.getRedirectURL());
-                      if (endpoint.getRedirectURL() != undefined) {
-                        const redirectInfo = endpoint.getRedirectURL()!;
+                      const redirectInfo = endpoint.getRedirectURL();
+                      const params = await this.gatherDBInputs(req.body.params, redirectInfo != undefined);
+                      if (redirectInfo != undefined) {
                         this.log.info(
                           `${this.CLASS_TAG} Redirecting request to ${redirectInfo.ip}:${redirectInfo.port}`
                         );
                         const subClient = new ZeroKnowledgeClient(redirectInfo.port, redirectInfo.ip);
                         result = await this.redirectRequest(subClient, endpointProperties.endpointName!, params);
+                        this.log.info(
+                          `${this.CLASS_TAG} Returning result ${JSON.stringify(result)} to caller`,
+                        );
                       } else {
                         this.log.info(`${this.CLASS_TAG} Executing service locally`);
                         result = await endpoint.executeService(
                           endpointProperties.endpointName!,
                           params,
+                        );
+                        this.log.info(
+                          `${this.CLASS_TAG} Service executed with result ${JSON.stringify(result)}`,
                         );
                       }
                       if (req.body.store) {
@@ -338,9 +356,6 @@ export class ZeroKnowledgeServer {
                           ?.get(req.body.store)
                           ?.storeObject(JSON.stringify(result));
                       }
-                      this.log.info(
-                        `${this.CLASS_TAG} Returning result ${result} to caller`,
-                      );
                       res.json({ result });
                     } else {
                       throw new NoRequestCallDataError(

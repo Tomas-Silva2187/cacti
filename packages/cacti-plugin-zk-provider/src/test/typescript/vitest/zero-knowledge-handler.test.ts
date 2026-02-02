@@ -170,6 +170,27 @@ describe("ZeroKnowledgeHandler", () => {
     let compiledCircuit: any;
     let witness: any;
     let keypair: any;
+
+    function stringToU8Array(str: string): number[] {
+      return Array.from(str).map(c => c.charCodeAt(0));
+    }
+
+    function stringToU16Array(str: string): number[] {
+      const bytes = stringToU8Array(str);
+      const arr: number[] = [];
+      for (let i = 0; i < bytes.length; i += 2) {
+        let a;
+        if (i + 1 >= bytes.length) {
+          a = 0;
+        }
+        else {
+          a = bytes[i + 1];
+        }
+        const rep = (bytes[i] * 256) + a;
+        arr.push(rep);
+      }
+      return arr;
+    }
     it("should initialize with default options", async () => {
       console.log("WOrking at dir:", __dirname);
       handler = new ZeroKnowledgeHandler({
@@ -179,12 +200,96 @@ describe("ZeroKnowledgeHandler", () => {
       expect(handler).toBeDefined();
       await handler.initializeZoKrates();
       compiledCircuit = await handler.compileCircuit({
-        circuitName: "hashCompute.zok",
+        circuitName: "hashCompute16.zok",
       } as CircuitLoadSetup);
       expect(compiledCircuit).toBeDefined();
-      witness = await handler.computeWitness(compiledCircuit, ["97", "98", "99"]);
+      console.log(`u8 array for "abcabc":`, stringToU8Array("abcabc"));
+      console.log(
+        `u16 array for "abcabc":`,
+        stringToU16Array("abcabc"),
+      );
+      witness = await handler.computeWitness(compiledCircuit, ["24930", "25441", "25187"]);
       expect(witness).toBeDefined();
       console.log("Witness output:", witness.output);
+      const localhash = createHash("sha256").update("abcabc").digest("hex");
+      console.log("Local hash:", localhash);
+      keypair = await handler.generateProofKeyPair(compiledCircuit);
+      expect(keypair).toBeDefined();
+      const proof = await handler.generateProof(
+        compiledCircuit,
+        witness,
+        keypair,
+      );
+      expect(proof).toBeDefined();
+      const isValid = await handler.verifyProof(proof, keypair);
+      expect(isValid).toBe(true);
+    }, 150000);
+  }, 150000);
+  describe("Prove hash knowledge", () => {
+    let handler: ZeroKnowledgeHandler;
+    let compiledCircuit: any;
+    let witness: any;
+    let keypair: any;
+
+    function stringToU8Array(str: string): number[] {
+      return Array.from(str).map(c => c.charCodeAt(0));
+    }
+
+    function stringToU16Array(str: string): string[] {
+      const bytes = stringToU8Array(str);
+      const arr: string[] = [];
+      for (let i = 0; i < bytes.length; i += 2) {
+        let a;
+        if (i + 1 >= bytes.length) {
+          a = 0;
+        }
+        else {
+          a = bytes[i + 1];
+        }
+        const rep = (bytes[i] * 256) + a;
+        arr.push(rep.toString());
+      }
+      return arr;
+    }
+    function hashToU32Array(hash: string): string[] {
+      const arr: string[] = [];
+      const hashArr = Array.from(hash);
+      for (let i=0; i < hashArr.length; i += 8) {
+        if (i + 8 <= hashArr.length) {
+          const segment = hashArr.slice(i, i + 8).join("");
+          //arr.push(BigInt("0x" + segment).toString());
+          arr.push(segment);
+        }
+      }
+      return arr;
+    }
+    it("should initialize with default options", async () => {
+      const secret = "mysecret";
+      //const secretBytes = stringToU16Array(secret);
+      handler = new ZeroKnowledgeHandler({
+        logLevel: "INFO",
+        zkcircuitPath: path.join(__dirname, "../../zokrates"),
+      } as ZeroKnowledgeHandlerOptions);
+      expect(handler).toBeDefined();
+      await handler.initializeZoKrates();
+      compiledCircuit = await handler.compileCircuit({
+        circuitName: "proveHash64Knowledge.zok",
+      } as CircuitLoadSetup);
+      expect(compiledCircuit).toBeDefined();
+      console.log(`u8 array for ${secret}:`, stringToU8Array(secret));
+      console.log(
+        `u16 array for ${secret}:`,
+        stringToU16Array(secret),
+      );
+      const localhash = createHash("sha256").update(secret).digest("hex");
+      console.log("Local hash:", localhash);
+      const toHash = stringToU16Array(secret);
+      const hash32 = hashToU32Array(localhash);
+      console.log(`hash array:`, hash32);
+      witness = await handler.computeWitness(compiledCircuit, toHash.concat(hash32));
+      expect(witness).toBeDefined();
+      console.log("Witness output:", witness.output);
+      
       keypair = await handler.generateProofKeyPair(compiledCircuit);
       expect(keypair).toBeDefined();
       const proof = await handler.generateProof(

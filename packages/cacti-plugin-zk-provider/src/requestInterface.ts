@@ -33,15 +33,16 @@ async function populateDatabase() {
     circuitCredentials: circuitHash1,
   };
   await redisClient.hSet(circuitId1, circuit1Value);
-  circuitIdMap.set("proveSquare.zok", circuitId1);
+  circuitIdMap.set("proveSquare", circuitId1);
 }
 
 try {
   const client = new ZeroKnowledgeClient(3000, "localhost");
   await populateDatabase();
   let circuitName;
+  let circuitInputs;
   while (true) {
-    console.log("Client Services:");
+    console.log("======Client Services:======");
     console.log("0. Select Circuit");
     console.log("1. Compile Circuit");
     console.log("2. Generate Witness");
@@ -64,14 +65,28 @@ try {
     }
     switch (in1) {
       case "0":
-        circuitName = await expectInput(
-          "Enter Circuit Name (e.g., <circuit name>.zok):\nOptions\n- proveSquare.zok\n -> ",
+        const selection = await expectInput(
+          "Enter Circuit Name (e.g., <circuit name>.zok):\nOptions\nA) proveSquare\n -> ",
         );
+        switch(selection.toUpperCase()) {
+          case "A":
+            circuitName = "proveSquare";
+            const providedInputs = await expectInput(
+              "Enter inputs for circuit 'proveSquare' separated by commas (e.g. $ <value>,<square>): ",
+            );
+            circuitInputs = (providedInputs.replace(/ /g, "")).split(",");
+            break;
+          default:
+            console.log("Invalid selection. Please try again.");
+            continue;
+        }
         const fetchData = {
           infrastructureElement: RequestTarget.SERVER,
           url: { ip: "offserver1", port: 3001 },
         }
-        await client.requestCircuitLoad(circuitIdMap.get(circuitName)!, "HASH", fetchData);
+        if (circuitName != undefined) {
+          await client.requestCircuitLoad(circuitIdMap.get(circuitName)!, "HASH", fetchData);
+        }
         break;
       case "1":
         if (circuitName === undefined) {
@@ -81,11 +96,11 @@ try {
         const r1 = await client.requestCompile(storeFlag, circuitName);
         if (r1 == "ACK") {
           console.log("Circuit Compiled. Return: ");
-          //console.log("->" + client.getCompilation());
+          console.log("->" + client.getCompilation());
         }
         break;
       case "2":
-        const r2 = await client.requestWitness(storeFlag, ["2", "4"]);
+        const r2 = await client.requestWitness(storeFlag, circuitInputs);
         if (r2 == "ACK") {
           console.log("Witness Generated. Return: ");
           console.log("->" + client.getWitness());
@@ -117,6 +132,7 @@ try {
       default:
         console.log("Invalid selection. Please try again.");
     }
+    console.log("=====================");
   }
 } catch (error) {
   throw error;

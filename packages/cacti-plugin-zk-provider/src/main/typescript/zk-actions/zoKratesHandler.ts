@@ -122,14 +122,13 @@ export class ZeroKnowledgeHandler {
           );
         }
         const source = fs.readFileSync(circuitPath).toString();
-        //const source = "...";
         const options = {
           location: circuitPath, // location of the root module
           resolveCallback: (currentLocation, importLocation) => {
-            this.log.warn(`[resolveCallback] Called with currentLocation: ${currentLocation}, importLocation: ${importLocation}`);
+            this.log.debug(`[resolveCallback] Called with currentLocation: ${currentLocation}, importLocation: ${importLocation}`);
             const dir = path.dirname(currentLocation);
             const importPath = path.resolve(dir, importLocation);
-            this.log.info(`[resolveCallback] Resolved import path: ${importPath}`);
+            this.log.debug(`[resolveCallback] Resolved import path: ${importPath}`);
             if (!fs.existsSync(importPath)) {
               this.log.error(`[resolveCallback] File not found: ${importPath}`);
               throw new Error(`ZoKrates import error: File not found: ${importPath}`);
@@ -179,8 +178,7 @@ export class ZeroKnowledgeHandler {
           compilationArtifacts.program,
         );
       }
-      this.log.warn("Comp: ", compilationArtifacts);
-      this.log.warn("inputs: ", inputs);
+      this.log.debug(`${fnTag}: Compilation Artifacts:\n${compilationArtifacts}\nfor inputs\n${inputs}`);
       return this.provider.computeWitness(compilationArtifacts, inputs);
     } catch (error) {
       throw new ZoKratesComputationError(error.message, fnTag);

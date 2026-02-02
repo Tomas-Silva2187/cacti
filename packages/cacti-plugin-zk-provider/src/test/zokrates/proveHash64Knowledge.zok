@@ -1,0 +1,19 @@
+import "./stdlib/hashes/sha256/sha256Padded.zok" as sha256;
+import "./stdlib/utils/casts/u16_to_u8array.zok" as cast;
+
+def main(private u16 p1, private u16 p2, private u16 p3, private u16 p4, u32 hash1, u32 hash2, u32 hash3, u32 hash4, u32 hash5, u32 hash6, u32 hash7, u32 hash8) {
+    u8[2] in1 = cast(p1);
+    u8[2] in2 = cast(p2);
+    u8[2] in3 = cast(p3);
+    u8[2] in4 = cast(p4);
+    u32[8] hash = sha256([in1[0], in1[1], in2[0], in2[1], in3[0], in3[1], in4[0], in4[1]]);
+    assert(hash[0] == hash1);
+    assert(hash[1] == hash2);
+    assert(hash[2] == hash3);
+    assert(hash[3] == hash4);
+    assert(hash[4] == hash5);
+    assert(hash[5] == hash6);
+    assert(hash[6] == hash7);
+    assert(hash[7] == hash8);
+    return;
+}

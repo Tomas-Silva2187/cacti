@@ -1,0 +1,9 @@
+from "EMBED" import u16_to_bits, u8_from_bits;
+
+def main(u16 input) -> u8[2] {
+    bool[16] bits = u16_to_bits(input);
+    return [
+        u8_from_bits(bits[0..8]),
+        u8_from_bits(bits[8..16])
+    ];
+}

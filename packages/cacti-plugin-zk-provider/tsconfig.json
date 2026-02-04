@@ -14,6 +14,7 @@
     "skipLibCheck": true,
     "noImplicitAny": false,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "strict": true
   },
   "ts-node": {
@@ -21,6 +22,7 @@
   },
   "include": [
     "src",
+    "src/**/*.json"
   ],
   "exclude": [
     "node_modules"

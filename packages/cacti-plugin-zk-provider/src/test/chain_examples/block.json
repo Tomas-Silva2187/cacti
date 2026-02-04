@@ -1,0 +1,20 @@
+{
+  "provider": "JsonRpcProvider {}",
+  "number": 12,
+  "hash": "0x73289de5491e74f168f9c6d47a73424983d3aaa72408e374c4881d33851b9b56",
+  "timestamp": 1770147728,
+  "parentHash": "0x7d39788818c45f214e442c3e49745d2eda0608e8c4939345937e5605da454a13",
+  "parentBeaconBlockRoot": "0x4feb20da2769fd9685376f7664f2a9d61067b3071cb9a085724411cbbe22dbd0",
+  "nonce": "0x0000000000000000",
+  "difficulty": "0n",
+  "gasLimit": "30000000n",
+  "gasUsed": "70777n",
+  "stateRoot": "0x9441bb1d7460b83db0712b6fbeb43cafe6f01780fd5fdacdbe30acc33ab133ef",
+  "receiptsRoot": "0x5828583ef17ff287498b5cce4ccc80fcaca09ea4b37accc835c0566340ab93f7",
+  "blobGasUsed": "0n",
+  "excessBlobGas": "0n",
+  "miner": "0xC014BA5EC014ba5ec014Ba5EC014ba5Ec014bA5E",
+  "prevRandao": "0xd7b75e6c2995915012655c8e7ac83bd5e0981d2e91075f830c7d44f4bc8950a4",
+  "extraData": "0x",
+  "baseFeePerGas": "212842347n"
+}

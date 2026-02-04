@@ -20,10 +20,16 @@ import { spawn } from "child_process";
 import { createClient, RedisClientType } from "redis";
 import { DatabaseType } from "../../../main/typescript/database/zkDatabase";
 import { ZeroKnowledgeClient } from "../../../main/typescript/server/zeroKnowledgeClient";
-import { mkdir, mkdtemp, rm } from "fs/promises";
+import { mkdir, rm } from "fs/promises";
 import { readFileSync } from "fs";
 import { createHash } from "crypto";
-import { FetchData, RequestTarget, ServerUrl } from "../../../main/typescript/utils";
+import {
+  FetchData,
+  RequestTarget,
+  ServerUrl,
+} from "../../../main/typescript/utils";
+//import ganache from "ganache";
+import { EthereumContractDeployer } from "../ethereumChain";
 
 describe("ZK Server Setup and Service Requests", () => {
   const PORT = 3000;
@@ -543,7 +549,7 @@ describe("ZK Client-Server Interaction", async () => {
         logLevel: "INFO",
         setupServices: [
           { endpointService: compileServiceSetup } as EndpointSetup,
-          { endpointService: computeWitnessServiceSetup} as EndpointSetup,
+          { endpointService: computeWitnessServiceSetup } as EndpointSetup,
           { endpointService: keyPairGenServiceSetup } as EndpointSetup,
           { endpointService: proofGenServiceSetup } as EndpointSetup,
           { endpointService: proofVerServiceSetup } as EndpointSetup,
@@ -648,9 +654,7 @@ describe("ZK Client-Server Interaction", async () => {
         path.join(circuitPath, "proveSquare.zok"),
         "utf-8",
       );
-      circuitHash = createHash("sha256")
-        .update(circuitCode)
-        .digest("hex");
+      circuitHash = createHash("sha256").update(circuitCode).digest("hex");
       circuitID = `proveSquare:${circuitHash}`;
       const circuitValue = {
         circuitCode: circuitCode,
@@ -668,11 +672,13 @@ describe("ZK Client-Server Interaction", async () => {
     });
 
     it("should successfully generate all elements for a valid proof", async () => {
-     expect(await zkClient.requestCompile(true, "proveSquare.zok")).toBe("ACK");
-     expect(await zkClient.requestWitness(true, ["2", "4"])).toBe("ACK");
-     expect(await zkClient.requestKeypair(true)).toBe("ACK");
-     expect(await zkClient.requestProof(true)).toBe("ACK");
-     expect(await zkClient.requestProofVerification()).toBe(true);
+      expect(await zkClient.requestCompile(true, "proveSquare.zok")).toBe(
+        "ACK",
+      );
+      expect(await zkClient.requestWitness(true, ["2", "4"])).toBe("ACK");
+      expect(await zkClient.requestKeypair(true)).toBe("ACK");
+      expect(await zkClient.requestProof(true)).toBe("ACK");
+      expect(await zkClient.requestProofVerification()).toBe(true);
     });
   });
   describe("Client and 2 Server interaction", async () => {
@@ -776,7 +782,7 @@ describe("ZK Client-Server Interaction", async () => {
           { endpointService: compileServiceSetup } as EndpointSetup,
           { endpointService: computeWitnessServiceSetup } as EndpointSetup,
           { endpointService: keyPairGenServiceSetup } as EndpointSetup,
-          { 
+          {
             endpointService: proofGenServiceSetup,
             redirectURL: redirectionUrl,
           } as EndpointSetup,
@@ -817,9 +823,7 @@ describe("ZK Client-Server Interaction", async () => {
         path.join(circuitPath, "proveSquare.zok"),
         "utf-8",
       );
-      circuitHash = createHash("sha256")
-        .update(circuitCode)
-        .digest("hex");
+      circuitHash = createHash("sha256").update(circuitCode).digest("hex");
       circuitID = `proveSquare:${circuitHash}`;
       const circuitValue = {
         circuitCode: circuitCode,
@@ -827,17 +831,218 @@ describe("ZK Client-Server Interaction", async () => {
       };
       await redisClient2.hSet(circuitID, circuitValue);
     }, 20000);
-    it("should proceed with the steps for a valid proof", async() => {
+    it("should proceed with the steps for a valid proof", async () => {
       const fetchData = {
         infrastructureElement: RequestTarget.SERVER,
         url: { ip: "localhost", port: 3001 } as ServerUrl,
       } as FetchData;
-      expect(await zkClient.requestCircuitLoad(circuitID, VerificationMethod.HASH, fetchData)).toBe("ACK");
-      expect(await zkClient.requestCompile(true, "proveSquare.zok")).toBe("ACK");
+      expect(
+        await zkClient.requestCircuitLoad(
+          circuitID,
+          VerificationMethod.HASH,
+          fetchData,
+        ),
+      ).toBe("ACK");
+      expect(await zkClient.requestCompile(true, "proveSquare.zok")).toBe(
+        "ACK",
+      );
       expect(await zkClient.requestWitness(true, ["2", "4"])).toBe("ACK");
       expect(await zkClient.requestKeypair(true)).toBe("ACK");
       expect(await zkClient.requestProof(true)).toBe("ACK");
       expect(await zkClient.requestProofVerification()).toBe(true);
     }, 20000);
+  });
+});
+
+describe("Proving EVM transactions", async () => {
+  describe("Client and 2 Server interaction", async () => {
+    /*let localZkServer: ZeroKnowledgeServer;
+    let offLoadZkServer: ZeroKnowledgeServer;
+    let redisProcess1: any;
+    let redisProcess2: any;
+    let redisClient1: RedisClientType;
+    let redisClient2: RedisClientType;
+    const redisPort1 = "6379";
+    const redisPort2 = "6380";
+    let tempCircuitDir: string;*/
+    //let circuitID: string;
+    //let circuitHash: string;
+    //let zkClient: ZeroKnowledgeClient;
+    /*beforeAll(async () => {
+      tempCircuitDir = path.join(__dirname, "/test-zk-circuits");
+      await mkdir(path.join(__dirname, "/test-zk-circuits"));
+    });
+    afterAll(async () => {
+      await rm(tempCircuitDir, { recursive: true, force: true });
+      if (localZkServer) {
+        localZkServer.serverStop();
+      }
+      if (redisProcess1) {
+        redisProcess1.kill();
+      }
+      if (offLoadZkServer) {
+        offLoadZkServer.serverStop();
+      }
+      if (redisProcess2) {
+        redisProcess2.kill();
+      }
+    });
+    const compileServiceSetup = {
+      endpointName: "compile",
+      executeFunction: "compileCircuit",
+      endpointCallType: EndpointCallType.POST,
+    } as EndpointService;
+    const computeWitnessServiceSetup = {
+      endpointName: "witness",
+      executeFunction: "computeWitness",
+      endpointCallType: EndpointCallType.POST,
+    } as EndpointService;
+    const keyPairGenServiceSetup = {
+      endpointName: "keypair",
+      executeFunction: "generateProofKeyPair",
+      endpointCallType: EndpointCallType.POST,
+    } as EndpointService;
+    const proofGenServiceSetup = {
+      endpointName: "generate",
+      executeFunction: "generateProof",
+      endpointCallType: EndpointCallType.POST,
+    } as EndpointService;
+    const proofVerServiceSetup = {
+      endpointName: "verify",
+      executeFunction: "verifyProof",
+      endpointCallType: EndpointCallType.POST,
+    } as EndpointService;
+    const redirectionUrl = { ip: "localhost", port: 3001 } as ServerUrl;
+
+    it("should launch a 2 local Redis server instances", async () => {
+      try {
+        redisProcess1 = spawn("redis-server", ["--port", redisPort1], {
+          stdio: "inherit",
+        });
+        redisProcess1.on("error", (error: Error) => {
+          throw error;
+        });
+        redisProcess1.on("exit", () => {
+          redisProcess1 = undefined;
+        });
+        redisProcess2 = spawn("redis-server", ["--port", redisPort2], {
+          stdio: "inherit",
+        });
+        redisProcess2.on("error", (error: Error) => {
+          throw error;
+        });
+        redisProcess2.on("exit", () => {
+          redisProcess2 = undefined;
+        });
+      } catch (error) {
+        throw new Error(`Error with Redis server: ${error}`);
+      }
+      redisClient1 = await createClient({
+        url: `redis://localhost:${redisPort1}`,
+      });
+      redisClient2 = await createClient({
+        url: `redis://localhost:${redisPort2}`,
+      });
+      await redisClient1.connect();
+      await redisClient2.connect();
+      expect(await redisClient1.ping()).toBe("PONG");
+      expect(await redisClient2.ping()).toBe("PONG");
+    }, 20000);
+    it("should successfully setup 2 full ZK Servers with a Redis DB each and a Client", async () => {
+      localZkServer = new ZeroKnowledgeServer({
+        zeroKnowledgeCircuitPath: tempCircuitDir,
+        logLevel: "INFO",
+        setupServices: [
+          { endpointService: compileServiceSetup } as EndpointSetup,
+          { endpointService: computeWitnessServiceSetup } as EndpointSetup,
+          { endpointService: keyPairGenServiceSetup } as EndpointSetup,
+          {
+            endpointService: proofGenServiceSetup,
+            redirectURL: redirectionUrl,
+          } as EndpointSetup,
+          { endpointService: proofVerServiceSetup } as EndpointSetup,
+        ],
+        serverPort: 3000,
+        databaseSetup: {
+          type: DatabaseType.REDIS,
+          port: parseInt(redisPort1),
+          ipAddress: "localhost",
+        },
+        serverId: "LOCAL",
+      } as ServerSetup);
+      offLoadZkServer = new ZeroKnowledgeServer({
+        zeroKnowledgeCircuitPath: tempCircuitDir,
+        logLevel: "INFO",
+        setupServices: [
+          { endpointService: proofGenServiceSetup } as EndpointSetup,
+        ],
+        serverPort: 3001,
+        databaseSetup: {
+          type: DatabaseType.REDIS,
+          port: parseInt(redisPort2),
+          ipAddress: "localhost",
+        },
+        serverId: "OFFLOAD",
+      } as ServerSetup);
+      await localZkServer.serverInit();
+      expect(localZkServer).toBeDefined();
+      await offLoadZkServer.serverInit();
+      expect(offLoadZkServer).toBeDefined();
+      zkClient = new ZeroKnowledgeClient(3000, "localhost");
+      expect(zkClient).toBeDefined();
+    }, 20000);*/
+    it("should start an Ethereum ledger instance mint and get a block", async () => {
+      console.log(
+        "\n\n\n\nNOTE TO MYSELF: RUN HARDHAT NODE ON 8545 FROM CACTI DEMOS FOLDER FOR THIS TO WORK\n\n\n\n",
+      );
+      const provider = new EthereumContractDeployer();
+      await provider.deployERC20Contract();
+
+      const tx = await provider.mintTokens();
+      console.log(`Mint transaction: ${tx}`);
+
+      const block = await provider.fetchBlock("latest");
+      console.log(`Block containing the transaction: ${JSON.stringify(block)}`);
+
+      const receipt = await provider.fetchTransactionReceipt(tx.hash);
+      console.log(`Transaction receipt: ${JSON.stringify(receipt)}`);
+
+      const encode = await provider.rlpEncodeReceipt(tx);
+      await provider.getTrieRoot(encode);
+    });
+    /*it("should load a new circuit into the Database for Server 2", async () => {
+      const circuitPath = path.join(__dirname, "../../zokrates");
+      const circuitCode = readFileSync(
+        path.join(circuitPath, "proveSquare.zok"),
+        "utf-8",
+      );
+      circuitHash = createHash("sha256").update(circuitCode).digest("hex");
+      circuitID = `proveSquare:${circuitHash}`;
+      const circuitValue = {
+        circuitCode: circuitCode,
+        circuitCredentials: circuitHash,
+      };
+      await redisClient2.hSet(circuitID, circuitValue);
+    }, 20000);
+    it("should proceed with the steps for a valid proof", async () => {
+      const fetchData = {
+        infrastructureElement: RequestTarget.SERVER,
+        url: { ip: "localhost", port: 3001 } as ServerUrl,
+      } as FetchData;
+      expect(
+        await zkClient.requestCircuitLoad(
+          circuitID,
+          VerificationMethod.HASH,
+          fetchData,
+        ),
+      ).toBe("ACK");
+      expect(await zkClient.requestCompile(true, "proveSquare.zok")).toBe(
+        "ACK",
+      );
+      expect(await zkClient.requestWitness(true, ["2", "4"])).toBe("ACK");
+      expect(await zkClient.requestKeypair(true)).toBe("ACK");
+      expect(await zkClient.requestProof(true)).toBe("ACK");
+      expect(await zkClient.requestProofVerification()).toBe(true);
+    }, 20000);*/
   });
 });

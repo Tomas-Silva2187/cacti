@@ -1,0 +1,3 @@
+[submodule "packages/cacti-plugin-zk-provider/lib/openzeppelin-contracts"]
+	path = packages/cacti-plugin-zk-provider/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts

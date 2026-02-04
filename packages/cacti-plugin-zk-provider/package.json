@@ -11,11 +11,19 @@
   ],
   "type": "module",
   "dependencies": {
+    "@ethereumjs/rlp": "^10.1.1",
+    "@ethereumjs/trie": "^6.2.1",
+    "@ethereumjs/util": "^10.1.1",
     "@hyperledger/cactus-common": "2.1.0",
+    "@hyperledger/cactus-core": "workspace:^",
     "@vercel/ncc": "^0.38.4",
     "@zkpassport/poseidon2": "^0.6.2",
+    "ethers": "^6.16.0",
     "express": "^5.2.1",
+    "ganache": "^7.9.2",
+    "hardhat": "^3.1.6",
     "ncc": "^0.3.6",
+    "openzeppelin": "^1.0.0",
     "poseidon": "^0.3.2",
     "redis": "^5.10.0",
     "zokrates-js": "^1.1.9"
@@ -32,12 +40,13 @@
     "zk-server-db-test2": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"ZK Server automatically Fetching from Database\"",
     "zk-client-test": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"Client to Server\"",
     "zk-client-test2": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"ZK Server circuit load and validation\"",
-    "zk-client-test3": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"Client and 2 Server interaction\"",
+    "zk-client-test3": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"Proving EVM transactions\"",
     "docker-rebuild": "yarn build && yarn build-bundle && yarn docker-build",
     "docker-build": "docker build -f zero-knowledge-server.Dockerfile -t zkserver .",
     "docker-network-setup": "docker network create zknet",
     "docker-run-local": "docker run -p 3000:3000 --name localserver1 --network zknet zkserver 0",
-    "docker-run-offserver": "docker run -p 6379:6379 -p 3001:3001 --name offserver1 --network zknet zkserver 1"
+    "docker-run-offserver": "docker run -p 6379:6379 -p 3001:3001 --name offserver1 --network zknet zkserver 1",
+    "forge:build:contracts": "forge build --out ./src/test/solidity/generated"
   },
   "devDependencies": {
     "@types/express": "^5",

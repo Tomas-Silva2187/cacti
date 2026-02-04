@@ -172,7 +172,7 @@ describe("ZeroKnowledgeHandler", () => {
     let keypair: any;
 
     function stringToU8Array(str: string): number[] {
-      return Array.from(str).map(c => c.charCodeAt(0));
+      return Array.from(str).map((c) => c.charCodeAt(0));
     }
 
     function stringToU16Array(str: string): number[] {
@@ -182,11 +182,10 @@ describe("ZeroKnowledgeHandler", () => {
         let a;
         if (i + 1 >= bytes.length) {
           a = 0;
-        }
-        else {
+        } else {
           a = bytes[i + 1];
         }
-        const rep = (bytes[i] * 256) + a;
+        const rep = bytes[i] * 256 + a;
         arr.push(rep);
       }
       return arr;
@@ -204,11 +203,12 @@ describe("ZeroKnowledgeHandler", () => {
       } as CircuitLoadSetup);
       expect(compiledCircuit).toBeDefined();
       console.log(`u8 array for "abcabc":`, stringToU8Array("abcabc"));
-      console.log(
-        `u16 array for "abcabc":`,
-        stringToU16Array("abcabc"),
-      );
-      witness = await handler.computeWitness(compiledCircuit, ["24930", "25441", "25187"]);
+      console.log(`u16 array for "abcabc":`, stringToU16Array("abcabc"));
+      witness = await handler.computeWitness(compiledCircuit, [
+        "24930",
+        "25441",
+        "25187",
+      ]);
       expect(witness).toBeDefined();
       console.log("Witness output:", witness.output);
       const localhash = createHash("sha256").update("abcabc").digest("hex");
@@ -225,6 +225,7 @@ describe("ZeroKnowledgeHandler", () => {
       expect(isValid).toBe(true);
     }, 150000);
   }, 150000);
+
   describe("Prove hash knowledge", () => {
     let handler: ZeroKnowledgeHandler;
     let compiledCircuit: any;
@@ -232,7 +233,7 @@ describe("ZeroKnowledgeHandler", () => {
     let keypair: any;
 
     function stringToU8Array(str: string): number[] {
-      return Array.from(str).map(c => c.charCodeAt(0));
+      return Array.from(str).map((c) => c.charCodeAt(0));
     }
 
     function stringToU16Array(str: string): string[] {
@@ -242,11 +243,10 @@ describe("ZeroKnowledgeHandler", () => {
         let a;
         if (i + 1 >= bytes.length) {
           a = 0;
-        }
-        else {
+        } else {
           a = bytes[i + 1];
         }
-        const rep = (bytes[i] * 256) + a;
+        const rep = bytes[i] * 256 + a;
         arr.push(rep.toString());
       }
       return arr;
@@ -254,7 +254,7 @@ describe("ZeroKnowledgeHandler", () => {
     function hashToU32Array(hash: string): string[] {
       const arr: string[] = [];
       const hashArr = Array.from(hash);
-      for (let i=0; i < hashArr.length; i += 8) {
+      for (let i = 0; i < hashArr.length; i += 8) {
         if (i + 8 <= hashArr.length) {
           const segment = hashArr.slice(i, i + 8).join("");
           //arr.push(BigInt("0x" + segment).toString());
@@ -277,19 +277,19 @@ describe("ZeroKnowledgeHandler", () => {
       } as CircuitLoadSetup);
       expect(compiledCircuit).toBeDefined();
       console.log(`u8 array for ${secret}:`, stringToU8Array(secret));
-      console.log(
-        `u16 array for ${secret}:`,
-        stringToU16Array(secret),
-      );
+      console.log(`u16 array for ${secret}:`, stringToU16Array(secret));
       const localhash = createHash("sha256").update(secret).digest("hex");
       console.log("Local hash:", localhash);
       const toHash = stringToU16Array(secret);
       const hash32 = hashToU32Array(localhash);
       console.log(`hash array:`, hash32);
-      witness = await handler.computeWitness(compiledCircuit, toHash.concat(hash32));
+      witness = await handler.computeWitness(
+        compiledCircuit,
+        toHash.concat(hash32),
+      );
       expect(witness).toBeDefined();
       console.log("Witness output:", witness.output);
-      
+
       keypair = await handler.generateProofKeyPair(compiledCircuit);
       expect(keypair).toBeDefined();
       const proof = await handler.generateProof(

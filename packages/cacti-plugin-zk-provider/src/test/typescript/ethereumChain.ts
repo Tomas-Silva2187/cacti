@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { ethers, keccak256 } from "ethers";
 import erc20 from "../solidity/generated/CustomERC20.sol/CustomERC20.json" assert { type: "json" };
 import { RLP } from "@ethereumjs/rlp";
 import { Trie } from "@ethereumjs/trie";
@@ -56,8 +56,20 @@ export class EthereumContractDeployer {
       this.deployerSignerAccount,
     ).mint(this.userAddress, 1000);
     await mintTx.wait();
-
+    console.log(`Minted tokens in tx: ${JSON.stringify(mintTx)}`);
     return mintTx;
+  }
+
+  async transferTokens(amount: number, receiverAddr: any) {
+    const userSignerAccount = await this.provider.getSigner(this.userAddress);
+    const transferTx = await new ethers.Contract(
+      this.TOKEN_CONTRACT_ADDRESS,
+      this.ABI,
+      userSignerAccount,
+    ).transfer(receiverAddr, amount);
+    await transferTx.wait();
+    console.log(`Transferred tokens in tx: ${JSON.stringify(transferTx)}`);
+    return transferTx;
   }
 
   async fetchBlock(blockNumber: string = "latest") {
@@ -80,6 +92,7 @@ export class EthereumContractDeployer {
 
   async rlpEncodeReceipt(tx: any) {
     const receipt = await this.fetchTransactionReceipt(tx.hash);
+    console.log("receipt im encoding has hash: ", receipt.hash);
     const status = receipt.status === 1 ? Buffer.from([1]) : Buffer.alloc(0);
     const cumulativeGas = receipt.cumulativeGasUsed;
     const logsBloom = receipt.logsBloom;
@@ -95,16 +108,30 @@ export class EthereumContractDeployer {
     } else {
       finalRlpEncoded = rlpEncoded;
     }
+    console.log(
+      "keccak256 of rlp encoded receipt: ",
+      keccak256(finalRlpEncoded),
+    );
     return finalRlpEncoded;
   }
+
+  /*async rlpEncodeBlock(block: any) {
+    const parentHash = block.parentHash;
+    const miner = block.miner;
+    const stateRoot = block.stateRoot;
+    const receiptsRoot = block.receiptsRoot;
+    
+  }*/
 
   async getTrieRoot(rlpEncoded: any) {
     const trie = await Trie.create();
     await trie.put(RLP.encode(0), rlpEncoded);
     const myRoot = bytesToHex(await trie.root());
     console.log("MY ROOT COMPUTED LOCALLY", myRoot);
+    return myRoot;
   }
 }
 const p = new EthereumContractDeployer();
 await p.deployERC20Contract();
 await p.mintTokens();
+await p.fetchBlock();

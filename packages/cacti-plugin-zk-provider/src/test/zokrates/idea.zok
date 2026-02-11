@@ -1,0 +1,8 @@
+/*def main(private field bridgeAddressHash, private field blockDataRLP, field blockHeaderHash) {
+    u32[2] bridgeAddressHashFixed = ["0xa6g7...", "0x5b3c..."];
+    assert(bridgeAddressHash[0] == bridgeAddressHashFixed[0]);
+    assert(bridgeAddressHash[1] == bridgeAddressHashFixed[1]);
+    field blockDataHash = sha256(blockDataRLP);
+    assert(blockDataHash == blockHeaderHash);
+    return;
+}*/

@@ -76,7 +76,9 @@ export class ZeroKnowledgeClient {
 
   public async requestCompile(store: boolean, circuitName: string) {
     const requestUrl = `${this.server_url}/compile`;
-    const requestBody = this.formatRequestBody(store, [{ circuitName: circuitName }]);
+    const requestBody = this.formatRequestBody(store, [
+      { circuitName: circuitName },
+    ]);
     const compilationResponse = await fetch(requestUrl, {
       method: "POST",
       headers: {
@@ -84,14 +86,19 @@ export class ZeroKnowledgeClient {
       },
       body: requestBody,
     });
-    this.circuitCompilation = (await compilationResponse.json()).result;
+    const responseData = await compilationResponse;
+    console.log("Compilation response: ", responseData);
+    //this.circuitCompilation = responseData.json();
     return "ACK";
   }
 
   public async requestWitness(store: boolean, inputs: any[] | undefined) {
     const requestUrl = `${this.server_url}/witness`;
     const compilationArtifacts = this.formatInput(this.circuitCompilation);
-    const requestBody = this.formatRequestBody(store, [compilationArtifacts, inputs]);
+    const requestBody = this.formatRequestBody(store, [
+      compilationArtifacts,
+      inputs,
+    ]);
     const witnessResponse = await fetch(requestUrl, {
       method: "POST",
       headers: {
@@ -123,7 +130,11 @@ export class ZeroKnowledgeClient {
     const compilationArtifacts = this.formatInput(this.circuitCompilation);
     const witnessArtifacts = this.formatInput(this.circuitWitness);
     const keypairArtifacts = this.formatInput(this.circuitKeypair);
-    const requestBody = this.formatRequestBody(store, [compilationArtifacts, witnessArtifacts, keypairArtifacts]);
+    const requestBody = this.formatRequestBody(store, [
+      compilationArtifacts,
+      witnessArtifacts,
+      keypairArtifacts,
+    ]);
 
     const proofResponse = await fetch(requestUrl, {
       method: "POST",
@@ -176,7 +187,9 @@ export class ZeroKnowledgeClient {
   }
 
   public async fetchCircuit(circuitID: string) {
-    console.log(`Performing a fetch request for circuit ID: ${circuitID} to ${this.server_url}/fetchCircuit...`);
+    console.log(
+      `Performing a fetch request for circuit ID: ${circuitID} to ${this.server_url}/fetchCircuit...`,
+    );
     const requestUrl = `${this.server_url}/fetchCircuit`;
     const requestBody = JSON.stringify({
       circuitID: circuitID,

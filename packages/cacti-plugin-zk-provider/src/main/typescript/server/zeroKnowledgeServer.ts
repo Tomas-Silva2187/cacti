@@ -14,7 +14,11 @@ import {
 } from "../zk-actions/zoKratesHandler.js";
 import express from "express";
 import { RedisDBClient } from "../database/redisDBClient.js";
-import { DatabaseType, ZKDatabaseClient, ZKSnarkCircuit } from "../database/zkDatabase.js";
+import {
+  DatabaseType,
+  ZKDatabaseClient,
+  ZKSnarkCircuit,
+} from "../database/zkDatabase.js";
 import {
   DuplicateDatabaseClientError,
   FailedToLoadCircuitError,
@@ -141,7 +145,10 @@ export class ZeroKnowledgeServer {
     throw new Error("MySQL DB setup not implemented yet");
   }
 
-  private async gatherDBInputs(requestParameters: any[], redirecting: boolean = false): Promise<any[]> {
+  private async gatherDBInputs(
+    requestParameters: any[],
+    redirecting: boolean = false,
+  ): Promise<any[]> {
     try {
       const preparedParams: any[] = [];
       for (const reqElement of requestParameters) {
@@ -153,15 +160,16 @@ export class ZeroKnowledgeServer {
           if (element != null) {
             preparedParams.push(JSON.parse(element!));
           }
-        } 
-        else if ("circuitName" in reqElement && redirecting) {
+        } else if ("circuitName" in reqElement && redirecting) {
           const circuitCode = readFileSync(
-            join(this.circuitStoragePath, `${reqElement.circuitName}${this.circuitExtension}`),
+            join(
+              this.circuitStoragePath,
+              `${reqElement.circuitName}${this.circuitExtension}`,
+            ),
             "utf-8",
           );
           preparedParams.push({ circuitSource: circuitCode });
-        }
-        else {
+        } else {
           preparedParams.push(reqElement);
         }
       }
@@ -171,14 +179,16 @@ export class ZeroKnowledgeServer {
     }
   }
 
-  private verifyCircuitCredential(verificationMethod: VerificationMethod, credentials: string, data: string): boolean {
+  private verifyCircuitCredential(
+    verificationMethod: VerificationMethod,
+    credentials: string,
+    data: string,
+  ): boolean {
     const fnTag = `${this.CLASS_TAG}#verifyCircuitCredential()`;
     switch (verificationMethod) {
       case VerificationMethod.HASH:
         this.log.info(`${fnTag} Verifying loaded circuit using HASH method`);
-        const hash = createHash("sha256")
-                .update(data)
-                .digest("hex");
+        const hash = createHash("sha256").update(data).digest("hex");
         return hash == credentials;
       default:
         throw new VerificationMethodNotSupportedError(verificationMethod);
@@ -188,31 +198,39 @@ export class ZeroKnowledgeServer {
   private async loadCircuit(
     circuitID: string,
     verificationMethod: VerificationMethod = VerificationMethod.HASH,
-    fetchData: FetchData = {infrastructureElement: RequestTarget.DB}
+    fetchData: FetchData = { infrastructureElement: RequestTarget.DB },
   ) {
     const fnTag = `${this.CLASS_TAG}#loadCircuit()`;
     let circuitCode: ZKSnarkCircuit | undefined;
     this.log.info(`${fnTag}: Loading circuit...`);
     switch (fetchData.infrastructureElement) {
       case RequestTarget.DB:
-        this.log.info(`${fnTag}: Fetching circuit ${circuitID} by direct DB fetching...`);
+        this.log.info(
+          `${fnTag}: Fetching circuit ${circuitID} by direct DB fetching...`,
+        );
         const dbClient = await this.dedicatedDatabases?.get(this.mainDBPort!);
         circuitCode = await dbClient?.getCircuit(circuitID);
         break;
       case RequestTarget.SERVER:
         if (fetchData.url != undefined) {
-          this.log.info(`${fnTag}: Fetching circuit ${circuitID} by server request...`);
+          this.log.info(
+            `${fnTag}: Fetching circuit ${circuitID} by server request...`,
+          );
           const zkClient = new ZeroKnowledgeClient(
             fetchData.url.port,
             fetchData.url.ip,
           );
           circuitCode = await zkClient.fetchCircuit(circuitID);
         } else {
-          throw new Error(`${fnTag}: Missing URL information for SERVER fetch type`);
-        }        
+          throw new Error(
+            `${fnTag}: Missing URL information for SERVER fetch type`,
+          );
+        }
         break;
       default:
-        throw new Error(`${fnTag}: Unsupported fetch method ${fetchData.infrastructureElement}`);
+        throw new Error(
+          `${fnTag}: Unsupported fetch method ${fetchData.infrastructureElement}`,
+        );
     }
     if (circuitCode === undefined || circuitCode === null) {
       throw new FailedToLoadCircuitError(circuitID);
@@ -220,23 +238,37 @@ export class ZeroKnowledgeServer {
     if (!existsSync(this.circuitStoragePath)) {
       mkdirSync(this.circuitStoragePath, { recursive: true });
     }
-    const validateCircuit = this.verifyCircuitCredential(verificationMethod, circuitCode.circuitCredentials, circuitCode.circuitCode);
+    const validateCircuit = this.verifyCircuitCredential(
+      verificationMethod,
+      circuitCode.circuitCredentials,
+      circuitCode.circuitCode,
+    );
     this.log.info(`${fnTag}: Circuit validity is ${validateCircuit}`);
     if (
       !existsSync(
-        join(this.circuitStoragePath, `${circuitID.split(":")[0]}${this.circuitExtension}`),
+        join(
+          this.circuitStoragePath,
+          `${circuitID.split(":")[0]}${this.circuitExtension}`,
+        ),
       ) &&
       validateCircuit
     ) {
-      this.log.info(`${fnTag}: Storing circuit file ${circuitID.split(":")[0]}${this.circuitExtension}...`);
+      this.log.info(
+        `${fnTag}: Storing circuit file ${circuitID.split(":")[0]}${this.circuitExtension}...`,
+      );
       writeFileSync(
-        join(this.circuitStoragePath, `${circuitID.split(":")[0]}${this.circuitExtension}`),
+        join(
+          this.circuitStoragePath,
+          `${circuitID.split(":")[0]}${this.circuitExtension}`,
+        ),
         circuitCode!.circuitCode,
       );
       return "ACK";
     } else {
       if (validateCircuit) {
-        this.log.warn(`${fnTag}: Circuit file ${circuitID}.zok already loaded.`);
+        this.log.warn(
+          `${fnTag}: Circuit file ${circuitID}.zok already loaded.`,
+        );
       } else {
         throw new OverwritingDefinedCircuitError(circuitID);
       }
@@ -250,13 +282,17 @@ export class ZeroKnowledgeServer {
    * @param params The necessary parameters for the endpoint call
    * @returns The result provided by the server for the call
    */
-  private redirectRequest(client: ZeroKnowledgeClient, actionName: string, params: any[]) {
+  private redirectRequest(
+    client: ZeroKnowledgeClient,
+    actionName: string,
+    params: any[],
+  ) {
     try {
       const result = client.blindRequest(actionName, params);
       return result;
     } catch (error) {
       throw error;
-    }    
+    }
   }
 
   public exposeEndpoints() {
@@ -331,25 +367,37 @@ export class ZeroKnowledgeServer {
                     if (req.body.params) {
                       let result;
                       const redirectInfo = endpoint.getRedirectURL();
-                      const params = await this.gatherDBInputs(req.body.params, redirectInfo != undefined);
+                      const params = await this.gatherDBInputs(
+                        req.body.params,
+                        redirectInfo != undefined,
+                      );
                       if (redirectInfo != undefined) {
                         this.log.info(
-                          `${this.CLASS_TAG} Redirecting request to ${redirectInfo.ip}:${redirectInfo.port}`
+                          `${this.CLASS_TAG} Redirecting request to ${redirectInfo.ip}:${redirectInfo.port}`,
                         );
-                        const subClient = new ZeroKnowledgeClient(redirectInfo.port, redirectInfo.ip);
-                        result = await this.redirectRequest(subClient, endpointProperties.endpointName!, params);
-                        this.log.info(
-                          `${this.CLASS_TAG} Returning result ${JSON.stringify(result)} to caller`,
+                        const subClient = new ZeroKnowledgeClient(
+                          redirectInfo.port,
+                          redirectInfo.ip,
                         );
-                      } else {
-                        this.log.info(`${this.CLASS_TAG} Executing service locally`);
-                        result = await endpoint.executeService(
+                        result = await this.redirectRequest(
+                          subClient,
                           endpointProperties.endpointName!,
                           params,
                         );
                         this.log.info(
-                          `${this.CLASS_TAG} Service executed with result ${JSON.stringify(result)}`,
+                          `${this.CLASS_TAG} Returning result ${JSON.stringify(result)} to caller`,
                         );
+                      } else {
+                        this.log.info(
+                          `${this.CLASS_TAG} Executing service locally`,
+                        );
+                        result = await endpoint.executeService(
+                          endpointProperties.endpointName!,
+                          params,
+                        );
+                        /*this.log.info(
+                          `${this.CLASS_TAG} Service executed with result ${JSON.stringify(result)}`,
+                        );*/
                       }
                       if (req.body.store) {
                         result = await this.dedicatedDatabases
@@ -423,17 +471,15 @@ export class ZeroKnowledgeServer {
       this.app.use(express.json());
       this.exposeEndpoints();
       this.serverInstance = this.app.listen(this.runningPort, "0.0.0.0", () => {
-        this.log.info(
-          `${fnTag}: Listening on port ${this.runningPort}`,
-        );
+        this.log.info(`${fnTag}: Listening on port ${this.runningPort}`);
       });
       this.log.info(`${fnTag}: Server initialization complete`);
     } catch (error) {
       throw error;
-    }   
+    }
   }
 
-  public serverStop() { 
+  public serverStop() {
     const fnTag = `${this.CLASS_TAG}#serverStop()`;
     this.log.info(`${fnTag}: Stopping Server...`);
     try {
@@ -442,6 +488,6 @@ export class ZeroKnowledgeServer {
       });
     } catch (error) {
       throw error;
-    }    
+    }
   }
 }

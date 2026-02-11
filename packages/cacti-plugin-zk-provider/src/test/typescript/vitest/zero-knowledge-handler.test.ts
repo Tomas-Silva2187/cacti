@@ -175,9 +175,9 @@ describe("ZeroKnowledgeHandler", () => {
       return Array.from(str).map((c) => c.charCodeAt(0));
     }
 
-    function stringToU16Array(str: string): number[] {
+    function stringToU16Array(str: string): string[] {
       const bytes = stringToU8Array(str);
-      const arr: number[] = [];
+      const arr: string[] = [];
       for (let i = 0; i < bytes.length; i += 2) {
         let a;
         if (i + 1 >= bytes.length) {
@@ -186,10 +186,11 @@ describe("ZeroKnowledgeHandler", () => {
           a = bytes[i + 1];
         }
         const rep = bytes[i] * 256 + a;
-        arr.push(rep);
+        arr.push(rep.toString());
       }
       return arr;
     }
+
     it("should initialize with default options", async () => {
       console.log("WOrking at dir:", __dirname);
       handler = new ZeroKnowledgeHandler({
@@ -204,11 +205,11 @@ describe("ZeroKnowledgeHandler", () => {
       expect(compiledCircuit).toBeDefined();
       console.log(`u8 array for "abcabc":`, stringToU8Array("abcabc"));
       console.log(`u16 array for "abcabc":`, stringToU16Array("abcabc"));
-      witness = await handler.computeWitness(compiledCircuit, [
-        "24930",
-        "25441",
-        "25187",
-      ]);
+      const arr = stringToU16Array("abcabc");
+      /*witness = await handler.computeWitness(compiledCircuit, [
+        ["24930", "25441", "25187"],
+      ]);*/
+      witness = await handler.computeWitness(compiledCircuit, [arr]);
       expect(witness).toBeDefined();
       console.log("Witness output:", witness.output);
       const localhash = createHash("sha256").update("abcabc").digest("hex");

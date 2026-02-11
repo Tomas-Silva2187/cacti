@@ -9,9 +9,19 @@ import "./stdlib/utils/casts/u16_to_u8array.zok" as cast;
     return sha256(input_bytes);
 }*/
 
-def main(private u16 inputs1, private u16 inputs2, private u16 inputs3) -> u32[8] {
+/*def main(private u16 inputs1, private u16 inputs2, private u16 inputs3) -> u32[8] {
     u8[2] in1 = cast(inputs1);
     u8[2] in2 = cast(inputs2);
     u8[2] in3 = cast(inputs3);
     return sha256([in1[0], in1[1], in2[0], in2[1], in3[0], in3[1]]);
+}*/
+
+def main(private u16[3] inputs) -> u32[8] {
+    u8[6] mut input_bytes = [0; 6];
+    for u32 i in 0.. 3 {
+        u8[2] part = cast(inputs[i]);
+        input_bytes[i*2] = part[0];
+        input_bytes[i*2 + 1] = part[1];
+    }
+    return sha256(input_bytes);
 }

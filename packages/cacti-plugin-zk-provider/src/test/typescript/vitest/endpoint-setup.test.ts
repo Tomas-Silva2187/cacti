@@ -42,14 +42,11 @@ describe("Endpoint Setup", () => {
         } as CircuitLoadSetup,
       ]);
       expect(response).toBeDefined();
-      expect(response).toHaveProperty("program");
-      expect(response).toHaveProperty("abi");
     });
   });
 
   describe("Endpoint Setup Errors", async () => {
     let basicEndpoint: Endpoint;
-    let basicEndpoint2: Endpoint;
     const zeroKnowledgeHandler = new ZeroKnowledgeHandler({
       logLevel: "INFO",
       zkcircuitPath: path.join(__dirname, "../../zokrates"),
@@ -78,16 +75,6 @@ describe("Endpoint Setup", () => {
           },
         });
       }).toThrow(OverwriteServiceError);
-
-      basicEndpoint2 = new Endpoint(zeroKnowledgeHandler);
-      expect(basicEndpoint2).toBeDefined();
-      basicEndpoint2.setupEndpoint({
-        endpointService: {
-          endpointName: "compileCircuit",
-          executeFunction: "compileCircuit",
-          endpointCallType: EndpointCallType.POST,
-        },
-      });
     });
 
     it("should avoid blacklisted service call", async () => {

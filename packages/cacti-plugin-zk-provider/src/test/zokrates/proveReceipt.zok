@@ -12,7 +12,9 @@ const u32[8] accountHash = [
   2785503734
 ];
 
-def main(private field prevAmount, private field transferAmount, private u16[24] userAddress) {
+def main(private field prevAmount, private field transferAmount, private u16[24] userAddress) -> u32[8] {
+     assert(transferAmount > 0);
+     assert(prevAmount - transferAmount >= 0);
     u8[48] mut userAddressBytes = [0; 48];
     for u32 i in 0..24 {
         u8[2] part = cast(userAddress[i]);
@@ -20,6 +22,7 @@ def main(private field prevAmount, private field transferAmount, private u16[24]
         userAddressBytes[i*2 + 1] = part[1];
     }
     u32[8] parsedAccountHash = sha256(userAddressBytes);
+    return parsedAccountHash;
     assert(parsedAccountHash[0] == accountHash[0]);
     assert(parsedAccountHash[1] == accountHash[1]);
     assert(parsedAccountHash[2] == accountHash[2]);

@@ -65,7 +65,7 @@ export class Endpoint {
         throw new OverwriteServiceError(this.endpointService.endpointName);
       }
       this.blackListedServices = setupElements.blackListedServices;
-      this.redirectURL = (setupElements.redirectURL) as ServerUrl;
+      this.redirectURL = setupElements.redirectURL as ServerUrl;
       const endpointName = setupElements.endpointService.endpointName;
       const executeFunction = setupElements.endpointService.executeFunction;
       const serviceEndpointType =

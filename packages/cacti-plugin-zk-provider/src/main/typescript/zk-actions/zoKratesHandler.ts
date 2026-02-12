@@ -10,9 +10,10 @@ import {
   Scheme,
   CompilationArtifacts,
   ComputationResult,
-  SetupKeypair,
   Proof,
   initialize,
+  ProvingKey,
+  VerificationKey,
 } from "zokrates-js";
 import {
   ZoKratesComputationError,
@@ -50,6 +51,9 @@ export class ZeroKnowledgeHandler {
   private readonly logLevel: LogLevelDesc;
   private provider: ZoKratesProvider | undefined;
   private defaultCircuitPath: string | undefined;
+  private compilationResult: CompilationArtifacts | undefined;
+  private witnessResult: ComputationResult | undefined;
+  private provingKey: ProvingKey | undefined;
 
   constructor(options: ZeroKnowledgeHandlerOptions) {
     const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#constructor()`;
@@ -93,7 +97,7 @@ export class ZeroKnowledgeHandler {
 
   public async compileCircuit(
     circuitSetup: CircuitSetup,
-  ): Promise<CompilationArtifacts> {
+  ): Promise<VerificationKey> {
     const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#compileCircuit()`;
     if (this.provider == undefined) {
       throw new ZoKratesProviderNotInitializedError();
@@ -125,13 +129,13 @@ export class ZeroKnowledgeHandler {
         const options = {
           location: circuitPath, // location of the root module
           resolveCallback: (currentLocation, importLocation) => {
-            this.log.debug(`[resolveCallback] Called with currentLocation: ${currentLocation}, importLocation: ${importLocation}`);
             const dir = path.dirname(currentLocation);
             const importPath = path.resolve(dir, importLocation);
-            this.log.debug(`[resolveCallback] Resolved import path: ${importPath}`);
             if (!fs.existsSync(importPath)) {
               this.log.error(`[resolveCallback] File not found: ${importPath}`);
-              throw new Error(`ZoKrates import error: File not found: ${importPath}`);
+              throw new Error(
+                `ZoKrates import error: File not found: ${importPath}`,
+              );
             }
             const importSource = fs.readFileSync(importPath, "utf8");
             return {
@@ -140,136 +144,118 @@ export class ZeroKnowledgeHandler {
             };
           },
         };
-        //const artifacts = zokratesProvider.compile(source, options);
-        return this.provider.compile(source, options);
+        this.compilationResult = await this.provider.compile(source, options);
       } else if (
         "circuitSource" in circuitSetup &&
         typeof circuitSetup.circuitSource === "string"
       ) {
         const rawCircuitSetup = circuitSetup as RawCircuitSetup;
-        return this.provider.compile(rawCircuitSetup.circuitSource);
+        this.compilationResult = await this.provider.compile(
+          rawCircuitSetup.circuitSource,
+        );
       } else {
         throw new ZoKratesComputationError(
           "Invalid circuit setup provided",
           fnTag,
         );
       }
+      const vk = await this.generateProofKeyPair();
+      return vk;
     } catch (error) {
       this.log.error(`${fnTag}: Error during circuit compilation: ${error}`);
       throw new ZoKratesComputationError(error.message, fnTag);
     }
   }
 
-  public async computeWitness(
-    compilationArtifacts: CompilationArtifacts,
-    inputs: any[],
-  ): Promise<ComputationResult> {
+  public async computeWitness(inputs: any[]): Promise<string> {
     const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#computeWitness()`;
     if (this.provider == undefined) {
       throw new ZoKratesProviderNotInitializedError();
     }
     try {
-      if (
-        compilationArtifacts &&
-        typeof compilationArtifacts.program === "object" &&
-        !(compilationArtifacts.program instanceof Uint8Array)
-      ) {
-        compilationArtifacts.program = this.uint8Deserializer(
-          compilationArtifacts.program,
+      if (this.compilationResult != undefined) {
+        this.witnessResult = await this.provider.computeWitness(
+          this.compilationResult,
+          inputs,
+        );
+        if (this.witnessResult != undefined) {
+          return "OK";
+        } else {
+          return "NOK";
+        }
+      } else {
+        throw new ZoKratesComputationError(
+          "No compilation result available. Please compile a circuit before computing the witness.",
+          fnTag,
         );
       }
-      this.log.debug(`${fnTag}: Compilation Artifacts:\n${compilationArtifacts}\nfor inputs\n${inputs}`);
-      return this.provider.computeWitness(compilationArtifacts, inputs);
     } catch (error) {
       throw new ZoKratesComputationError(error.message, fnTag);
     }
   }
 
-  public async generateProofKeyPair(
-    compilationArtifacts: CompilationArtifacts,
-  ): Promise<SetupKeypair> {
+  private async generateProofKeyPair(): Promise<VerificationKey> {
     const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#generateProofKeyPair()`;
     if (this.provider == undefined) {
       throw new ZoKratesProviderNotInitializedError();
     }
     try {
-      if (
-        compilationArtifacts &&
-        typeof compilationArtifacts.program === "object" &&
-        !(compilationArtifacts.program instanceof Uint8Array)
-      ) {
-        compilationArtifacts.program = this.uint8Deserializer(
-          compilationArtifacts.program,
+      if (this.compilationResult != undefined) {
+        const keypair = await this.provider.setup(
+          this.compilationResult.program,
+        );
+        this.provingKey = keypair.pk;
+        return keypair.vk;
+      } else {
+        throw new ZoKratesComputationError(
+          "No compilation result available. Please compile a circuit before generating the proof key pair.",
+          fnTag,
         );
       }
-      return this.provider.setup(compilationArtifacts.program);
     } catch (error) {
       throw new ZoKratesComputationError(error.message, fnTag);
     }
   }
 
-  public async generateProof(
-    compilationArtifacts: CompilationArtifacts,
-    witness: ComputationResult,
-    keypair: SetupKeypair,
-  ): Promise<Proof> {
-    const fntag = `${ZeroKnowledgeHandler.CLASS_NAME}#generateProof()`;
+  public async generateProof(): Promise<Proof> {
+    const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#generateProof()`;
     if (this.provider == undefined) {
       throw new ZoKratesProviderNotInitializedError();
     }
     try {
       if (
-        compilationArtifacts &&
-        typeof compilationArtifacts.program === "object" &&
-        !(compilationArtifacts.program instanceof Uint8Array)
+        this.compilationResult != undefined &&
+        this.witnessResult != undefined &&
+        this.provingKey != undefined
       ) {
-        compilationArtifacts.program = this.uint8Deserializer(
-          compilationArtifacts.program,
+        return this.provider.generateProof(
+          this.compilationResult.program,
+          this.witnessResult.witness,
+          this.provingKey,
+        );
+      } else {
+        throw new ZoKratesComputationError(
+          "Missing compilation, witness or proving key. Ensure all steps are completed beforehand.",
+          fnTag,
         );
       }
-      if (
-        witness &&
-        typeof witness.witness === "object" &&
-        !(witness.witness instanceof Uint8Array)
-      ) {
-        witness.witness = this.uint8Deserializer(witness.witness);
-      }
-      if (
-        keypair &&
-        typeof keypair.pk === "object" &&
-        !(keypair.pk instanceof Uint8Array)
-      ) {
-        keypair.pk = this.uint8Deserializer(keypair.pk);
-      }
-      return this.provider.generateProof(
-        compilationArtifacts.program,
-        witness.witness,
-        keypair.pk,
-      );
     } catch (error) {
-      throw new ZoKratesComputationError(error.message, fntag);
+      throw new ZoKratesComputationError(error.message, fnTag);
     }
   }
 
   public async verifyProof(
     proof: Proof,
-    keypair: SetupKeypair,
+    vk: VerificationKey,
   ): Promise<boolean> {
-    const fntag = `${ZeroKnowledgeHandler.CLASS_NAME}#verifyProof()`;
+    const fnTag = `${ZeroKnowledgeHandler.CLASS_NAME}#verifyProof()`;
     if (this.provider == undefined) {
       throw new ZoKratesProviderNotInitializedError();
     }
     try {
-      return this.provider.verify(keypair.vk, proof);
+      return this.provider.verify(vk, proof);
     } catch (error) {
-      throw new ZoKratesComputationError(error.message, fntag);
+      throw new ZoKratesComputationError(error.message, fnTag);
     }
-  }
-
-  private uint8Deserializer(programObj: any) {
-    const programArr = Object.keys(programObj)
-      .sort((a, b) => Number(a) - Number(b))
-      .map((k) => programObj[k]);
-    return new Uint8Array(programArr);
   }
 }

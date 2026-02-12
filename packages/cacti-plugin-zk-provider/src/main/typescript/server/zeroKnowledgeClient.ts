@@ -1,9 +1,4 @@
-import {
-  CompilationArtifacts,
-  ComputationResult,
-  Proof,
-  SetupKeypair,
-} from "zokrates-js";
+import { Proof, VerificationKey } from "zokrates-js";
 import { FetchData } from "../utils";
 
 export class ZeroKnowledgeClient {
@@ -11,9 +6,7 @@ export class ZeroKnowledgeClient {
   private dbPort: number;
   private server_ip: string;
   private server_url: string;
-  private circuitCompilation: CompilationArtifacts | string | undefined;
-  private circuitWitness: ComputationResult | string | undefined;
-  private circuitKeypair: string | SetupKeypair | undefined;
+  private circuitVerificationKey: string | VerificationKey | undefined;
   private circuitProof: string | Proof | undefined;
   constructor(port: number, ip: string, dbPort?: number) {
     this.server_port = port;
@@ -22,14 +15,8 @@ export class ZeroKnowledgeClient {
     this.dbPort = dbPort || 6379;
   }
 
-  public getCompilation() {
-    return JSON.stringify(this.circuitCompilation);
-  }
-  public getWitness() {
-    return JSON.stringify(this.circuitWitness);
-  }
-  public getKeypair() {
-    return JSON.stringify(this.circuitKeypair);
+  public getVerificationKey() {
+    return this.circuitVerificationKey;
   }
   public getProof() {
     return JSON.stringify(this.circuitProof);
@@ -86,19 +73,13 @@ export class ZeroKnowledgeClient {
       },
       body: requestBody,
     });
-    const responseData = await compilationResponse;
-    console.log("Compilation response: ", responseData);
-    //this.circuitCompilation = responseData.json();
+    this.circuitVerificationKey = (await compilationResponse.json()).result;
     return "ACK";
   }
 
-  public async requestWitness(store: boolean, inputs: any[] | undefined) {
+  public async requestWitness(inputs: any[] | undefined) {
     const requestUrl = `${this.server_url}/witness`;
-    const compilationArtifacts = this.formatInput(this.circuitCompilation);
-    const requestBody = this.formatRequestBody(store, [
-      compilationArtifacts,
-      inputs,
-    ]);
+    const requestBody = this.formatRequestBody(false, [inputs]);
     const witnessResponse = await fetch(requestUrl, {
       method: "POST",
       headers: {
@@ -106,35 +87,16 @@ export class ZeroKnowledgeClient {
       },
       body: requestBody,
     });
-    this.circuitWitness = (await witnessResponse.json()).result;
-    return "ACK";
-  }
-
-  public async requestKeypair(store: boolean) {
-    const requestUrl = `${this.server_url}/keypair`;
-    const compilationArtifacts = this.formatInput(this.circuitCompilation);
-    const requestBody = this.formatRequestBody(store, [compilationArtifacts]);
-    const keypairResponse = await fetch(requestUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: requestBody,
-    });
-    this.circuitKeypair = (await keypairResponse.json()).result;
-    return "ACK";
+    if ((await witnessResponse.json()).result == "OK") {
+      return "ACK";
+    } else {
+      return "NACK";
+    }
   }
 
   public async requestProof(store: boolean) {
     const requestUrl = `${this.server_url}/generate`;
-    const compilationArtifacts = this.formatInput(this.circuitCompilation);
-    const witnessArtifacts = this.formatInput(this.circuitWitness);
-    const keypairArtifacts = this.formatInput(this.circuitKeypair);
-    const requestBody = this.formatRequestBody(store, [
-      compilationArtifacts,
-      witnessArtifacts,
-      keypairArtifacts,
-    ]);
+    const requestBody = this.formatRequestBody(store, []);
 
     const proofResponse = await fetch(requestUrl, {
       method: "POST",
@@ -150,11 +112,10 @@ export class ZeroKnowledgeClient {
   public async requestProofVerification() {
     const requestUrl = `${this.server_url}/verify`;
     const proofArtifacts = this.formatInput(this.circuitProof);
-    const keypairArtifacts = this.formatInput(this.circuitKeypair);
+    const vkArtifact = this.formatInput(this.circuitVerificationKey);
     const requestBody = JSON.stringify({
-      params: [proofArtifacts, keypairArtifacts],
+      params: [proofArtifacts, vkArtifact],
     });
-
     const verifyResponse = await fetch(requestUrl, {
       method: "POST",
       headers: {

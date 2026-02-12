@@ -131,7 +131,3 @@ export class EthereumContractDeployer {
     return myRoot;
   }
 }
-const p = new EthereumContractDeployer();
-await p.deployERC20Contract();
-await p.mintTokens();
-await p.fetchBlock();

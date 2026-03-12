@@ -15,6 +15,7 @@ import {
 import express from "express";
 import { RedisDBClient } from "../database/redisDBClient.js";
 import {
+  DatabaseSetup,
   DatabaseType,
   ZKDatabaseClient,
   ZKSnarkCircuit,
@@ -33,12 +34,6 @@ import { existsSync, writeFileSync, mkdirSync, readFileSync } from "fs";
 import { createHash } from "crypto";
 import { ZeroKnowledgeClient } from "./zeroKnowledgeClient.js";
 import { FetchData, RequestTarget } from "../utils.js";
-
-export interface DatabaseSetup {
-  type: DatabaseType;
-  port?: number;
-  ipAddress?: string;
-}
 
 export enum VerificationMethod {
   HASH = "HASH",
@@ -349,7 +344,7 @@ export class ZeroKnowledgeServer {
                         ?.storeObject(JSON.stringify(result));
                     }
                     this.log.info(
-                      `${this.CLASS_TAG}:${endpointProperties.endpointName!}->${JSON.stringify(result)}`,
+                      `${this.CLASS_TAG}:${endpointProperties.endpointName!}[result]->${JSON.stringify(result)}`,
                     );
                     res.json({ result });
                   } else {
@@ -404,6 +399,7 @@ export class ZeroKnowledgeServer {
               this.mainDBPort,
               "DEBUG",
               ipAddress,
+              dbSetup.name,
             ),
           );
           await this.dedicatedDatabases.get(this.mainDBPort)!.connect();

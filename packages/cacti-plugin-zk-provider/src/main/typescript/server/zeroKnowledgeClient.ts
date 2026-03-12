@@ -73,8 +73,9 @@ export class ZeroKnowledgeClient {
       },
       body: requestBody,
     });
-    this.circuitVerificationKey = (await compilationResponse.json()).result;
-    return "ACK";
+    this.circuitVerificationKey =
+      (await compilationResponse.json()).result ?? "";
+    return this.circuitVerificationKey;
   }
 
   public async requestWitness(inputs: any[] | undefined) {

@@ -7,6 +7,7 @@ import * as path from "path";
 import { describe, expect, it } from "vitest";
 import { createHash } from "crypto";
 import { VerificationKey } from "zokrates-js";
+import { EthereumContractDeployer } from "../ethereumChain";
 
 describe("ZeroKnowledgeHandler", () => {
   describe("Single handler testing", () => {
@@ -126,4 +127,29 @@ describe("ZeroKnowledgeHandler", () => {
       expect(isValid).toBe(true);
     }, 150000);
   }, 150000);
+});
+
+describe("On-chain Zero Knowledge", () => {
+  const mockContractDeployer = new EthereumContractDeployer();
+  let zkHandler: ZeroKnowledgeHandler;
+  let trfTx: any;
+  describe("Fetching data from the chain", () => {
+    it("Should deploy ERC20 token and perform calls", async () => {
+      await mockContractDeployer.deployERC20Contract();
+      await mockContractDeployer.mintTokens(1000);
+      trfTx = await mockContractDeployer.transferTokens(200);
+    });
+    it("Should start a zkHandler class", async () => {
+      zkHandler = new ZeroKnowledgeHandler({
+        logLevel: "INFO",
+        zkcircuitPath: path.join(__dirname, "../../zokrates"),
+        chainPort: "8545",
+      } as ZeroKnowledgeHandlerOptions);
+      expect(zkHandler).toBeDefined();
+      zkHandler.initializeZoKrates();
+      const txHash = trfTx.hash ?? "NOK";
+      console.log(`Using hash ${txHash}`);
+      await zkHandler.computeChainProof(txHash);
+    });
+  });
 });

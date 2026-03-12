@@ -8,6 +8,7 @@ export class EthereumContractDeployer {
   private accounts;
   private deployerAddress;
   private userAddress;
+  private user2Address;
   private callerAddress;
   private deployerSignerAccount;
   private ABI = erc20.abi;
@@ -21,6 +22,7 @@ export class EthereumContractDeployer {
     this.accounts = await this.provider.listAccounts();
     this.deployerAddress = this.accounts[0].address;
     this.userAddress = this.accounts[1].address;
+    this.user2Address = this.accounts[5].address;
     this.callerAddress = this.accounts[2].address;
 
     this.deployerSignerAccount = await this.provider.getSigner(
@@ -49,24 +51,24 @@ export class EthereumContractDeployer {
     this.TOKEN_CONTRACT_ADDRESS = await contractDeploymentTx.getAddress();
   }
 
-  async mintTokens() {
+  async mintTokens(amount?: number) {
     const mintTx = await new ethers.Contract(
       this.TOKEN_CONTRACT_ADDRESS,
       this.ABI,
       this.deployerSignerAccount,
-    ).mint(this.userAddress, 1000);
+    ).mint(this.userAddress, amount ?? 1000);
     await mintTx.wait();
     console.log(`Minted tokens in tx: ${JSON.stringify(mintTx)}`);
     return mintTx;
   }
 
-  async transferTokens(amount: number, receiverAddr: any) {
+  async transferTokens(amount: number, receiverAddr?: any) {
     const userSignerAccount = await this.provider.getSigner(this.userAddress);
     const transferTx = await new ethers.Contract(
       this.TOKEN_CONTRACT_ADDRESS,
       this.ABI,
       userSignerAccount,
-    ).transfer(receiverAddr, amount);
+    ).transfer(receiverAddr ?? this.user2Address, amount);
     await transferTx.wait();
     console.log(`Transferred tokens in tx: ${JSON.stringify(transferTx)}`);
     return transferTx;

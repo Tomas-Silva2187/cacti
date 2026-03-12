@@ -4,14 +4,18 @@ import {
   LogLevelDesc,
 } from "@hyperledger/cactus-common";
 import { createClient, RedisClientType } from "redis";
-//import { spawn, ChildProcess } from "child_process";
-//import { ZKDatabase } from "./zkDatabase";
-import { DatabaseType, ZKDatabaseClient, ZKSnarkCircuit } from "./zkDatabase.js";
+import {
+  DatabaseType,
+  REDISKeyComponents,
+  REDISNewElementLabel,
+  ZKDatabaseClient,
+  ZKSnarkCircuit,
+} from "./zkDatabase.js";
 import { createHash } from "crypto";
 import { UnformattedCircuitError } from "./databaseErrors.js";
 
 export class RedisDBClient extends ZKDatabaseClient {
-  public static readonly CLASS_NAME = "RedisDBClient";
+  private CLASS_NAME;
   private client: RedisClientType;
   private log: Logger;
 
@@ -20,10 +24,12 @@ export class RedisDBClient extends ZKDatabaseClient {
     port: number = 6379,
     logLevel: LogLevelDesc = "DEBUG",
     ipAddress?: string,
+    name?: string,
   ) {
     super(dbType, port ?? 6379, ipAddress ? ipAddress : "localhost");
+    this.CLASS_NAME = name ?? "RedisDBClient";
     this.log = LoggerProvider.getOrCreate({
-      label: RedisDBClient.CLASS_NAME,
+      label: this.CLASS_NAME,
       level: logLevel,
     });
     this.client = createClient({
@@ -31,46 +37,8 @@ export class RedisDBClient extends ZKDatabaseClient {
     });
   }
 
-  /*async startServer(): Promise<void> {
-    const fnTag = `${RedisDB.CLASS_NAME}#startServer()`;
-    this.log.debug(`${fnTag}: Launching Redis server on port ${this.port}...`);
-    if (this.redisProcess) {
-      this.log.warn(`${fnTag}: Redis server process already running.`);
-      return;
-    }
-    this.redisProcess = spawn(
-      "redis-server",
-      ["--port", this.port.toString()],
-      {
-        stdio: "inherit",
-      },
-    );
-    this.redisProcess.on("error", (err) => {
-      this.log.error(`${fnTag}: Failed to start Redis server: ${err}`);
-    });
-    this.redisProcess.on("exit", (code, signal) => {
-      this.log.info(
-        `${fnTag}: Redis server exited with code ${code}, signal ${signal}`,
-      );
-      this.redisProcess = undefined;
-    });
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    this.log.info(`${fnTag}: Redis server launched.`);
-  }
-  async stopServer(): Promise<void> {
-    const fnTag = `${RedisDBClient.CLASS_NAME}#stopServer()`;
-    if (this.redisProcess) {
-      this.log.debug(`${fnTag}: Stopping Redis server...`);
-      this.redisProcess.kill();
-      this.redisProcess = undefined;
-      this.log.info(`${fnTag}: Redis server stopped.`);
-    } else {
-      this.log.debug(`${fnTag}: No Redis server process to stop.`);
-    }
-  }*/
-
   async connect(): Promise<void> {
-    const fnTag = `${RedisDBClient.CLASS_NAME}#connect()`;
+    const fnTag = `${this.CLASS_NAME}#connect()`;
     this.log.debug(`${fnTag}: Connecting to Redis server...`);
     try {
       await this.client.connect();
@@ -83,7 +51,7 @@ export class RedisDBClient extends ZKDatabaseClient {
   }
 
   async disconnect(): Promise<void> {
-    const fnTag = `${RedisDBClient.CLASS_NAME}#disconnect()`;
+    const fnTag = `${this.CLASS_NAME}#disconnect()`;
     this.log.debug(`${fnTag}: Disconnecting from Redis server...`);
     try {
       await this.client.quit();
@@ -96,11 +64,48 @@ export class RedisDBClient extends ZKDatabaseClient {
     }
   }
 
+  private generateNewElementKey(
+    keyElements: REDISKeyComponents,
+    newElementLabel: REDISNewElementLabel,
+  ) {
+    switch (newElementLabel) {
+      case REDISNewElementLabel.VerificationKey:
+        if (keyElements.chainId && keyElements.circuitVersion) {
+          return keyElements.chainId + ":" + keyElements.circuitVersion;
+        }
+      case REDISNewElementLabel.OwnerVerificationCredential:
+        if (keyElements.chainId && keyElements.circuitVersion) {
+          return keyElements.chainId + ":" + keyElements.circuitVersion;
+        }
+      case REDISNewElementLabel.ProvingKey:
+        if (keyElements.chainId && keyElements.chainAction) {
+          return keyElements.chainId + ":" + keyElements.chainAction;
+        }
+      case REDISNewElementLabel.ZKSNARK:
+        if (
+          keyElements.chainId &&
+          keyElements.sessionId &&
+          keyElements.chainAction &&
+          keyElements.circuitVersion
+        ) {
+          return (
+            keyElements.sessionId +
+            ":" +
+            keyElements.chainAction +
+            ":" +
+            keyElements.circuitVersion
+          );
+        }
+      default:
+        throw new Error("Insufficient parameters for key generation");
+    }
+  }
+
   /**
    * Stores a data object in Redis with hash as key, and returns the key.
    */
   async storeObject(objectToStore: string) {
-    const fnTag = `${RedisDBClient.CLASS_NAME}#storeObject()`;
+    const fnTag = `${this.CLASS_NAME}#storeObject()`;
     try {
       const key = createHash("sha256").update(objectToStore).digest("hex");
       this.log.info(`${fnTag}: Storing operation result with key ${key}...`);
@@ -114,11 +119,57 @@ export class RedisDBClient extends ZKDatabaseClient {
     }
   }
 
+  async storeElement(
+    element: string,
+    keyComponents: REDISKeyComponents,
+    newElementLabel: REDISNewElementLabel,
+    certificate?: string,
+  ) {
+    const fnTag = `${this.CLASS_NAME}#storeElement()`;
+
+    try {
+      const newElementStorageKey = this.generateNewElementKey(
+        keyComponents,
+        newElementLabel,
+      );
+      this.log.info(
+        `${fnTag}: Storing Verification Key for ${newElementStorageKey}`,
+      );
+      if (!certificate) {
+        this.log.info(`${fnTag}: Storing ${element}`);
+        await this.client.hSet(newElementStorageKey, { artifact: element });
+      } else {
+        await this.client.hSet(newElementStorageKey, {
+          artifact: element,
+          credential: certificate,
+        });
+        this.log.info(`${fnTag}: Storing ${element} with ${certificate}`);
+      }
+      return newElementStorageKey;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getElement(dbKey: string) {
+    const fnTag = `${this.CLASS_NAME}#getElement()`;
+    this.log.info(
+      `${fnTag}: Fetching element ${dbKey} from ${this.ipAddress}:${this.port}`,
+    );
+    try {
+      const element = await this.client.hGet(dbKey, "artifact");
+      const certificate = await this.client.hGet(dbKey, "credential");
+      return { artifact: element, certificate: certificate ?? "" };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   /**
    * Retrieves a data object from Redis using the provided key.
    */
   async getObject(key: string): Promise<string | null> {
-    const fnTag = `${RedisDBClient.CLASS_NAME}#getObject()`;
+    const fnTag = `${this.CLASS_NAME}#getObject()`;
     this.log.info(`${fnTag}: Fetching data with key: ${key}`);
     try {
       const data = await this.client.hGet(`sha256: ${key}`, "result");
@@ -129,14 +180,17 @@ export class RedisDBClient extends ZKDatabaseClient {
   }
 
   async getCircuit(key: string): Promise<ZKSnarkCircuit> {
-    const fnTag = `${RedisDBClient.CLASS_NAME}#getCircuit()`;
+    const fnTag = `${this.CLASS_NAME}#getCircuit()`;
     this.log.info(`${fnTag}: Fetching data with key: ${key}`);
     try {
       const data = await this.client.hGetAll(key);
       if (!data || !data.circuitCode || !data.circuitCredentials) {
         throw new UnformattedCircuitError("REDIS");
       }
-      return {circuitCode: data.circuitCode, circuitCredentials: data.circuitCredentials} as ZKSnarkCircuit;
+      return {
+        circuitCode: data.circuitCode,
+        circuitCredentials: data.circuitCredentials,
+      } as ZKSnarkCircuit;
     } catch (error) {
       throw error;
     }

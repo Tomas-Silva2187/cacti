@@ -1,12 +1,12 @@
-import "hashes/sha256/1024bitPadded" as sha256;
-import "ecc/edwardsScalarMult" as scalarMult;
-import "ecc/edwardsAdd" as add;
-import "utils/pack/bool/nonStrictUnpack256" as unpack256bool;
-import "utils/pack/u32/nonStrictUnpack256" as unpack256u;
-import "ecc/edwardsOnCurve" as onCurve;
-import "ecc/edwardsOrderCheck" as orderCheck;
-from "ecc/babyjubjubParams" import BabyJubJubParams;
-import "utils/casts/u32_8_to_bool_256";
+import "../hashes/sha256/1024bitPadded.zok" as sha256;
+import "../ecc/edwardsScalarMult.zok" as scalarMult;
+import "../ecc/edwardsAdd.zok" as add;
+import "../utils/pack/bool/nonStrictUnpack256.zok" as unpack256bool;
+import "../utils/pack/u32/nonStrictUnpack256.zok" as unpack256u;
+import "../ecc/edwardsOnCurve.zok" as onCurve;
+import "../ecc/edwardsOrderCheck.zok" as orderCheck;
+from "../ecc/babyjubjubParams.zok" import BabyJubJubParams;
+import "../utils/casts/u32_8_to_bool_256.zok";
 
 /// Verifies an EdDSA Signature.
 ///

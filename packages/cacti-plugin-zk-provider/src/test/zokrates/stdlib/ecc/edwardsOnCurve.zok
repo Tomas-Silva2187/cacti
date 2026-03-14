@@ -1,4 +1,4 @@
-from "ecc/babyjubjubParams" import BabyJubJubParams;
+from "./babyjubjubParams.zok" import BabyJubJubParams;
 
 // Check if a point is on a twisted Edwards curve
 // Curve parameters are defined with the last argument

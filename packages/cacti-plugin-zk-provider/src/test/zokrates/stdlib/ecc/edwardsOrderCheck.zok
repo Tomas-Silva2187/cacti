@@ -1,7 +1,7 @@
-import "ecc/edwardsAdd" as add;
-import "ecc/edwardsScalarMult" as multiply;
-import "utils/pack/bool/nonStrictUnpack256" as unpack256;
-from "ecc/babyjubjubParams" import BabyJubJubParams;
+import "./edwardsAdd.zok" as add;
+import "./edwardsScalarMult.zok" as multiply;
+import "../utils/pack/bool/nonStrictUnpack256.zok" as unpack256;
+from "./babyjubjubParams.zok" import BabyJubJubParams;
 
 // Verifies that the point is not one of the low-order points.
 // If any of the points is multiplied by the cofactor, the resulting point

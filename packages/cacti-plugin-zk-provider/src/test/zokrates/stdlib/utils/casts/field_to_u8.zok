@@ -1,6 +1,6 @@
 from "field" import FIELD_SIZE_IN_BITS;
-import "utils/pack/bool/unpack";
-import "utils/casts/u8_from_bits";
+import "utils/pack/bool/unpack.zok";
+import "utils/casts/u8_from_bits.zok";
 
 def main(field input) -> u8 {
     bool[FIELD_SIZE_IN_BITS] bits = unpack(input);

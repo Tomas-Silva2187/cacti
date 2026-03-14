@@ -1,0 +1,6 @@
+import "hashes/poseidon/poseidon" as poseidon;
+
+def main(private field a, private field b, private field c) -> field {
+    field[3] inputs = [a, b, c];
+    return poseidon(inputs);
+}

@@ -1,0 +1,24 @@
+import "./stdlib/hashes/sha256/sha256Padded.zok" as sha256;
+import "./stdlib/utils/casts/u16_to_u8array.zok" as cast_u16_u8;
+import "./stdlib/utils/casts/field_to_u8.zok" as cast_field_u8;
+
+def main(private u16[24] userAddress, private u16 txAmount, private u16 blockNumber) -> u32[8] {
+    u8[52] mut compactDataBytes = [0; 52];
+    for u32 i in 0..24 {
+        u8[2] part = cast_u16_u8(userAddress[i]);
+        compactDataBytes[i*2] = part[0];
+        compactDataBytes[i*2 + 1] = part[1];
+    }
+    
+    u8[2] part2 = cast_u16_u8(txAmount);
+    compactDataBytes[48] = part2[0];
+    compactDataBytes[49] = part2[1];
+    
+    
+    u8[2] part3 = cast_u16_u8(blockNumber);
+    compactDataBytes[50] = part3[0];
+    compactDataBytes[51] = part3[1];
+    
+    u32[8] parsedDataHash = sha256(compactDataBytes);
+    return parsedDataHash;
+}

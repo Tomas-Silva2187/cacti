@@ -666,8 +666,10 @@ describe("Proving EVM transactions", async () => {
         Number(transferReceipt.logs[0].data), //amount
         transferReceipt.logs[0].topics[2], //receiver address
       ];
+      console.log("Address prior to u16 " + transferData[1].slice(-48));
       const txAddr = transferData[1].slice(-48);
       const txAddr2 = stringToU16Array(txAddr);
+      console.log(createHash("sha256").update(txAddr).digest("hex"));
       console.log(
         stringToU32Array(
           "0x7c46fabc08c1bfc255d66771b8d1179bb9ccf58eed86639df655b522a60769f6",

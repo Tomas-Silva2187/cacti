@@ -1,4 +1,4 @@
-from "ecc/babyjubjubParams" import BabyJubJubParams;
+from "./babyjubjubParams.zok" import BabyJubJubParams;
 
 // Add two points on a twisted Edwards curve
 // Curve parameters are defined with the last argument

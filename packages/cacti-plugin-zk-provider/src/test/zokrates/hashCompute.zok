@@ -1,5 +1,13 @@
 import "./stdlib/hashes/sha256/sha256Padded.zok" as sha256;
+import "./stdlib/utils/casts/u16_to_u8array.zok" as cast;
 
-def main(private u8 inputs1, private u8 inputs2, private u8 inputs3) -> u32[8] {
-    return sha256([inputs1, inputs2, inputs3]);
+def main(private u16[20] userAddress) -> u32[8] {
+    u8[40] mut userAddressBytes = [0; 40];
+    for u32 i in 0..20 {
+        u8[2] part = cast(userAddress[i]);
+        userAddressBytes[i*2] = part[0];
+        userAddressBytes[i*2 + 1] = part[1];
+    }
+    u32[8] parsedAccountHash = sha256(userAddressBytes);
+    return parsedAccountHash;
 }

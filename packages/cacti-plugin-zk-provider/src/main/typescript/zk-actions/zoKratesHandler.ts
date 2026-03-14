@@ -179,6 +179,7 @@ export class ZeroKnowledgeHandler {
           inputs,
         );
         if (this.witnessResult != undefined) {
+          console.log(this.witnessResult);
           return "OK";
         } else {
           return "NOK";

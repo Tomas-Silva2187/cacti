@@ -1,6 +1,6 @@
-import "ecc/edwardsAdd" as add;
-import "ecc/edwardsOnCurve" as onCurve;
-from "ecc/babyjubjubParams" import BabyJubJubParams;
+import "./edwardsAdd.zok" as add;
+import "./edwardsOnCurve.zok" as onCurve;
+from "./babyjubjubParams.zok" import BabyJubJubParams;
 
 // Function that implements scalar multiplication for a fixed base point
 // Curve parameters are defined with the last argument

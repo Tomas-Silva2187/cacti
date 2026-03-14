@@ -1,6 +1,6 @@
 #pragma curve bn128
 
-import "./unpack_unchecked";
+import "./unpack_unchecked.zok";
 
 // Unpack a field element as 256 big-endian bits
 // Note: uniqueness of the output is not guaranteed

@@ -20695,6 +20695,37 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@zk-kit/baby-jubjub@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@zk-kit/baby-jubjub@npm:1.0.3"
+  dependencies:
+    "@zk-kit/utils": "npm:1.2.1"
+  checksum: 10/ae64d27f43ed53df15eebfb3468dadc202a587201a711b8716f1b855ea3b83e01e7eb5769eaa5c030979099c353396a0b1bf12dfa9c7575adce402ca64989e12
+  languageName: node
+  linkType: hard
+
+"@zk-kit/eddsa-poseidon@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@zk-kit/eddsa-poseidon@npm:1.1.0"
+  dependencies:
+    "@zk-kit/baby-jubjub": "npm:1.0.3"
+    "@zk-kit/utils": "npm:1.2.1"
+    blakejs: "npm:^1.2.1"
+    buffer: "npm:6.0.3"
+    poseidon-lite: "npm:0.3.0"
+  checksum: 10/35cb60a5b36709611ea05a7c6923caf0f4139d0473d03a1316735877b6354f6bc70f74114ada982ba3caee255b614fe4e239800ae64844bec3771f03f86f52f5
+  languageName: node
+  linkType: hard
+
+"@zk-kit/utils@npm:1.2.1":
+  version: 1.2.1
+  resolution: "@zk-kit/utils@npm:1.2.1"
+  dependencies:
+    buffer: "npm:^6.0.3"
+  checksum: 10/05cb209adadad753ae9ca9be7a1664fb4c3259a703f64e8b0af637e5fa4b2a9099c21b80a30df62cfe826b165941e1dfe0e95decde5a4eafd53328692cb0a4b8
+  languageName: node
+  linkType: hard
+
 "@zkpassport/poseidon2@npm:^0.6.2":
   version: 0.6.2
   resolution: "@zkpassport/poseidon2@npm:0.6.2"
@@ -23134,7 +23165,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"blakejs@npm:^1.1.0":
+"blakejs@npm:^1.1.0, blakejs@npm:^1.2.1":
   version: 1.2.1
   resolution: "blakejs@npm:1.2.1"
   checksum: 10/0638b1bd058b21892633929c43005aa6a4cc4b2ac5b338a146c3c076622f1b360795bd7a4d1f077c9b01863ed2df0c1504a81c5b520d164179120434847e6cd7
@@ -23940,6 +23971,7 @@ __metadata:
     "@hyperledger/cactus-core": "workspace:^"
     "@types/express": "npm:^5"
     "@vercel/ncc": "npm:^0.38.4"
+    "@zk-kit/eddsa-poseidon": "npm:^1.1.0"
     "@zkpassport/poseidon2": "npm:^0.6.2"
     ethers: "npm:^6.16.0"
     express: "npm:^5.2.1"
@@ -46522,6 +46554,13 @@ __metadata:
     path-data-parser: "npm:0.1.0"
     points-on-curve: "npm:0.2.0"
   checksum: 10/8b3f42feb24433b4a3e0b1c1f951340f06f523b26ed4d87446829f500f1468ad1484a6bf7fedf076ff4b492ae6b1daa7ffc07c7a8f7c00f4d072f17f79fe9ed0
+  languageName: node
+  linkType: hard
+
+"poseidon-lite@npm:0.3.0":
+  version: 0.3.0
+  resolution: "poseidon-lite@npm:0.3.0"
+  checksum: 10/1e7294f7fed91e1cdc3aee7bd0380461bfdba74ba34d100c2fc4e3d5434d09af0644f6c889b749b9511fd3867216a1aa6d575f070b716c6756b1f56c0067b71d
   languageName: node
   linkType: hard
 

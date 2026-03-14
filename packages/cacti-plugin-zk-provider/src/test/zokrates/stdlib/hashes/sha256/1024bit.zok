@@ -1,4 +1,4 @@
-import "./sha256" as sha256;
+import "./sha256.zok" as sha256;
 
 // A function that takes 4 u32[8] arrays as inputs, concatenates them,
 // and returns their sha256 compression as a u32[8].

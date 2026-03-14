@@ -1,0 +1,13 @@
+import "./stdlib/hashes/sha256/sha256Padded.zok" as sha256;
+import "./stdlib/utils/casts/u16_to_u8array.zok" as cast_u16_u8;
+import "./stdlib/utils/casts/field_to_u8.zok" as cast_field_u8;
+import "./stdlib/signatures/verifyEddsa.zok" as check_babyjubjub_sign;
+import "./stdlib/ecc/babyjubjubParams.zok" as babyjubjubparams;
+from "./stdlib/ecc/babyjubjubParams.zok" import BabyJubJubParams;
+
+def main(field[2] signR, field signS, field[2]signA, u32[8] M0, u32[8] M1) -> bool {
+    BabyJubJubParams context = babyjubjubparams();
+    bool signValidity = check_babyjubjub_sign(signR, signS, signA, M0, M1, context);
+    assert (signValidity == true);
+    return signValidity;
+}

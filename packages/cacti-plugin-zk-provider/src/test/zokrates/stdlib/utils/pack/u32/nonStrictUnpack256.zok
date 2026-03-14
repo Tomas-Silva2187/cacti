@@ -1,7 +1,7 @@
 #pragma curve bn128
 
-import "../bool/nonStrictUnpack256" as unpack;
-import "../../casts/bool_256_to_u32_8" as from_bits;
+import "../bool/nonStrictUnpack256.zok" as unpack;
+import "../../casts/bool_256_to_u32_8.zok" as from_bits;
 
 // Unpack a field element as a u32[8] (big-endian)
 // Note: uniqueness of the output is not guaranteed

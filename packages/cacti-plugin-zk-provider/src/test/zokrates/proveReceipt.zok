@@ -22,7 +22,7 @@ def main(private field prevAmount, private field transferAmount, private u16[24]
         userAddressBytes[i*2 + 1] = part[1];
     }
     u32[8] parsedAccountHash = sha256(userAddressBytes);
-    return parsedAccountHash;
+    //return parsedAccountHash;
     assert(parsedAccountHash[0] == accountHash[0]);
     assert(parsedAccountHash[1] == accountHash[1]);
     assert(parsedAccountHash[2] == accountHash[2]);
@@ -34,4 +34,5 @@ def main(private field prevAmount, private field transferAmount, private u16[24]
     assert(transferAmount > 0);
     assert(prevAmount - transferAmount >= 0);
     // parse and return hash for transactionHash+address+amount
+    return parsedAccountHash;
 }

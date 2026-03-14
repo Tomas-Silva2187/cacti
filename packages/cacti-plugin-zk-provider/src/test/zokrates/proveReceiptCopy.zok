@@ -12,7 +12,7 @@ const u32[8] accountHash = [
   2785503734
 ];
 
-def main(private field prevAmount, private field transferAmount, private u16[24] userAddress) -> u32[8] {
+def main(private field prevAmount, private field transferAmount, private u16[24] userAddress) -> u32[8]{
      assert(transferAmount > 0);
      assert(prevAmount - transferAmount >= 0);
     u8[48] mut userAddressBytes = [0; 48];
@@ -34,4 +34,5 @@ def main(private field prevAmount, private field transferAmount, private u16[24]
     assert(transferAmount > 0);
     assert(prevAmount - transferAmount >= 0);
     // parse and return hash for transactionHash+address+amount
+    //return parsedAccountHash;
 }

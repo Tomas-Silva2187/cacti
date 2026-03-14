@@ -1,0 +1,32 @@
+import "./stdlib/hashes/sha256/sha256Padded.zok" as sha256;
+import "./stdlib/utils/casts/u16_to_u8array.zok" as cast_u16_u8;
+import "./stdlib/utils/casts/field_to_u8.zok" as cast_field_u8;
+import "./stdlib/signatures/verifyEddsa.zok" as check_babyjubjub_sign;
+import "./stdlib/ecc/babyjubjubParams.zok" as babyjubjubparams;
+from "./stdlib/ecc/babyjubjubParams.zok" import BabyJubJubParams;
+
+const u32[8] accountHash = [
+  2936442290,
+  1742908427,
+  3915282546,
+  1520574369,
+  2295394211,
+  1453959117,
+  2468118789,
+  2168134190
+];
+
+def main(field[2] signR, field signS, field[2]signA, private u16[20] userAddress) -> bool {
+    u8[40] mut userAddressBytes = [0; 40];
+    for u32 i in 0..20 {
+        u8[2] part = cast_u16_u8(userAddress[i]);
+        userAddressBytes[i*2] = part[0];
+        userAddressBytes[i*2 + 1] = part[1];
+    }
+    u32[8] M0 = sha256(userAddressBytes);
+
+    BabyJubJubParams context = babyjubjubparams();
+    bool signValidity = check_babyjubjub_sign(signR, signS, signA, M0, accountHash, context);
+    assert (signValidity == true);
+    return signValidity;
+}

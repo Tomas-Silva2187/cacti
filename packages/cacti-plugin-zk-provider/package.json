@@ -37,7 +37,7 @@
     "zk-multi-test": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"Multiple handler testing\"",
     "zk-hash-test": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"Prove hash knowledge\"",
     "zk-chain-test1": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"Prove hash over data concatenation\"",
-    "zk-chain-test": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"Prove signature\"",
+    "zk-chain-test": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler.test.ts -t \"Prove signature2\"",
     "endpoint-test": "npx vitest run ./src/test/typescript/vitest/endpoint-setup.test.ts -t \"Endpoint Setup\"",
     "zk-server-test": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"Endpoint Testing\"",
     "zk-server-test2": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"ZK Server automatically Fetching from Database\"",

@@ -174,7 +174,7 @@ describe("On-chain Zero Knowledge", () => {
     }
     return arr;
   }
-  /*function hexToU32Array(hex: string): string[] {
+  function hexToU32Array(hex: string): string[] {
     if (hex.startsWith("0x") || hex.startsWith("0X")) {
       hex = hex.slice(2);
     }
@@ -185,7 +185,7 @@ describe("On-chain Zero Knowledge", () => {
       arr.push(parseInt(chunk, 16).toString());
     }
     return arr;
-  }*/
+  }
   describe("Prove hash over data concatenation", () => {
     it("Should deploy ERC20 token and perform calls", async () => {
       await mockContractDeployer.deployERC20Contract();
@@ -246,6 +246,7 @@ describe("On-chain Zero Knowledge", () => {
       expect(zkHandler).toBeDefined();
       await zkHandler.initializeZoKrates();
 
+      //Should be two concat hashes
       const val =
         "bf2cecf882dac1c443b9b3d094e9e4406ba0ddc646767759360e72cba28d217ac1f7e49fafce9ea7850726a8529ddb2e571d1a1e66144d1fa4864d61a936f497";
       console.log(parseInt(val, 16));
@@ -276,6 +277,60 @@ describe("On-chain Zero Knowledge", () => {
         circuitInputJson.A,
         circuitInputJson.M0,
         circuitInputJson.M1,
+      ]);
+    }, 1500000);
+  }, 1500000);
+
+  describe("Prove signature2", () => {
+    it("Should start a zkHandler class", async () => {
+      zkHandler = new ZeroKnowledgeHandler({
+        logLevel: "INFO",
+        zkcircuitPath: path.join(__dirname, "../../zokrates"),
+        chainPort: "8545",
+      } as ZeroKnowledgeHandlerOptions);
+      expect(zkHandler).toBeDefined();
+      await zkHandler.initializeZoKrates();
+
+      const hash1 = createHash("sha256")
+        .update("dD2FD4581271e230360230F9337D5c0430Bf44C0")
+        .digest("hex");
+      const hash2 = createHash("sha256")
+        .update("Bcd4042DE499D14e55001CcbB24a551F3b954096")
+        .digest("hex");
+
+      //Should be two concat hashes
+      const val = hash1 + hash2;
+
+      const arr1 = hexToU16Array("dD2FD4581271e230360230F9337D5c0430Bf44C0");
+      const arr2 = hexToU32Array(hash2);
+      //console.log(arr1);
+      console.log(arr2);
+
+      const outputDir = path.resolve(__dirname, "../../../main/python/outputs");
+      console.log(outputDir);
+      const out = execSync(`python3 ../main.py ${val}`, { cwd: outputDir })
+        .toString()
+        .trim();
+      console.log(out);
+      const inputsFile = path.resolve(
+        __dirname,
+        "../../../main/python/outputs/inputs.json",
+      );
+      const circuitInputsJsonStr = fs.readFileSync(inputsFile, "utf8");
+      console.log(circuitInputsJsonStr);
+
+      const circuitInputJson = JSON.parse(circuitInputsJsonStr);
+      console.log(circuitInputJson);
+
+      const vk = await zkHandler.compileCircuit({
+        circuitName: "verifySignature2.zok",
+      } as CircuitLoadSetup);
+      expect(vk).toBeDefined();
+      await zkHandler.computeWitness([
+        circuitInputJson.R,
+        circuitInputJson.S,
+        circuitInputJson.A,
+        arr1,
       ]);
     }, 1500000);
   }, 1500000);

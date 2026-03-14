@@ -9,9 +9,14 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         #raw_msg = "This is my secret message"
         raw_msg = sys.argv[1]
-        print(raw_msg)
-        msg = hashlib.sha512(raw_msg.encode("utf-8")).digest()
+        print("raw: ", raw_msg)
+        #msgPadded = raw_msg * 2
+        #print(msgPadded)
+        msg = bytes.fromhex(raw_msg)
+        print(msg)
 
+        #following line is just to ensure that input has a max of 512 bits
+        print("from normal ", len(msg))
         # sk = PrivateKey.from_rand()
         # Seeded for debug purpose
         key = FQ(1997011358982923168928344992199991480689546837621580239342656433234255379025)

@@ -238,15 +238,16 @@ describe("On-chain Zero Knowledge", () => {
 
   describe("Prove signature", () => {
     it("Should start a zkHandler class", async () => {
-      /*zkHandler = new ZeroKnowledgeHandler({
+      zkHandler = new ZeroKnowledgeHandler({
         logLevel: "INFO",
         zkcircuitPath: path.join(__dirname, "../../zokrates"),
         chainPort: "8545",
       } as ZeroKnowledgeHandlerOptions);
       expect(zkHandler).toBeDefined();
-      await zkHandler.initializeZoKrates();*/
+      await zkHandler.initializeZoKrates();
 
-      const val = "0000000070997970C51812dc3A010C7d01b50e0d17dc79C8";
+      const val =
+        "bf2cecf882dac1c443b9b3d094e9e4406ba0ddc646767759360e72cba28d217ac1f7e49fafce9ea7850726a8529ddb2e571d1a1e66144d1fa4864d61a936f497";
       console.log(parseInt(val, 16));
 
       const outputDir = path.resolve(__dirname, "../../../main/python/outputs");
@@ -265,7 +266,7 @@ describe("On-chain Zero Knowledge", () => {
       const circuitInputJson = JSON.parse(circuitInputsJsonStr);
       console.log(circuitInputJson);
 
-      /*const vk = await zkHandler.compileCircuit({
+      const vk = await zkHandler.compileCircuit({
         circuitName: "proveSignature.zok",
       } as CircuitLoadSetup);
       expect(vk).toBeDefined();
@@ -275,7 +276,7 @@ describe("On-chain Zero Knowledge", () => {
         circuitInputJson.A,
         circuitInputJson.M0,
         circuitInputJson.M1,
-      ]);*/
+      ]);
     }, 1500000);
   }, 1500000);
 });

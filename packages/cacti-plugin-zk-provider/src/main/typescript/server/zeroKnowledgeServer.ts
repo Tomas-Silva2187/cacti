@@ -7,19 +7,19 @@ import {
   Endpoint,
   EndpointCallType,
   EndpointSetup,
-} from "../endpoints/endpoint.js";
+} from "../endpoints/endpoint";
 import {
   ZeroKnowledgeHandler,
   ZeroKnowledgeProviderOptions,
-} from "../zk-actions/zoKratesHandler.js";
+} from "../zk-actions/zoKratesHandler";
 import express from "express";
-import { RedisDBClient } from "../database/redisDBClient.js";
+import { RedisDBClient } from "../database/redisDBClient";
 import {
   DatabaseSetup,
   DatabaseType,
   ZKDatabaseClient,
   ZKSnarkCircuit,
-} from "../database/zkDatabase.js";
+} from "../database/zkDatabase";
 import {
   DuplicateDatabaseClientError,
   FailedToLoadCircuitError,
@@ -27,13 +27,13 @@ import {
   NoRequestCallDataError,
   OverwritingDefinedCircuitError,
   VerificationMethodNotSupportedError,
-} from "./serverErrors.js";
+} from "./serverErrors";
 import { join } from "path";
 import { existsSync, writeFileSync, mkdirSync, readFileSync } from "fs";
 
 import { createHash } from "crypto";
-import { ZeroKnowledgeClient } from "./zeroKnowledgeClient.js";
-import { FetchData, RequestTarget } from "../utils.js";
+import { ZeroKnowledgeClient } from "./zeroKnowledgeClient";
+import { FetchData, RequestTarget } from "../utils";
 
 export enum VerificationMethod {
   HASH = "HASH",

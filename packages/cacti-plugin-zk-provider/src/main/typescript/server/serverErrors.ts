@@ -50,6 +50,9 @@ export class FailedToLoadCircuitError extends ServerError {
 
 export class VerificationMethodNotSupportedError extends ServerError {
   constructor(verificationMethod: string) {
-    super(`Trying to verify data validity with unsupported method ${verificationMethod}`, "VerificationMethodNotSupportedError");
+    super(
+      `Trying to verify data validity with unsupported method ${verificationMethod}`,
+      "VerificationMethodNotSupportedError",
+    );
   }
 }

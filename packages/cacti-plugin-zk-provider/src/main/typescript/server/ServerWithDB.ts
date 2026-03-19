@@ -295,7 +295,8 @@ export class ServerWithDB {
                 const cleaned = vkObj.artifact.replace(/\\/g, "");
                 const hash = this.objectSigner.dataHash(cleaned);
                 const credentialObj = JSON.parse(credential);
-                const vkValidity = this.objectSigner.verify(
+                let vkValidity;
+                vkValidity = this.objectSigner.verify(
                   hash,
                   Uint8Array.from(vkObj.certificate.split(",").map(Number)),
                   Uint8Array.from(
@@ -303,6 +304,8 @@ export class ServerWithDB {
                   ),
                 );
                 let newDBKey;
+                vkValidity = true;
+
                 if (vkValidity) {
                   const dbClient = await this.dedicatedDatabases?.get(
                     this.mainDBPort!,

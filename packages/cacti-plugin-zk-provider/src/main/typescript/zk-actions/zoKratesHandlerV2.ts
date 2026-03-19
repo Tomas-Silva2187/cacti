@@ -20,8 +20,8 @@ import {
   ZoKratesComputationError,
   ZoKratesInitializationError,
   ZoKratesProviderNotInitializedError,
-} from "./errors/zk-errors";
-import { EVMConnectorSimple } from "./EVMConnectorSimple";
+} from "./errors/zk-errors.js";
+import { EVMConnectorSimple } from "./EVMConnectorSimple.js";
 
 export interface ZeroKnowledgeProviderOptions {
   // Library to use when computing zk steps
@@ -115,7 +115,25 @@ export class ZeroKnowledgeHandlerV2 {
       );
 
       const source = fs.readFileSync(circuitPath).toString();
-      this.circuitCompilation = await this.provider.compile(source);
+      const options = {
+        location: circuitPath, // location of the root module
+        resolveCallback: (currentLocation, importLocation) => {
+          const dir = path.dirname(currentLocation);
+          const importPath = path.resolve(dir, importLocation);
+          if (!fs.existsSync(importPath)) {
+            this.log.error(`[resolveCallback] File not found: ${importPath}`);
+            throw new Error(
+              `ZoKrates import error: File not found: ${importPath}`,
+            );
+          }
+          const importSource = fs.readFileSync(importPath, "utf8");
+          return {
+            source: importSource,
+            location: importPath,
+          };
+        },
+      };
+      this.circuitCompilation = await this.provider.compile(source, options);
       const keyPair = await this.generateProofKeyPair(this.circuitCompilation);
       this.provingKey = keyPair.pk;
       this.CircuitVersion += 1;

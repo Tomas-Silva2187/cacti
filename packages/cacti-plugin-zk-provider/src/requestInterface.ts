@@ -1,4 +1,4 @@
-import { ZeroKnowledgeClient } from "./main/typescript/server/zeroKnowledgeClient.js";
+/*import { ZeroKnowledgeClient } from "./main/typescript/server/zeroKnowledgeClient.js";
 import * as readline from "readline";
 import { createHash } from "crypto";
 import { dirname } from "path";
@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import { readFileSync as s_read } from "fs";
 import { createClient } from "redis";
 import { RequestTarget } from "./main/typescript/utils.js";
- 
+
 const input = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -18,7 +18,7 @@ function expectInput(query: string): Promise<string> {
 }
 
 async function populateDatabase() {
-  const redisClient = await createClient({url: `redis://localhost:6379`});
+  const redisClient = await createClient({ url: `redis://localhost:6379` });
   await redisClient.connect();
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
@@ -56,7 +56,7 @@ try {
     if (["1", "2", "3", "4"].includes(in1)) {
       in2 = await expectInput("Store Result on Server DB (y/n): ");
     }
-    
+
     let storeFlag;
     if (in2 !== undefined && in2.toLowerCase() === "y") {
       storeFlag = true;
@@ -68,13 +68,13 @@ try {
         const selection = await expectInput(
           "Enter Circuit Name (e.g., <circuit name>.zok):\nOptions\nA) proveSquare\n -> ",
         );
-        switch(selection.toUpperCase()) {
+        switch (selection.toUpperCase()) {
           case "A":
             circuitName = "proveSquare";
             const providedInputs = await expectInput(
               "Enter inputs for circuit 'proveSquare' separated by commas (e.g. $ <value>,<square>): ",
             );
-            circuitInputs = (providedInputs.replace(/ /g, "")).split(",");
+            circuitInputs = providedInputs.replace(/ /g, "").split(",");
             break;
           default:
             console.log("Invalid selection. Please try again.");
@@ -83,9 +83,13 @@ try {
         const fetchData = {
           infrastructureElement: RequestTarget.SERVER,
           url: { ip: "offserver1", port: 3001 },
-        }
+        };
         if (circuitName != undefined) {
-          await client.requestCircuitLoad(circuitIdMap.get(circuitName)!, "HASH", fetchData);
+          await client.requestCircuitLoad(
+            circuitIdMap.get(circuitName)!,
+            "HASH",
+            fetchData,
+          );
         }
         break;
       case "1":
@@ -136,4 +140,4 @@ try {
   }
 } catch (error) {
   throw error;
-}
+}*/

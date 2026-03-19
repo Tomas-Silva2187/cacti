@@ -733,7 +733,7 @@ describe("Full System Setup", async () => {
     }
   }
   describe("Complete framework setup for simple circuit", async () => {
-    afterAll(() => {
+    /*afterAll(() => {
       if (redisProcess1) {
         redisProcess1.kill();
       }
@@ -746,7 +746,7 @@ describe("Full System Setup", async () => {
       if (redisProcess4) {
         redisProcess4.kill();
       }
-    });
+    });*/
     let PCU1: ServerWithDB;
     let PCU2: ServerWithDB;
     let ExternalServer: ServerWithDB;

@@ -1,4 +1,17 @@
-import { Endpoints } from "../utils";
+export enum Endpoints {
+  POST_VK = "/postVerificationKey",
+  GET_VK = "/getVerificationKey",
+  POST_PROOF = "/postProof",
+  GET_PROOF = "/getProof",
+  POST_CREDENTIAL = "/postCredential",
+  GET_CREDENTIAL = "/getCredential",
+  //PCU Endpoints
+  VK_LOAD = "/loadThirdPartyVerificationKey",
+  COMPILE = "/compileCircuit",
+  GEN_PROOF = "/generateProof",
+  VRF_PROOF = "/verifyProof",
+  VERSION = "/circuitVersion",
+}
 
 export class ServerClient {
   private server_url: string;
@@ -54,6 +67,7 @@ export class ServerClient {
       chainId: chainId,
     });
     const request = await this.executeRequest(requestUrl, requestBody);
+    console.log(request);
     return request;
   }
 

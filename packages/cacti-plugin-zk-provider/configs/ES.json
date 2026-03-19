@@ -1,0 +1,12 @@
+{
+    "logLevel": "INFO",
+    "serverType": "EXT",
+    "serverPort": 12803,
+    "databaseSetup": {
+        "type": 1,
+        "port": 6383,
+        "ipAddress": "localhost",
+        "name": "ext-server-db"
+    },
+    "serverId": "ext-server"
+}

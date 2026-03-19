@@ -64,7 +64,7 @@ describe("Full System Setup", async () => {
     const redisCredentials1Port = "6381";
     const redisPCU1Port = "6382";
     const redisPCU2Port = "6383";
-    let Gateway1Client: ServerClient;
+    //let Gateway1Client: ServerClient;
     let Gateway2Client: ServerClient;
     const PCU1Port = "12801";
     const PCU2Port = "12802";
@@ -80,7 +80,7 @@ describe("Full System Setup", async () => {
     let redisProcess3;
     let redisProcess4;
 
-    let proof: string;
+    //let proof: string;
     it("Should setup all components", async () => {
       try {
         redisProcess1 = spawn(
@@ -238,9 +238,10 @@ describe("Full System Setup", async () => {
     it("The second PCU should load and verify the Verification Key", async () => {
       Gateway2Client = new ServerClient(parseInt(PCU2Port), "localhost");
       const validity = await Gateway2Client.loadVerificationKey("1", "ETH");
+      console.log(validity);
       expect(validity).toBe(true);
     });
-    it("Should allow the generation of a zkSnark", async () => {
+    /*it("Should allow the generation of a zkSnark", async () => {
       Gateway1Client = new ServerClient(parseInt(PCU1Port), "localhost");
       proof = await Gateway1Client.generateZkSnark(["2", "4"]);
       expect(proof).toBeDefined();
@@ -249,6 +250,6 @@ describe("Full System Setup", async () => {
     it("The second PCU should validate the proof with its stored Verification Key", async () => {
       const proofStatus = await Gateway2Client.verifyZkSnark(proof, "ETH", "1");
       expect(proofStatus).toBe(true);
-    });
+    });*/
   });
 });

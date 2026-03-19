@@ -1,0 +1,33 @@
+{
+    "logLevel": "INFO",
+    "serverType": "PCU",
+    "serverPort": 12802,
+    "databaseSetup": {
+        "type": 1,
+        "port": 6382,
+        "ipAddress": "localhost",
+        "name": "besu-pcu-db"
+    },
+    "serverId": "besu-pcu-server",
+    "zkHandlerOptions": {
+        "logLevel": "INFO",
+        "zkcircuitPath": "zokrates"
+    },
+    "counterServers": [
+        {
+            "serverUrl": {
+                "ip": "extserver",
+                "port": 12803
+            },            
+            "serverType": "EXT"
+        },
+        {
+            "serverUrl": {
+                "ip": "ethcredserver",
+                "port": 12804,
+                "ownerChainId": "ETH"
+            },
+            "serverType": "OWN"
+        }
+    ]
+}

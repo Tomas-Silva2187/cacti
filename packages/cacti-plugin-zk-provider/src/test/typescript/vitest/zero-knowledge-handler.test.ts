@@ -282,6 +282,10 @@ describe("On-chain Zero Knowledge", () => {
   }, 1500000);
 
   describe("Prove signature2", () => {
+    let arr1;
+    let circuitInputJson;
+    let vk;
+    let proof;
     it("Should start a zkHandler class", async () => {
       zkHandler = new ZeroKnowledgeHandler({
         logLevel: "INFO",
@@ -290,7 +294,8 @@ describe("On-chain Zero Knowledge", () => {
       } as ZeroKnowledgeHandlerOptions);
       expect(zkHandler).toBeDefined();
       await zkHandler.initializeZoKrates();
-
+    }, 1500000);
+    it("Should pre-compile a circuit and prepare the witness inputs", async () => {
       const hash1 = createHash("sha256")
         .update("dD2FD4581271e230360230F9337D5c0430Bf44C0")
         .digest("hex");
@@ -301,7 +306,7 @@ describe("On-chain Zero Knowledge", () => {
       //Should be two concat hashes
       const val = hash1 + hash2;
 
-      const arr1 = hexToU16Array("dD2FD4581271e230360230F9337D5c0430Bf44C0");
+      arr1 = hexToU16Array("dD2FD4581271e230360230F9337D5c0430Bf44C0");
       const arr2 = hexToU32Array(hash2);
       //console.log(arr1);
       console.log(arr2);
@@ -319,19 +324,27 @@ describe("On-chain Zero Knowledge", () => {
       const circuitInputsJsonStr = fs.readFileSync(inputsFile, "utf8");
       console.log(circuitInputsJsonStr);
 
-      const circuitInputJson = JSON.parse(circuitInputsJsonStr);
+      circuitInputJson = JSON.parse(circuitInputsJsonStr);
       console.log(circuitInputJson);
 
-      const vk = await zkHandler.compileCircuit({
+      vk = await zkHandler.compileCircuit({
         circuitName: "verifySignature2.zok",
       } as CircuitLoadSetup);
       expect(vk).toBeDefined();
+    }, 1500000);
+    it("Should generate a witness", async () => {
       await zkHandler.computeWitness([
         circuitInputJson.R,
         circuitInputJson.S,
         circuitInputJson.A,
         arr1,
       ]);
+    }, 1500000);
+    it("Should generate a proof", async () => {
+      proof = await zkHandler.generateProof();
+    }, 1500000);
+    it("Should verify the proof", async () => {
+      await zkHandler.verifyProof(proof, vk);
     }, 1500000);
   }, 1500000);
 });

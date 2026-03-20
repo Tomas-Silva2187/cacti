@@ -70,9 +70,9 @@ export class ServerWithDB {
   constructor(setupOptions: ServerSetup) {
     try {
       this.serverId = setupOptions.serverId ?? "default-zk-server";
-      this.CLASS_TAG = `#ZeroKnowledgeServer[${this.serverId}]`;
+      this.CLASS_TAG = `#Server[${this.serverId}]`;
       this.log = LoggerProvider.getOrCreate({
-        label: "ZeroKnowledgeServer",
+        label: "Server",
         level: setupOptions.logLevel,
       });
       this.runningPort = setupOptions.serverPort ?? 3000;
@@ -142,7 +142,7 @@ export class ServerWithDB {
               req.body.v &&
               req.body.sessionId &&
               req.body.chainId &&
-              req.body.chainAct
+              req.body.chainAction
             ) {
               const dbClient = await this.dedicatedDatabases?.get(
                 this.mainDBPort!,
@@ -180,9 +180,13 @@ export class ServerWithDB {
                 {
                   chainId: req.body.chainId,
                   circuitVersion: req.body.v,
+                  chainAction: req.body.chainAction ?? undefined,
                 } as REDISKeyComponents,
                 REDISNewElementLabel.VerificationKey,
                 req.body.cred,
+              );
+              this.log.info(
+                `${this.CLASS_TAG}:${Endpoints.POST_VK} stored new zkSNARK vk with key ${newDBKey}`,
               );
               res.json({ result: newDBKey });
             }
@@ -196,10 +200,26 @@ export class ServerWithDB {
               const dbClient = await this.dedicatedDatabases?.get(
                 this.mainDBPort!,
               );
-              const vk = await dbClient?.getElement(
-                req.body.chainId + ":" + req.body.v,
+              let vkDBKey;
+              const onChainAction = req.body.chainAction ?? "";
+              // Check if there is a vk for a circuit for lock, mint, burn, release or if it is only one circuit for all the actions
+              if (onChainAction != "") {
+                const fullKey =
+                  req.body.chainId + ":" + onChainAction + ":" + req.body.v;
+                const exists = await dbClient?.checkElementExists(fullKey);
+                if (exists) {
+                  vkDBKey = fullKey;
+                } else {
+                  vkDBKey = req.body.chainId + "::" + req.body.v;
+                }
+              } else {
+                vkDBKey = req.body.chainId + "::" + req.body.v;
+              }
+              const vk = await dbClient?.getElement(vkDBKey);
+              this.log.info(
+                `${this.CLASS_TAG}:${Endpoints.GET_VK} requested zkSNARK vk for ${vkDBKey}`,
               );
-              res.json({ result: JSON.stringify(vk) });
+              res.json({ result: vk });
             }
           } catch (error) {
             res.status(400).json({ error: error.message });
@@ -211,21 +231,24 @@ export class ServerWithDB {
               req.body.v &&
               req.body.sessionId &&
               req.body.chainId &&
-              req.body.chainAct
+              req.body.chainAction
             ) {
               const dbClient = await this.dedicatedDatabases?.get(
                 this.mainDBPort!,
               );
-              const newDBKey = await dbClient?.getElement(
+              const zkSNARK = await dbClient?.getElement(
                 req.body.chainId +
                   ":" +
                   req.body.v +
                   ":" +
                   req.body.sessionId +
                   ":" +
-                  req.body.chainAct,
+                  req.body.chainAction,
               );
-              res.json({ result: newDBKey });
+              this.log.info(
+                `${this.CLASS_TAG}:${Endpoints.GET_VK} requested zkSNARK for ${req.body.chainId} ${req.body.chainAction} ${req.body.sessionId}`,
+              );
+              res.json({ result: zkSNARK?.artifact });
             }
           } catch (error) {
             res.status(400).json({ error: error.message });
@@ -236,6 +259,7 @@ export class ServerWithDB {
         this.app.post(Endpoints.POST_CREDENTIAL, async (req, res) => {
           try {
             if (req.body.cred && req.body.chainId && req.body.v) {
+              const chainAction = req.body.chainAction ?? undefined;
               const dbClient = await this.dedicatedDatabases?.get(
                 this.mainDBPort!,
               );
@@ -244,8 +268,12 @@ export class ServerWithDB {
                 {
                   chainId: req.body.chainId,
                   circuitVersion: req.body.v,
+                  chainAction: chainAction,
                 } as REDISKeyComponents,
                 REDISNewElementLabel.OwnerVerificationCredential,
+              );
+              this.log.info(
+                `${this.CLASS_TAG}:${Endpoints.POST_CREDENTIAL} new verification credential stored with key ${newDBKey}`,
               );
               res.json({ result: newDBKey });
             }
@@ -259,10 +287,25 @@ export class ServerWithDB {
               const dbClient = await this.dedicatedDatabases?.get(
                 this.mainDBPort!,
               );
-              const credential = await dbClient?.getElement(
-                req.body.chainId + ":" + req.body.v,
+              let credentialDBKey;
+              const onChainAction = req.body.chainAction ?? "";
+              if (onChainAction != "") {
+                const fullKey =
+                  req.body.chainId + ":" + onChainAction + ":" + req.body.v;
+                const exists = await dbClient?.checkElementExists(fullKey);
+                if (exists) {
+                  credentialDBKey = fullKey;
+                } else {
+                  credentialDBKey = req.body.chainId + "::" + req.body.v;
+                }
+              } else {
+                credentialDBKey = req.body.chainId + "::" + req.body.v;
+              }
+              const credential = await dbClient?.getElement(credentialDBKey);
+              this.log.info(
+                `${this.CLASS_TAG}:${Endpoints.POST_CREDENTIAL} fetching credential with key ${credentialDBKey}`,
               );
-              res.json({ result: JSON.stringify(credential) });
+              res.json({ result: credential });
             }
           } catch (error) {
             res.status(400).json({ error: error.message });
@@ -281,10 +324,12 @@ export class ServerWithDB {
                 const vk = await client?.getVerificationKey(
                   req.body.v,
                   req.body.chainId,
+                  req.body.chainAction,
                 );
                 const credential = await client1?.getCredential(
                   req.body.v,
                   req.body.chainId,
+                  req.body.chainAction,
                 );
                 if (!credential || !vk) {
                   throw new Error(
@@ -292,8 +337,8 @@ export class ServerWithDB {
                   );
                 }
                 const vkObj = JSON.parse(vk);
-                const cleaned = vkObj.artifact.replace(/\\/g, "");
-                const hash = this.objectSigner.dataHash(cleaned);
+                //const cleaned = vkObj.artifact.replace(/\\/g, "");
+                const hash = this.objectSigner.dataHash(vkObj);
                 const credentialObj = JSON.parse(credential);
                 let vkValidity;
                 vkValidity = this.objectSigner.verify(
@@ -303,6 +348,7 @@ export class ServerWithDB {
                     credentialObj.artifact.split(",").map(Number),
                   ),
                 );
+                console.log("validity was ", vkValidity);
                 let newDBKey;
                 vkValidity = true;
 
@@ -311,10 +357,11 @@ export class ServerWithDB {
                     this.mainDBPort!,
                   );
                   newDBKey = await dbClient?.storeElement(
-                    cleaned,
+                    vkObj,
                     {
                       chainId: req.body.chainId,
                       circuitVersion: req.body.v,
+                      chainAction: req.body.chainAction,
                     } as REDISKeyComponents,
                     REDISNewElementLabel.OwnerVerificationCredential,
                   );
@@ -370,11 +417,12 @@ export class ServerWithDB {
           this.app.post(Endpoints.VRF_PROOF, async (req, res) => {
             try {
               if (req.body.proof && req.body.chainId && req.body.v) {
+                const chainAction = req.body.chainAction ?? "";
                 const dbClient = await this.dedicatedDatabases?.get(
                   this.mainDBPort!,
                 );
                 const verificationKey = await dbClient?.getElement(
-                  req.body.chainId + ":" + req.body.v,
+                  req.body.chainId + ":" + chainAction + ":" + req.body.v,
                 );
                 if (verificationKey?.artifact) {
                   const key = JSON.parse(verificationKey.artifact);

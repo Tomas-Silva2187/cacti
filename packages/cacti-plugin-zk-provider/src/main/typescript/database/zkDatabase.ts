@@ -54,4 +54,5 @@ export abstract class ZKDatabaseClient {
   abstract getElement(
     dbKey: string,
   ): Promise<{ artifact: string | null; certificate: string | null }>;
+  abstract checkElementExists(dbKey: string): Promise<boolean>;
 }

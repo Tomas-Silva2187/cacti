@@ -18,13 +18,23 @@ export class ServerClient {
   constructor(port: number, ip: string) {
     this.server_url = `http://${ip}:${port}`;
   }
-
-  public async compileCircuit(circuitName: string) {
+  //===================================================================================================
+  //======================================    [PCU Related]   =========================================
+  //===================================================================================================
+  public async compileCircuit(circuitName: string, chainAction?: string) {
     try {
       const requestUrl = `${this.server_url}${Endpoints.COMPILE}`;
-      const requestBody = JSON.stringify({
-        circuitName: circuitName,
-      });
+      let requestBody;
+      if (chainAction) {
+        requestBody = JSON.stringify({
+          circuitName: circuitName,
+          chainAction: chainAction,
+        });
+      } else {
+        requestBody = JSON.stringify({
+          circuitName: circuitName,
+        });
+      }
       const request = await this.executeRequest(requestUrl, requestBody);
       return request;
     } catch (error) {
@@ -32,12 +42,20 @@ export class ServerClient {
     }
   }
 
-  public async generateZkSnark(inputs: string[]) {
+  public async generateZkSnark(inputs: string[], chainAction?: string) {
     try {
       const requestUrl = `${this.server_url}${Endpoints.GEN_PROOF}`;
-      const requestBody = JSON.stringify({
-        params: inputs,
-      });
+      let requestBody;
+      if (chainAction) {
+        requestBody = JSON.stringify({
+          params: inputs,
+          chainAction: chainAction,
+        });
+      } else {
+        requestBody = JSON.stringify({
+          params: inputs,
+        });
+      }
       const request = await this.executeRequest(requestUrl, requestBody);
       return request;
     } catch (error) {
@@ -45,14 +63,29 @@ export class ServerClient {
     }
   }
 
-  public async verifyZkSnark(proof: string, chainId: string, version: string) {
+  public async verifyZkSnark(
+    proof: string,
+    chainId: string,
+    version: string,
+    chainAction?: string,
+  ) {
     try {
       const requestUrl = `${this.server_url}${Endpoints.VRF_PROOF}`;
-      const requestBody = JSON.stringify({
-        proof: proof,
-        chainId: chainId,
-        v: version,
-      });
+      let requestBody;
+      if (chainAction) {
+        requestBody = JSON.stringify({
+          proof: proof,
+          chainId: chainId,
+          v: version,
+          chainAction: chainAction,
+        });
+      } else {
+        requestBody = JSON.stringify({
+          proof: proof,
+          chainId: chainId,
+          v: version,
+        });
+      }
       const request = await this.executeRequest(requestUrl, requestBody);
       return request;
     } catch (error) {
@@ -60,73 +93,84 @@ export class ServerClient {
     }
   }
 
-  public async loadVerificationKey(circuitVersion: string, chainId: string) {
+  public async loadVerificationKey(
+    circuitVersion: string,
+    chainId: string,
+    chainAction?: string,
+  ) {
     const requestUrl = `${this.server_url}${Endpoints.VK_LOAD}`;
-    const requestBody = JSON.stringify({
-      v: circuitVersion,
-      chainId: chainId,
-    });
+    let requestBody;
+    if (chainAction) {
+      requestBody = JSON.stringify({
+        v: circuitVersion,
+        chainId: chainId,
+        chainAction: chainAction,
+      });
+    } else {
+      requestBody = JSON.stringify({
+        v: circuitVersion,
+        chainId: chainId,
+      });
+    }
+
     const request = await this.executeRequest(requestUrl, requestBody);
     console.log(request);
     return request;
   }
-
-  public async postVerificationKey(
-    vk: string,
-    circuitVersion: string,
-    chainId: string,
-    vkCredential: string,
-  ) {
-    try {
-      const requestUrl = `${this.server_url}${Endpoints.POST_VK}`;
-      const requestBody = JSON.stringify({
-        vk: vk,
-        v: circuitVersion,
-        chainId: chainId,
-        cred: vkCredential,
-      });
-      const request = await this.executeRequest(requestUrl, requestBody);
-      return request;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  public async getVerificationKey(circuitVersion: string, chainId: string) {
-    const requestUrl = `${this.server_url}${Endpoints.GET_VK}`;
-    const requestBody = JSON.stringify({
-      v: circuitVersion,
-      chainId: chainId,
-    });
-    const request = await this.executeRequest(requestUrl, requestBody);
-    return request;
-  }
-
+  //===================================================================================================
+  //============================    [Credential Server Related]   =====================================
+  //===================================================================================================
   public async postCredential(
     credential: string,
     circuitVersion: string,
     chainId: string,
+    chainAction?: string,
   ) {
     const requestUrl = `${this.server_url}${Endpoints.POST_CREDENTIAL}`;
-    const requestBody = JSON.stringify({
-      cred: credential,
-      v: circuitVersion,
-      chainId: chainId,
-    });
+    let requestBody;
+    if (chainAction) {
+      requestBody = JSON.stringify({
+        cred: credential,
+        v: circuitVersion,
+        chainId: chainId,
+        chainAction: chainAction,
+      });
+    } else {
+      requestBody = JSON.stringify({
+        cred: credential,
+        v: circuitVersion,
+        chainId: chainId,
+      });
+    }
     const request = await this.executeRequest(requestUrl, requestBody);
     return request;
   }
 
-  public async getCredential(circuitVersion: string, chainId: string) {
+  public async getCredential(
+    circuitVersion: string,
+    chainId: string,
+    chainAction?: string,
+  ) {
     const requestUrl = `${this.server_url}${Endpoints.GET_CREDENTIAL}`;
-    const requestBody = JSON.stringify({
-      v: circuitVersion,
-      chainId: chainId,
-    });
+    let requestBody;
+    if (chainAction) {
+      requestBody = JSON.stringify({
+        v: circuitVersion,
+        chainId: chainId,
+        chainAction: chainAction,
+      });
+    } else {
+      requestBody = JSON.stringify({
+        v: circuitVersion,
+        chainId: chainId,
+      });
+    }
     const request = await this.executeRequest(requestUrl, requestBody);
     return request;
   }
-
+  //===================================================================================================
+  //============================    [External Server Related]   =======================================
+  //===================================================================================================
   public async postProof(
     proof: string,
     circuitVersion: string,
@@ -163,6 +207,66 @@ export class ServerClient {
     return request;
   }
 
+  public async postVerificationKey(
+    vk: string,
+    circuitVersion: string,
+    chainId: string,
+    vkCredential: string,
+    chainAction?: string,
+  ) {
+    try {
+      const requestUrl = `${this.server_url}${Endpoints.POST_VK}`;
+      let requestBody;
+      if (chainAction) {
+        requestBody = JSON.stringify({
+          vk: vk,
+          v: circuitVersion,
+          chainId: chainId,
+          cred: vkCredential,
+          chainAction: chainAction,
+        });
+      } else {
+        requestBody = JSON.stringify({
+          vk: vk,
+          v: circuitVersion,
+          chainId: chainId,
+          cred: vkCredential,
+        });
+      }
+
+      const request = await this.executeRequest(requestUrl, requestBody);
+      return request;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async getVerificationKey(
+    circuitVersion: string,
+    chainId: string,
+    chainAction?: string,
+  ) {
+    const requestUrl = `${this.server_url}${Endpoints.GET_VK}`;
+    let requestBody;
+    if (chainAction) {
+      requestBody = JSON.stringify({
+        v: circuitVersion,
+        chainId: chainId,
+        chainAction: chainAction,
+      });
+    } else {
+      requestBody = JSON.stringify({
+        v: circuitVersion,
+        chainId: chainId,
+      });
+    }
+
+    const request = await this.executeRequest(requestUrl, requestBody);
+    return request;
+  }
+  //===================================================================================================
+  //======================================    Old Functions   =========================================
+  //===================================================================================================
   private async executeRequest(
     requestUrl: string,
     requestBody: any,

@@ -64,22 +64,48 @@ export class RedisDBClient extends ZKDatabaseClient {
     }
   }
 
+  /**\
+   * Generates a new key for a specific type of element in REDIS:
+   * * DBKey for a verification key
+   * * DBKey for verification public key
+   * * DBKey for a zkSNARK proving key
+   * * DBKey for a zkSNARK
+   */
   private generateNewElementKey(
     keyElements: REDISKeyComponents,
     newElementLabel: REDISNewElementLabel,
   ) {
+    const on_chain_action = keyElements.chainAction ?? "";
     switch (newElementLabel) {
       case REDISNewElementLabel.VerificationKey:
         if (keyElements.chainId && keyElements.circuitVersion) {
-          return keyElements.chainId + ":" + keyElements.circuitVersion;
+          return (
+            keyElements.chainId +
+            ":" +
+            on_chain_action +
+            ":" +
+            keyElements.circuitVersion
+          );
         }
       case REDISNewElementLabel.OwnerVerificationCredential:
         if (keyElements.chainId && keyElements.circuitVersion) {
-          return keyElements.chainId + ":" + keyElements.circuitVersion;
+          return (
+            keyElements.chainId +
+            ":" +
+            on_chain_action +
+            ":" +
+            keyElements.circuitVersion
+          );
         }
       case REDISNewElementLabel.ProvingKey:
         if (keyElements.chainId && keyElements.chainAction) {
-          return keyElements.chainId + ":" + keyElements.chainAction;
+          return (
+            keyElements.chainId +
+            ":" +
+            on_chain_action +
+            ":" +
+            keyElements.chainAction
+          );
         }
       case REDISNewElementLabel.ZKSNARK:
         if (
@@ -191,6 +217,19 @@ export class RedisDBClient extends ZKDatabaseClient {
         circuitCode: data.circuitCode,
         circuitCredentials: data.circuitCredentials,
       } as ZKSnarkCircuit;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async checkElementExists(dbKey: string) {
+    try {
+      const exists = await this.client.exists(dbKey);
+      if (exists == 1) {
+        return true;
+      } else {
+        return false;
+      }
     } catch (error) {
       throw error;
     }

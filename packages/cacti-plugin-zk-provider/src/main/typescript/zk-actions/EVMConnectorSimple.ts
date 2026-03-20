@@ -31,8 +31,9 @@ export type TransactionReceipt = {
 export class EVMConnectorSimple {
   private provider;
 
-  constructor(port: string) {
-    this.provider = new ethers.JsonRpcProvider(`http://0.0.0.0:${port}`);
+  constructor(port: string, ip?: string) {
+    const chainIp = ip ?? "0.0.0.0";
+    this.provider = new ethers.JsonRpcProvider(`http://${chainIp}:${port}`);
   }
 
   async fetchBlock(blockNumber: number | string = "latest") {

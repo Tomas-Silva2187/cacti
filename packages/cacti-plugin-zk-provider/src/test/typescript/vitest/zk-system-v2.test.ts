@@ -41,6 +41,7 @@ describe("Full System Setup", async () => {
       return signature;
     }
   }
+  const MOCKSESSION = "mockSessionId";
   describe("Complete framework setup for simple circuit", async () => {
     afterAll(() => {
       if (redisProcess1) {
@@ -64,7 +65,7 @@ describe("Full System Setup", async () => {
     const redisCredentials1Port = "6381";
     const redisPCU1Port = "6382";
     const redisPCU2Port = "6383";
-    //let Gateway1Client: ServerClient;
+    let Gateway1Client: ServerClient;
     let Gateway2Client: ServerClient;
     const PCU1Port = "12801";
     const PCU2Port = "12802";
@@ -80,7 +81,7 @@ describe("Full System Setup", async () => {
     let redisProcess3;
     let redisProcess4;
 
-    //let proof: string;
+    let proof: string;
     it("Should setup all components", async () => {
       try {
         redisProcess1 = spawn(
@@ -222,34 +223,51 @@ describe("Full System Setup", async () => {
         Owner1.pubKey.toString(),
         "1",
         "ETH",
+        "lock",
       );
     });
     it("The Owner should sign and publish the Verification Key", async () => {
       const vk = await Owner1.PCUClient.compileCircuit("proveSquare.zok");
       expect(vk).toBeDefined();
+      console.log("vk with the owner is ", typeof vk);
       const signature = Owner1.signData(JSON.stringify(vk));
+      console.log("vk string: ", JSON.stringify(vk));
       Owner1.ExternalServerConn.postVerificationKey(
-        JSON.stringify(vk!),
+        JSON.stringify(vk),
         "1",
         "ETH",
         signature.toString(),
+        "lock",
       );
     });
     it("The second PCU should load and verify the Verification Key", async () => {
       Gateway2Client = new ServerClient(parseInt(PCU2Port), "localhost");
-      const validity = await Gateway2Client.loadVerificationKey("1", "ETH");
+      const validity = await Gateway2Client.loadVerificationKey(
+        "1",
+        "ETH",
+        "lock",
+      );
       console.log(validity);
       expect(validity).toBe(true);
     });
-    /*it("Should allow the generation of a zkSnark", async () => {
+    it("Should allow the generation of a zkSnark", async () => {
       Gateway1Client = new ServerClient(parseInt(PCU1Port), "localhost");
-      proof = await Gateway1Client.generateZkSnark(["2", "4"]);
+      proof = await Gateway1Client.generateZkSnark(
+        ["2", "4"],
+        MOCKSESSION,
+        "lock",
+      );
       expect(proof).toBeDefined();
       expect(JSON.parse(proof).proof).toBeDefined();
     });
     it("The second PCU should validate the proof with its stored Verification Key", async () => {
-      const proofStatus = await Gateway2Client.verifyZkSnark(proof, "ETH", "1");
+      const proofStatus = await Gateway2Client.verifyZkSnark(
+        proof,
+        "ETH",
+        "1",
+        "lock",
+      );
       expect(proofStatus).toBe(true);
-    });*/
+    });
   });
 });

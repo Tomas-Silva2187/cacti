@@ -316,6 +316,7 @@ export class ServerWithDB {
         if (this.zkHandler != undefined) {
           this.app.post(Endpoints.VK_LOAD, async (req, res) => {
             try {
+              console.log("\n\n\nRECEIVED THE VK LOAD REQUEST");
               if (req.body.chainId && req.body.v) {
                 const client = this.webServerClients.get("EXTERNAL0");
                 const client1 = this.webServerClients.get(
@@ -326,27 +327,29 @@ export class ServerWithDB {
                   req.body.chainId,
                   req.body.chainAction,
                 );
+                console.log("THE VK:", vk);
                 const credential = await client1?.getCredential(
                   req.body.v,
                   req.body.chainId,
                   req.body.chainAction,
                 );
+                console.log("The Public Key ", credential);
                 if (!credential || !vk) {
                   throw new Error(
                     "Verification Key or Owner Credential not published",
                   );
                 }
-                const vkObj = JSON.parse(vk);
+                console.log("the verification key is ", typeof vk);
+                const vkObj = JSON.parse(vk.artifact);
+                console.log(vkObj);
                 //const cleaned = vkObj.artifact.replace(/\\/g, "");
-                const hash = this.objectSigner.dataHash(vkObj);
-                const credentialObj = JSON.parse(credential);
+                const hash = this.objectSigner.dataHash(vk.artifact);
+                //const credentialObj = JSON.parse(credential.artifact);
                 let vkValidity;
                 vkValidity = this.objectSigner.verify(
                   hash,
-                  Uint8Array.from(vkObj.certificate.split(",").map(Number)),
-                  Uint8Array.from(
-                    credentialObj.artifact.split(",").map(Number),
-                  ),
+                  Uint8Array.from(vk.certificate.split(",").map(Number)),
+                  Uint8Array.from(credential.artifact.split(",").map(Number)),
                 );
                 console.log("validity was ", vkValidity);
                 let newDBKey;
@@ -357,7 +360,7 @@ export class ServerWithDB {
                     this.mainDBPort!,
                   );
                   newDBKey = await dbClient?.storeElement(
-                    vkObj,
+                    JSON.stringify(vkObj),
                     {
                       chainId: req.body.chainId,
                       circuitVersion: req.body.v,
@@ -401,9 +404,10 @@ export class ServerWithDB {
           });
           this.app.post(Endpoints.GEN_PROOF, async (req, res) => {
             try {
-              if (req.body.params) {
+              if (req.body.params && req.body.sessionId) {
                 const zkSnark = await this.zkHandler!.generateProof(
                   req.body.params,
+                  req.body.sessionId,
                 );
                 this.log.info(
                   `${this.CLASS_TAG}:${Endpoints.GEN_PROOF}[result]->${JSON.stringify(zkSnark)}`,

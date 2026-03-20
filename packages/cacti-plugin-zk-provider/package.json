@@ -46,6 +46,7 @@
     "zk-client-test2": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"Client and 2 Server interaction\"",
     "zk-client-test3": "npx vitest run ./src/test/typescript/vitest/zk-server.test.ts -t \"Proving EVM transactions\"",
     "zk-full-struct": "npx vitest run ./src/test/typescript/vitest/zk-system-v2.test.ts -t \"Full System Setup\"",
+    "zk-handler-v2": "npx vitest run ./src/test/typescript/vitest/zero-knowledge-handler-v2.test.ts -t \"ZeroKnowledgeHandlerV2\"",
     "docker-rebuild": "yarn build && yarn build-bundle && yarn docker-build2",
     "docker-build": "docker build -f zero-knowledge-server.Dockerfile -t zkserver .",
     "docker-build2": "docker build -f web-server.Dockerfile -t zkserverv2 .",

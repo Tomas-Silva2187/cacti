@@ -42,18 +42,24 @@ export class ServerClient {
     }
   }
 
-  public async generateZkSnark(inputs: string[], chainAction?: string) {
+  public async generateZkSnark(
+    inputs: string[],
+    sessionId: string,
+    chainAction?: string,
+  ) {
     try {
       const requestUrl = `${this.server_url}${Endpoints.GEN_PROOF}`;
       let requestBody;
       if (chainAction) {
         requestBody = JSON.stringify({
           params: inputs,
+          sessionId: sessionId,
           chainAction: chainAction,
         });
       } else {
         requestBody = JSON.stringify({
           params: inputs,
+          sessionId: sessionId,
         });
       }
       const request = await this.executeRequest(requestUrl, requestBody);
@@ -112,7 +118,7 @@ export class ServerClient {
         chainId: chainId,
       });
     }
-
+    console.log("\n\n\nRequest: ", requestBody);
     const request = await this.executeRequest(requestUrl, requestBody);
     console.log(request);
     return request;
@@ -267,10 +273,7 @@ export class ServerClient {
   //===================================================================================================
   //======================================    Old Functions   =========================================
   //===================================================================================================
-  private async executeRequest(
-    requestUrl: string,
-    requestBody: any,
-  ): Promise<string> {
+  private async executeRequest(requestUrl: string, requestBody: any) {
     const response = await fetch(requestUrl, {
       method: "POST",
       headers: {

@@ -8376,6 +8376,33 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hyperledger/cacti-plugin-zk-provider@workspace:packages/cacti-plugin-zk-provider":
+  version: 0.0.0-use.local
+  resolution: "@hyperledger/cacti-plugin-zk-provider@workspace:packages/cacti-plugin-zk-provider"
+  dependencies:
+    "@ethereumjs/rlp": "npm:^10.1.1"
+    "@ethereumjs/trie": "npm:^6.2.1"
+    "@ethereumjs/util": "npm:^10.1.1"
+    "@hyperledger/cactus-common": "npm:2.1.0"
+    "@hyperledger/cactus-core": "workspace:^"
+    "@types/express": "npm:^5"
+    "@vercel/ncc": "npm:^0.38.4"
+    "@zk-kit/eddsa-poseidon": "npm:^1.1.0"
+    "@zkpassport/poseidon2": "npm:^0.6.2"
+    ethers: "npm:^6.16.0"
+    express: "npm:^5.2.1"
+    ganache: "npm:^7.9.2"
+    hardhat: "npm:^3.1.6"
+    ncc: "npm:^0.3.6"
+    openzeppelin: "npm:^1.0.0"
+    poseidon: "npm:^0.3.2"
+    redis: "npm:^5.10.0"
+    typescript: "npm:^5.9.3"
+    vitest: "npm:^4.0.14"
+    zokrates-js: "npm:^1.1.9"
+  languageName: unknown
+  linkType: soft
+
 "@hyperledger/cacti-weaver-besu-cli@workspace:weaver/samples/besu/besu-cli":
   version: 0.0.0-use.local
   resolution: "@hyperledger/cacti-weaver-besu-cli@workspace:weaver/samples/besu/besu-cli"
@@ -23959,33 +23986,6 @@ __metadata:
   checksum: 10/7e7ca628511ab18c86eea1231834d2591de29a13ae771a7d9ab85be8c6e53e45c5a5b0d0d95d4a3274fc4f26c16956a98162e40c191c131204b5d5aa949660b5
   languageName: node
   linkType: hard
-
-"cacti-plugin-zk-provider@workspace:packages/cacti-plugin-zk-provider":
-  version: 0.0.0-use.local
-  resolution: "cacti-plugin-zk-provider@workspace:packages/cacti-plugin-zk-provider"
-  dependencies:
-    "@ethereumjs/rlp": "npm:^10.1.1"
-    "@ethereumjs/trie": "npm:^6.2.1"
-    "@ethereumjs/util": "npm:^10.1.1"
-    "@hyperledger/cactus-common": "npm:2.1.0"
-    "@hyperledger/cactus-core": "workspace:^"
-    "@types/express": "npm:^5"
-    "@vercel/ncc": "npm:^0.38.4"
-    "@zk-kit/eddsa-poseidon": "npm:^1.1.0"
-    "@zkpassport/poseidon2": "npm:^0.6.2"
-    ethers: "npm:^6.16.0"
-    express: "npm:^5.2.1"
-    ganache: "npm:^7.9.2"
-    hardhat: "npm:^3.1.6"
-    ncc: "npm:^0.3.6"
-    openzeppelin: "npm:^1.0.0"
-    poseidon: "npm:^0.3.2"
-    redis: "npm:^5.10.0"
-    typescript: "npm:^5.9.3"
-    vitest: "npm:^4.0.14"
-    zokrates-js: "npm:^1.1.9"
-  languageName: unknown
-  linkType: soft
 
 "call-bind-apply-helpers@npm:^1.0.0, call-bind-apply-helpers@npm:^1.0.1, call-bind-apply-helpers@npm:^1.0.2":
   version: 1.0.2

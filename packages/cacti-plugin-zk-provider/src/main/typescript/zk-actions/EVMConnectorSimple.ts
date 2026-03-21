@@ -1,4 +1,5 @@
 import { ethers } from "ethers";
+import { WebSocketProvider } from "web3";
 export type TransactionLog = {
   _type: string;
   address: string;
@@ -31,9 +32,14 @@ export type TransactionReceipt = {
 export class EVMConnectorSimple {
   private provider;
 
-  constructor(port: string, ip?: string) {
+  constructor(port: string, ip?: string, connectionType?: string) {
+    const conn = connectionType ?? "http";
     const chainIp = ip ?? "0.0.0.0";
-    this.provider = new ethers.JsonRpcProvider(`http://${chainIp}:${port}`);
+    if (conn == "http") {
+      this.provider = new ethers.JsonRpcProvider(`http://${chainIp}:${port}`);
+    } else {
+      this.provider = new WebSocketProvider(`ws://${chainIp}:${port}`);
+    }
   }
 
   async fetchBlock(blockNumber: number | string = "latest") {

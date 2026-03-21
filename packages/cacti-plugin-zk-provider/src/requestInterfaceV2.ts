@@ -19,12 +19,12 @@ try {
   let proof;
   while (true) {
     console.log("======Client Services:======");
-    console.log("1. OWNER->EthPCU - Compile Circuit");
+    console.log("1. OWNER->BesuPCU - Compile Circuit");
     console.log("2. OWNER->EthCred - Upload pub key");
     console.log("3. OWNER->ExtServ - Upload vk");
-    console.log("4. BesuPCU->ExtServ - Load vk");
-    console.log("5. EthPCU - Generate Proof");
-    console.log("6. BesuPCU - Verify Proof");
+    console.log("4. EthPCU->ExtServ - Load vk");
+    console.log("5. BesuPCU - Generate Proof");
+    console.log("6. EthPCU - Verify Proof");
     console.log("7. Exit");
 
     const in1 = await expectInput("Select Service: ");
@@ -33,7 +33,7 @@ try {
         const selection = await expectInput(
           "Enter Circuit (e.g., <circuit name>.zok): ",
         );
-        vk = await pcuClient.compileCircuit(selection);
+        vk = await pcu2Client.compileCircuit(selection);
         console.log(vk);
         break;
       case "2":
@@ -59,13 +59,13 @@ try {
         );
         break;
       case "4":
-        await pcu2Client.loadVerificationKey("1", "ETH");
+        await pcuClient.loadVerificationKey("1", "ETH");
         break;
       case "5":
-        proof = await pcuClient.generateZkSnark(["2", "4"]);
+        proof = await pcu2Client.generateZkSnark(["2", "4"], "MOCKSESSION");
         break;
       case "6":
-        const v = await pcu2Client.verifyZkSnark(proof, "ETH", "1");
+        const v = await pcuClient.verifyZkSnark(proof, "ETH", "1");
         console.log(v);
         break;
       case "7":

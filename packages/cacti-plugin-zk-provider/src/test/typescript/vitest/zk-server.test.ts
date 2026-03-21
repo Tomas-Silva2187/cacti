@@ -934,7 +934,7 @@ describe("Full System Setup", async () => {
     });
     it("Should allow the generation of a zkSnark", async () => {
       Gateway1Client = new ServerClient(parseInt(PCU1Port), "localhost");
-      proof = await Gateway1Client.generateZkSnark(["2", "4"]);
+      proof = await Gateway1Client.generateZkSnark(["2", "4"], "MOCKSESSIONID");
       expect(proof).toBeDefined();
       expect(JSON.parse(proof).proof).toBeDefined();
     });

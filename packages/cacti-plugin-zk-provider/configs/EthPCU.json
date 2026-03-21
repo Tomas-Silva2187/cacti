@@ -11,7 +11,10 @@
     "serverId": "eth-pcu-server",
     "zkHandlerOptions": {
         "logLevel": "INFO",
-        "zkcircuitPath": "zokrates"
+        "zkcircuitPath": "zokrates",
+        "chainPort": "32829",
+        "chainIp": "127.0.0.1",
+        "connectionType": "ws"
     },
     "counterServers": [
         {

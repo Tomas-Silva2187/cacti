@@ -41,6 +41,7 @@ import { create } from "@bufbuild/protobuf";
 import { BridgeManagerClientInterface } from "../../../cross-chain-mechanisms/bridge/interfaces/bridge-manager-client-interface";
 import { context, SpanStatusCode } from "@opentelemetry/api";
 import { buildAndCheckAsset, SessionSide } from "../../satp-utils";
+import { ServerClient } from "../ServerClient";
 
 export class Stage2ClientService extends SATPService {
   public static readonly SATP_STAGE = "2";
@@ -162,6 +163,15 @@ export class Stage2ClientService extends SATPService {
             lockAssertionRequestMessage.clientTransferNumber =
               sessionData.clientTransferNumber;
           }
+
+          console.log("\n\n\n\nLOCK ASSET MSG ", lockAssertionRequestMessage);
+          const receipt = JSON.parse(lockAssertionRequestMessage.lockAssertionClaim.receipt);
+          const txHash = receipt.hash;
+          lockAssertionRequestMessage.lockAssertionClaim.receipt = "{}";
+          lockAssertionRequestMessage.lockAssertionClaim.proof = txHash;
+          const client = new ServerClient(12802, "localhost");
+          const proof = await client.generateChainZkSnark(txHash, lockAssertionRequestMessage.common!.sessionId);
+          console.log("\n\n\n\nPROOF : ", proof);
 
           const messageSignature = bufArray2HexStr(
             sign(this.Signer, safeStableStringify(lockAssertionRequestMessage)),

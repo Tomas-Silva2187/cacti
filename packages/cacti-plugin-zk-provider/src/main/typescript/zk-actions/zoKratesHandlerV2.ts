@@ -38,6 +38,8 @@ export interface ZeroKnowledgeHandlerOptions {
   zkcircuitPath: string;
   providerOptions?: ZeroKnowledgeProviderOptions;
   chainPort?: string;
+  chainIp?: string;
+  connectionType?: string;
 }
 
 export enum chainActions {
@@ -70,6 +72,8 @@ export class ZeroKnowledgeHandlerV2 {
       this.initializeZoKrates(options.providerOptions);
       this.simplifiedConnector = new EVMConnectorSimple(
         options.chainPort ?? "8545",
+        options.chainIp,
+        options.connectionType,
       );
       this.circuitVersionList.set(chainActions.lock, 0);
       this.circuitVersionList.set(chainActions.mint, 0);

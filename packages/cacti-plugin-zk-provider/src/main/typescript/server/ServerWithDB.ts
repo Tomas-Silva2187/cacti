@@ -418,6 +418,22 @@ export class ServerWithDB {
               res.status(400).json({ error: error.message });
             }
           });
+          this.app.post(Endpoints.GEN_PROOF, async (req, res) => {
+            try {
+              if (req.body.txHash && req.body.sessionId) {
+                const zkSnark = await this.zkHandler!.generateChainProof(
+                  req.body.txHash,
+                  req.body.sessionId,
+                );
+                this.log.info(
+                  `${this.CLASS_TAG}:${Endpoints.GEN_PROOF}[result]->${JSON.stringify(zkSnark)}`,
+                );
+                res.json({ result: JSON.stringify(zkSnark) });
+              }
+            } catch (error) {
+              res.status(400).json({ error: error.message });
+            }
+          });
           this.app.post(Endpoints.VRF_PROOF, async (req, res) => {
             try {
               if (req.body.proof && req.body.chainId && req.body.v) {

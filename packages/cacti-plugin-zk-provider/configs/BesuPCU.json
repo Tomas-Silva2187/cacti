@@ -11,7 +11,10 @@
     "serverId": "besu-pcu-server",
     "zkHandlerOptions": {
         "logLevel": "INFO",
-        "zkcircuitPath": "zokrates"
+        "zkcircuitPath": "zokrates",
+        "chainPort": "32823",
+        "chainIp": "127.0.0.1",
+        "connectionType": "http"
     },
     "counterServers": [
         {

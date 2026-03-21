@@ -12,8 +12,8 @@
     "zkHandlerOptions": {
         "logLevel": "INFO",
         "zkcircuitPath": "zokrates",
-        "chainPort": "32829",
-        "chainIp": "127.0.0.1",
+        "chainPort": "32791",
+        "chainIp": "172.17.0.1",
         "connectionType": "ws"
     },
     "counterServers": [

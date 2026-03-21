@@ -418,19 +418,37 @@ export class ServerWithDB {
               res.status(400).json({ error: error.message });
             }
           });
-          this.app.post(Endpoints.GEN_PROOF, async (req, res) => {
+          this.app.post(Endpoints.GEN_CHAIN_PROOF, async (req, res) => {
             try {
-              if (req.body.txHash && req.body.sessionId) {
+              if (
+                req.body.txHash &&
+                req.body.sessionId &&
+                req.body.ext &&
+                req.body.ip &&
+                req.body.port
+              ) {
+                this.log.info(
+                  `${this.CLASS_TAG}:${Endpoints.GEN_CHAIN_PROOF}Received new Request and using url ${req.body.ext}:${req.body.ip}:${req.body.port}`,
+                );
                 const zkSnark = await this.zkHandler!.generateChainProof(
                   req.body.txHash,
                   req.body.sessionId,
+                  req.body.ext,
+                  req.body.ip,
+                  req.body.port,
                 );
                 this.log.info(
                   `${this.CLASS_TAG}:${Endpoints.GEN_PROOF}[result]->${JSON.stringify(zkSnark)}`,
                 );
-                res.json({ result: JSON.stringify(zkSnark) });
+                res.json({ result: zkSnark });
+              } else {
+                this.log.info(
+                  `${this.CLASS_TAG}:${Endpoints.GEN_PROOF}SOMETHING WRONG`,
+                );
+                res.json({ result: "WRONG" });
               }
             } catch (error) {
+              console.log(error);
               res.status(400).json({ error: error.message });
             }
           });

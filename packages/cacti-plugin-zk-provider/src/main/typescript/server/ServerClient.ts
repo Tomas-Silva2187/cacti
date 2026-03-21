@@ -73,6 +73,9 @@ export class ServerClient {
   public async generateChainZkSnark(
     txHash: string,
     sessionId: string,
+    ext: string,
+    ip: string,
+    port: string,
     chainAction?: string,
   ) {
     try {
@@ -83,11 +86,17 @@ export class ServerClient {
           txHash: txHash,
           sessionId: sessionId,
           chainAction: chainAction,
+          ext: ext,
+          ip: ip,
+          port: port,
         });
       } else {
         requestBody = JSON.stringify({
           txHash: txHash,
           sessionId: sessionId,
+          ext: ext,
+          ip: ip,
+          port: port,
         });
       }
       const request = await this.executeRequest(requestUrl, requestBody);

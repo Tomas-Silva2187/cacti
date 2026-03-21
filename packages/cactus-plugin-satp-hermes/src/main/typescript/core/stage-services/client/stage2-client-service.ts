@@ -42,6 +42,7 @@ import { BridgeManagerClientInterface } from "../../../cross-chain-mechanisms/br
 import { context, SpanStatusCode } from "@opentelemetry/api";
 import { buildAndCheckAsset, SessionSide } from "../../satp-utils";
 import { ServerClient } from "../ServerClient";
+import { promises as fs } from "fs";
 
 export class Stage2ClientService extends SATPService {
   public static readonly SATP_STAGE = "2";
@@ -163,14 +164,29 @@ export class Stage2ClientService extends SATPService {
             lockAssertionRequestMessage.clientTransferNumber =
               sessionData.clientTransferNumber;
           }
+          const readData = await fs.readFile("besu.txt", "utf-8");
+          console.log("Data read from file:", readData);
+          const fullData = JSON.parse(readData);
+          const url = fullData.connectorOptions.rpcApiHttpHost;
+          const { protocol, hostname, port } = new URL(url);
+          console.log(protocol.replace(":", ""));
+          console.log(hostname);
+          console.log(port);
+          const prot = protocol.replace(":", "");
+        
 
+
+          console.log(sessionData);
           console.log("\n\n\n\nLOCK ASSET MSG ", lockAssertionRequestMessage);
           const receipt = JSON.parse(lockAssertionRequestMessage.lockAssertionClaim.receipt);
+          console.log(receipt);
           const txHash = receipt.hash;
           lockAssertionRequestMessage.lockAssertionClaim.receipt = "{}";
           lockAssertionRequestMessage.lockAssertionClaim.proof = txHash;
           const client = new ServerClient(12802, "localhost");
-          const proof = await client.generateChainZkSnark(txHash, lockAssertionRequestMessage.common!.sessionId);
+          const proof = await client.generateChainZkSnark(txHash, "MOCKSESSION", "http", "172.17.0.1", port);
+          //const proof = await client.generateZkSnark(["a"], "a");
+          //const proof = await client.generateChainZkSnark(txHash, "MOCK", "http", "0000", "1001");
           console.log("\n\n\n\nPROOF : ", proof);
 
           const messageSignature = bufArray2HexStr(

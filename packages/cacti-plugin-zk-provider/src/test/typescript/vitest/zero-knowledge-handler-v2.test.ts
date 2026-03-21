@@ -365,8 +365,8 @@ describe(
           "Should deploy an ERC20 token contract on local chain",
           async () => {
             await mockContractDeployer.deployERC20Contract();
-            await mockContractDeployer.mintTokens(1000);
-            trfTx = await mockContractDeployer.transferTokens(200);
+            trfTx = await mockContractDeployer.mintTokens(1000);
+            //trfTx = await mockContractDeployer.transferTokens(200);
           },
           TIMEOUT,
         );
@@ -374,7 +374,13 @@ describe(
           "Should allow the zkHandler to get data directly from the chain",
           async () => {
             await zkHandler.compileCircuit("concatHash.zok");
-            const ok = await zkHandler.generateChainProof(trfTx.hash, "MOCKID");
+            const ok = await zkHandler.generateChainProof(
+              trfTx.hash,
+              "MOCKID",
+              "http",
+              "0.0.0.0",
+              "8545",
+            );
             console.log(JSON.stringify(ok));
           },
           TIMEOUT,

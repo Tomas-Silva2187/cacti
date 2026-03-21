@@ -42,6 +42,7 @@ import { MonitorService } from "../../../../main/typescript/services/monitoring/
 import { TokenType as TokenTypeMain } from "../../../../main/typescript/generated/proto/cacti/satp/v02/common/message_pb";
 import { SupportedContractTypes as SupportedEthereumContractTypes } from "../../environments/ethereum-test-environment";
 import { SupportedContractTypes as SupportedBesuContractTypes } from "../../environments/ethereum-test-environment";
+import { promises as fs } from "fs";
 
 const logLevel: LogLevelDesc = "DEBUG";
 const log = LoggerProvider.getOrCreate({
@@ -238,6 +239,8 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
     const ethereumNetworkOptions = ethereumEnv.createEthereumConfig();
     console.log("ETHEREUM OPTIONS: ", ethereumNetworkOptions);
     console.log("BESU OPTIONS: ", besuNetworkOptions);
+
+    await fs.writeFile("besu.txt", JSON.stringify(besuNetworkOptions));
 
     const ontologiesPath = path.join(__dirname, "../../../ontologies");
 

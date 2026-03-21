@@ -56,7 +56,7 @@ export class ZeroKnowledgeHandlerV2 {
   private readonly logLevel: LogLevelDesc;
   private provider: ZoKratesProvider | undefined;
   private defaultCircuitPath: string | undefined;
-  private simplifiedConnector: EVMConnectorSimple;
+  private simplifiedConnector: EVMConnectorSimple | undefined;
   private proofsList = new Map<string, Proof>();
   private compilationsList = new Map<string, CompilationArtifacts>();
   private provingKeysList = new Map<string, ProvingKey>();
@@ -70,11 +70,11 @@ export class ZeroKnowledgeHandlerV2 {
     this.defaultCircuitPath = options.zkcircuitPath;
     try {
       this.initializeZoKrates(options.providerOptions);
-      this.simplifiedConnector = new EVMConnectorSimple(
+      /*this.simplifiedConnector = new EVMConnectorSimple(
         options.chainPort ?? "8545",
         options.chainIp,
         options.connectionType,
-      );
+      );*/
       this.circuitVersionList.set(chainActions.lock, 0);
       this.circuitVersionList.set(chainActions.mint, 0);
       this.circuitVersionList.set(chainActions.burn, 0);
@@ -91,6 +91,10 @@ export class ZeroKnowledgeHandlerV2 {
   public checkCurrentCircuitVersion(chainAction?: string) {
     const chainActionId = chainAction?.toUpperCase() ?? chainActions.common;
     return this.circuitVersionList.get(chainActionId);
+  }
+
+  public setConnector(ext: string, ip: string, port: string) {
+    this.simplifiedConnector = new EVMConnectorSimple(port, ip, ext);
   }
 
   public async initializeZoKrates(
@@ -267,16 +271,23 @@ export class ZeroKnowledgeHandlerV2 {
     }
   }
 
-  public async generateChainProof(txHash: string, sessionId: string) {
+  public async generateChainProof(
+    txHash: string,
+    sessionId: string,
+    ext: string,
+    ip: string,
+    port: string,
+  ) {
     const requestReceivalTimestamp = Math.floor(Date.now() / 1000);
     console.log(
       "Request received for proof generation at: ",
       requestReceivalTimestamp,
     );
+    this.setConnector(ext, ip, port);
     const txReceipt =
-      await this.simplifiedConnector.fetchTransactionReceipt(txHash);
+      await this.simplifiedConnector!.fetchTransactionReceipt(txHash);
     console.log("Transaction was at block height ", txReceipt.blockNumber);
-    const block = await this.simplifiedConnector.fetchBlock(
+    const block = await this.simplifiedConnector!.fetchBlock(
       txReceipt.blockNumber,
     );
     /*const rawTx = await this.simplifiedConnector.fetchTransactionFromBlock(

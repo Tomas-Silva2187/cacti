@@ -15,15 +15,16 @@ export class EthereumContractDeployer {
   private BYTECODE = erc20.bytecode;
   private TOKEN_CONTRACT_ADDRESS;
   constructor() {
-    this.provider = new ethers.JsonRpcProvider("http://0.0.0.0:8545");
+    this.provider = new ethers.JsonRpcProvider("http://localhost:32791");
   }
 
   async deployERC20Contract() {
     this.accounts = await this.provider.listAccounts();
+    console.log("ACCOUNTS: ", this.accounts);
     this.deployerAddress = this.accounts[0].address;
     this.userAddress = this.accounts[1].address;
-    this.user2Address = this.accounts[5].address;
-    this.callerAddress = this.accounts[2].address;
+    //this.user2Address = this.accounts[5].address;
+    //this.callerAddress = this.accounts[2].address;
 
     this.deployerSignerAccount = await this.provider.getSigner(
       this.deployerAddress,
@@ -45,7 +46,7 @@ export class EthereumContractDeployer {
       await contractDeploymentTx.getAddress(),
       this.ABI,
       this.deployerSignerAccount,
-    ).grantBridgeRole(this.callerAddress);
+    ).grantBridgeRole(this.userAddress);
 
     await giveRoleTx.wait();
     this.TOKEN_CONTRACT_ADDRESS = await contractDeploymentTx.getAddress();

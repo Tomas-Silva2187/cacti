@@ -73,24 +73,36 @@ export class ServerClient {
   public async generateChainZkSnark(
     txHash: string,
     sessionId: string,
+    ext: string,
+    ip: string,
+    port: string,
     chainAction?: string,
   ) {
     try {
-      const requestUrl = `${this.server_url}${Endpoints.GEN_PROOF}`;
+      const requestUrl = `${this.server_url}${Endpoints.GEN_CHAIN_PROOF}`;
       let requestBody;
       if (chainAction) {
         requestBody = JSON.stringify({
           txHash: txHash,
           sessionId: sessionId,
           chainAction: chainAction,
+          ext: ext,
+          ip: ip,
+          port: port,
         });
       } else {
         requestBody = JSON.stringify({
           txHash: txHash,
           sessionId: sessionId,
+          ext: ext,
+          ip: ip,
+          port: port,
         });
       }
+      console.log("sending request ", requestBody);
+      console.log("url ", requestUrl);
       const request = await this.executeRequest(requestUrl, requestBody);
+      console.log(request);
       return request;
     } catch (error) {
       throw error;
@@ -310,10 +322,13 @@ export class ServerClient {
       body: requestBody,
     });
     const responseContent = await response.json();
+    //const responseContent = await response;
+    //console.log(response);
     if (responseContent.error) {
       throw new Error(responseContent.error);
     }
     return responseContent.result;
+    //return responseContent;
   }
 
   public async blindRequest(endpointName: string, inputs: any[]) {

@@ -14,9 +14,14 @@ module.exports = {
   moduleNameMapper: {
     "^(\\.\\.?\\/.+)\\.jsx?$": "$1",
     "^(.+)/(.+)_pb\\.js$": "$1/$2_pb",
+    "^@hyperledger/cacti-plugin-zk-provider$":
+      "<rootDir>/../../cacti-plugin-zk-provider/src/main/typescript/index",
   },
   testMatch: ["**/src/test/typescript/integration/gateway/*.test.ts"],
   testPathIgnorePatterns: [],
+  transformIgnorePatterns: [
+    "/node_modules/(?!@hyperledger/cacti-plugin-zk-provider)"
+  ],
   reporters: [
     "default",
     [

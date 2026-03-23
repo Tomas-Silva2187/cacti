@@ -151,6 +151,7 @@ import { getEnumKeyByValue } from "../../../services/utils";
 import { getUint8Key } from "./leafs-utils";
 import { MonitorService } from "../../../services/monitoring/monitor";
 import { context, SpanStatusCode } from "@opentelemetry/api";
+import { ServerClient } from "../../../core/stage-services/ServerClient";
 
 /**
  * Configuration options specific to Ethereum network integration for SATP bridge leaf operations.
@@ -693,6 +694,9 @@ export class EthereumLeaf
    */
   private readonly monitorService: MonitorService;
 
+  private urlHttp: any;
+  private urlWs: any;
+
   /**
    * Constructs a new instance of the EthereumLeaf class for SATP cross-chain operations.
    *
@@ -826,6 +830,25 @@ export class EthereumLeaf
       options.connectorOptions as IPluginLedgerConnectorEthereumOptions,
     );
 
+    const connectorHttp = options.connectorOptions.rpcApiHttpHost ?? "";
+    const connectorWs = options.connectorOptions.rpcApiWsHost ?? "";
+
+    console.log("ETHEREUM LEAF OPTIONS ", options);
+    console.log(connectorHttp);
+    console.log(connectorWs);
+
+    if (connectorHttp != "") {
+      this.urlHttp = new URL(connectorHttp);
+      this.urlHttp.hostname = "172.17.0.1";
+    }
+    if(connectorWs != "") {
+      this.urlWs = new URL(connectorWs);
+      this.urlWs.hostname = "172.17.0.1";
+    }
+
+    console.log(this.urlHttp);
+    console.log(this.urlWs);
+
     this.ontologyManager = ontologyManager;
 
     if (isWeb3SigningCredentialNone(options.signingCredential)) {
@@ -859,6 +882,7 @@ export class EthereumLeaf
               }
               break;
             case ClaimFormat.DEFAULT:
+            case ClaimFormat.ZK:
               break;
             default:
               throw new ClaimFormatError(
@@ -893,6 +917,14 @@ export class EthereumLeaf
         span.end();
       }
     });
+  }
+
+  public getConnectorHttp() {
+    return this.urlHttp ?? "";
+  }
+
+  public getConnectorWs() {
+    return this.urlWs ?? "";
   }
 
   /**
@@ -1859,6 +1891,8 @@ export class EthereumLeaf
   public async getProof(
     asset: Asset,
     claimFormat: ClaimFormat,
+    txHash?: string,
+    satpStageOperation?: string,
   ): Promise<string> {
     const fnTag = `${EthereumLeaf.CLASS_NAME}}#runTransaction`;
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
@@ -1877,6 +1911,19 @@ export class EthereumLeaf
               );
           case ClaimFormat.DEFAULT:
             return "";
+          case ClaimFormat.ZK:
+            let chainUrl = this.getConnectorHttp();
+            if(chainUrl == "") {
+              chainUrl = this.getConnectorWs();
+            }
+            const client = new ServerClient(12801, "localhost");
+            if(satpStageOperation?.includes("lock") || satpStageOperation?.includes("mint") || satpStageOperation?.includes("burn") || satpStageOperation?.includes("assign")) {
+              const proof = await client.generateChainZkSnark(txHash!, "SESSIONID", chainUrl.protocol.replace(":", ""), chainUrl.hostname, chainUrl.port);
+              //const proof = await client.generateZkSnark(["2", "4"], "MOCK-SESSION-ETH");
+              return JSON.stringify(proof);
+            } else {
+              return "DEFAULT_ZKSNARK";
+            }
           default:
             throw new ProofError(`Claim format not supported: ${claimFormat}`);
         }

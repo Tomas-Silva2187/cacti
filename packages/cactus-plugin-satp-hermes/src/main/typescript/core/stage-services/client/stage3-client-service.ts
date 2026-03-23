@@ -44,6 +44,7 @@ import {
   MintAssertionClaimError,
   MissingBridgeManagerError,
   SessionError,
+  SessionIdError,
 } from "../../errors/satp-service-errors";
 import { FailedToProcessError } from "../../errors/satp-handler-errors";
 import { State } from "../../../generated/proto/cacti/satp/v02/session/session_pb";
@@ -51,6 +52,9 @@ import { create } from "@bufbuild/protobuf";
 import { BridgeManagerClientInterface } from "../../../cross-chain-mechanisms/bridge/interfaces/bridge-manager-client-interface";
 import { context, SpanStatusCode } from "@opentelemetry/api";
 import { buildAndCheckAsset, SessionSide } from "../../satp-utils";
+import { request } from "http";
+import { ServerClient } from "../ServerClient";
+import { getZKServicePort } from "../service-utils";
 
 export class Stage3ClientService extends SATPService {
   public static readonly SATP_STAGE = "3";
@@ -557,7 +561,7 @@ export class Stage3ClientService extends SATPService {
     const stepTag = `checkCommitPreparationResponse()`;
     const fnTag = `${this.getServiceIdentifier()}#${stepTag}`;
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
-    await context.with(ctx, () => {
+    await context.with(ctx, async () => {
       try {
         this.Log.debug(`${fnTag}, CommitPreparationResponse...`);
 
@@ -578,21 +582,37 @@ export class Stage3ClientService extends SATPService {
 
         signatureVerifier(fnTag, this.Signer, response, sessionData);
 
-        if (response.mintAssertionClaimFormat != undefined) {
-          //todo
-          this.Log.info(
-            `${fnTag},  Optional variable loaded: mintAssertionClaimsFormat `,
-          );
-          sessionData.mintAssertionClaimFormat =
-            response.mintAssertionClaimFormat;
-        }
-
         if (response.mintAssertionClaim == undefined) {
           //todo
           throw new MintAssertionClaimError(fnTag);
         }
 
         sessionData.mintAssertionClaim = response.mintAssertionClaim;
+
+        let proofValidity = true;
+
+        if (response.mintAssertionClaimFormat != undefined) {
+          //todo
+          this.Log.info(
+            `${fnTag},  Optional variable loaded: mintAssertionClaimsFormat `,
+          );
+
+          if (response.mintAssertionClaimFormat.format == 3 && response.mintAssertionClaim.proof != "DEFAULT_ZKSNARK") {
+            console.log("\n\n\nTHE RECEIVER ", sessionData.receiverAsset!.networkId!);
+            console.log("\n\n\nTHE SENDER ", sessionData.receiverAsset!.networkId!);
+              const clientPort = getZKServicePort(sessionData.senderAsset!.networkId!.type);
+              const client = new ServerClient(clientPort, "localhost");
+              const proof = response.mintAssertionClaim.proof;
+              proofValidity = await client.verifyZkSnark(proof, sessionData.receiverAsset!.networkId!.type, "1");
+          }
+        }
+
+        sessionData.mintAssertionClaimFormat =
+          response.mintAssertionClaimFormat;
+        
+        if(!proofValidity) {
+          throw new Error("Mint Proof Invalid");
+        }
 
         if (
           sessionData.serverTransferNumber != undefined &&
@@ -630,7 +650,7 @@ export class Stage3ClientService extends SATPService {
     const stepTag = `checkCommitFinalAssertionResponse()`;
     const fnTag = `${this.getServiceIdentifier()}#${stepTag}`;
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
-    await context.with(ctx, () => {
+    await context.with(ctx, async () => {
       try {
         this.Log.debug(`${fnTag}, CommitFinalAcknowledgementReceipt...`);
 
@@ -658,12 +678,26 @@ export class Stage3ClientService extends SATPService {
         sessionData.assignmentAssertionClaim =
           response.assignmentAssertionClaim;
 
+        let proofValidity = true;
+
         if (response.assignmentAssertionClaimFormat != undefined) {
           this.Log.info(
             `${fnTag},  Optional variable loaded: assignmentAssertionClaimFormat `,
           );
-          sessionData.assignmentAssertionClaimFormat =
-            response.assignmentAssertionClaimFormat;
+
+          if(response.assignmentAssertionClaimFormat.format == 3 && response.assignmentAssertionClaim.proof != "DEFAULT_ZKSNARK") {
+            const clientPort = getZKServicePort(sessionData.senderAsset!.networkId!.type);
+            const client = new ServerClient(clientPort, "localhost");
+            const proof = response.assignmentAssertionClaim.proof;
+            proofValidity = await client.verifyZkSnark(proof, sessionData.receiverAsset!.networkId!.type, "1");
+          }
+        }
+
+        sessionData.assignmentAssertionClaimFormat =
+          response.assignmentAssertionClaimFormat;
+
+        if(!proofValidity) {
+          throw new Error("Assign Proof Invalid");
         }
 
         if (

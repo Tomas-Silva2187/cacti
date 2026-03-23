@@ -36,6 +36,9 @@ import { SATPInternalError } from "../../errors/satp-errors";
 import { SessionNotFoundError } from "../../errors/satp-handler-errors";
 import { create } from "@bufbuild/protobuf";
 import { context, SpanStatusCode } from "@opentelemetry/api";
+import { promises as fs } from "fs";
+import { ComponentsPorts, ServerClient } from "../ServerClient";
+import { getZKServicePort } from "../service-utils";
 export class Stage2ServerService extends SATPService {
   public static readonly SATP_STAGE = "2";
   public static readonly SERVICE_TYPE = SATPServiceType.Server;
@@ -221,7 +224,7 @@ export class Stage2ServerService extends SATPService {
     const stepTag = `checkLockAssertionRequest()`;
     const fnTag = `${this.getServiceIdentifier()}#${stepTag}`;
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
-    await context.with(ctx, () => {
+    await context.with(ctx, async () => {
       try {
         this.Log.debug(`${fnTag}, checkLockAssertionRequest...`);
 
@@ -248,11 +251,23 @@ export class Stage2ServerService extends SATPService {
 
         sessionData.lockAssertionClaim = request.lockAssertionClaim;
 
+        let proofValidity = true;
+
         if (request.lockAssertionClaimFormat == undefined) {
           throw new LockAssertionClaimFormatError(fnTag);
+        } else if (request.lockAssertionClaimFormat.format == 3 && request.lockAssertionClaim.proof != "DEFAULT_ZKSNARK") {
+          const clientPort = getZKServicePort(sessionData.receiverAsset!.networkId!.type);
+          const client = new ServerClient(clientPort, "localhost");
+          const proof = request.lockAssertionClaim.proof;
+          proofValidity = await client.verifyZkSnark(proof, sessionData.senderAsset!.networkId!.type, "1");
         }
-
+        
         sessionData.lockAssertionClaimFormat = request.lockAssertionClaimFormat; //todo check if valid
+        
+        if (!proofValidity) {
+          throw new Error("Lock Proof Invalid");  
+        }
+        
 
         if (request.lockAssertionExpiration == BigInt(0)) {
           throw new LockAssertionExpirationError(fnTag);

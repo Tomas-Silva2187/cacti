@@ -14,6 +14,11 @@ export enum Endpoints {
   GEN_CHAIN_PROOF = "/generateChainProof",
 }
 
+export enum ComponentsPorts {
+  clientPCU = 12802,
+  serverPCU = 12801,
+}
+
 export class ServerClient {
   private server_url: string;
   constructor(port: number, ip: string) {
@@ -73,36 +78,24 @@ export class ServerClient {
   public async generateChainZkSnark(
     txHash: string,
     sessionId: string,
-    ext: string,
-    ip: string,
-    port: string,
+    ext?: string,
+    ip?: string,
+    port?: string,
     chainAction?: string,
   ) {
     try {
       const requestUrl = `${this.server_url}${Endpoints.GEN_CHAIN_PROOF}`;
-      let requestBody;
-      if (chainAction) {
-        requestBody = JSON.stringify({
-          txHash: txHash,
-          sessionId: sessionId,
-          chainAction: chainAction,
-          ext: ext,
-          ip: ip,
-          port: port,
-        });
-      } else {
-        requestBody = JSON.stringify({
-          txHash: txHash,
-          sessionId: sessionId,
-          ext: ext,
-          ip: ip,
-          port: port,
-        });
-      }
-      console.log("sending request ", requestBody);
-      console.log("url ", requestUrl);
+     
+      const requestBody = JSON.stringify({
+        txHash: txHash,
+        sessionId: sessionId,
+        chainAction: chainAction,
+        ext: ext,
+        ip: ip,
+        port: port,
+      });
+     
       const request = await this.executeRequest(requestUrl, requestBody);
-      console.log(request);
       return request;
     } catch (error) {
       throw error;

@@ -209,6 +209,8 @@ export abstract class BridgeLeaf {
   public abstract getProof(
     asset: Asset,
     claimFormat: ClaimFormat,
+    txHash?: string,
+    satpStageOperation?: string,
   ): Promise<string>;
 
   /**

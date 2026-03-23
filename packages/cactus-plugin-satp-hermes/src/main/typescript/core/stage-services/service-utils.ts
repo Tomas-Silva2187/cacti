@@ -401,3 +401,11 @@ export function compareProtoAsset(
     asset1.ercTokenStandard === asset2.ercTokenStandard
   );
 }
+
+export function getZKServicePort(networkType: string): number {
+  if(networkType == "ETHEREUM") {
+    return 12801;
+  } else {
+    return 12802;
+  }
+}

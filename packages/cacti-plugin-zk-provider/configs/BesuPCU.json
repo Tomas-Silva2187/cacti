@@ -28,7 +28,7 @@
             "serverUrl": {
                 "ip": "ethcredserver",
                 "port": 12804,
-                "ownerChainId": "ETH"
+                "ownerChainId": "ETHEREUM"
             },
             "serverType": "OWN"
         }

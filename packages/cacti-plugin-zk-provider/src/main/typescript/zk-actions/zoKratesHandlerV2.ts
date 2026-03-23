@@ -46,7 +46,7 @@ export enum chainActions {
   lock = "LOCK",
   mint = "MINT",
   burn = "BURN",
-  release = "RELEASE",
+  release = "ASSIGN",
   common = "COMMON",
 }
 
@@ -56,11 +56,13 @@ export class ZeroKnowledgeHandlerV2 {
   private readonly logLevel: LogLevelDesc;
   private provider: ZoKratesProvider | undefined;
   private defaultCircuitPath: string | undefined;
-  private simplifiedConnector: EVMConnectorSimple | undefined;
   private proofsList = new Map<string, Proof>();
   private compilationsList = new Map<string, CompilationArtifacts>();
   private provingKeysList = new Map<string, ProvingKey>();
   private circuitVersionList = new Map<string, number>();
+  private defaultChainProtocol: string;
+  private defaultChainIp: string;
+  private defaultChainPort: string;
 
   constructor(options: ZeroKnowledgeHandlerOptions) {
     const fnTag = `${ZeroKnowledgeHandlerV2.CLASS_NAME}#constructor()`;
@@ -70,11 +72,9 @@ export class ZeroKnowledgeHandlerV2 {
     this.defaultCircuitPath = options.zkcircuitPath;
     try {
       this.initializeZoKrates(options.providerOptions);
-      /*this.simplifiedConnector = new EVMConnectorSimple(
-        options.chainPort ?? "8545",
-        options.chainIp,
-        options.connectionType,
-      );*/
+      this.defaultChainProtocol = options.connectionType ?? "http";
+      this.defaultChainIp = options.chainIp ?? "localhost";
+      this.defaultChainPort = options.chainPort ?? "8545";
       this.circuitVersionList.set(chainActions.lock, 0);
       this.circuitVersionList.set(chainActions.mint, 0);
       this.circuitVersionList.set(chainActions.burn, 0);
@@ -93,8 +93,12 @@ export class ZeroKnowledgeHandlerV2 {
     return this.circuitVersionList.get(chainActionId);
   }
 
-  public setConnector(ext: string, ip: string, port: string) {
-    this.simplifiedConnector = new EVMConnectorSimple(port, ip, ext);
+  public getConnector(
+    ext: string,
+    ip: string,
+    port: string,
+  ): EVMConnectorSimple {
+    return new EVMConnectorSimple(port, ip, ext);
   }
 
   public async initializeZoKrates(
@@ -274,22 +278,27 @@ export class ZeroKnowledgeHandlerV2 {
   public async generateChainProof(
     txHash: string,
     sessionId: string,
-    ext: string,
-    ip: string,
-    port: string,
+    ext?: string,
+    ip?: string,
+    port?: string,
   ) {
     const requestReceivalTimestamp = Math.floor(Date.now() / 1000);
+    let connector;
     console.log(
       "Request received for proof generation at: ",
       requestReceivalTimestamp,
     );
-    this.setConnector(ext, ip, port);
-    const txReceipt =
-      await this.simplifiedConnector!.fetchTransactionReceipt(txHash);
-    console.log("Transaction was at block height ", txReceipt.blockNumber);
-    const block = await this.simplifiedConnector!.fetchBlock(
-      txReceipt.blockNumber,
-    );
+    if (ext && ip && port) {
+      connector = this.getConnector(ext, ip, port);
+    } else {
+      connector = this.getConnector(
+        this.defaultChainProtocol,
+        this.defaultChainIp,
+        this.defaultChainPort,
+      );
+    }
+    const txReceipt = await connector.fetchTransactionReceipt(txHash);
+    const block = await connector.fetchBlock(txReceipt.blockNumber);
     /*const rawTx = await this.simplifiedConnector.fetchTransactionFromBlock(
       block,
       txHash,

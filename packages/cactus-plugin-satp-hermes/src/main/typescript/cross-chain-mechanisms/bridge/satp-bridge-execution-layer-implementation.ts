@@ -265,7 +265,8 @@ export class SATPBridgeExecutionLayerImpl implements SATPBridgeExecutionLayer {
 
     this.claimType = options.claimType || ClaimFormat.DEFAULT;
 
-    if (!(this.claimType in options.leafBridge.getSupportedClaimFormats())) {
+
+    if (!(options.leafBridge.getSupportedClaimFormats().includes(this.claimType as ClaimFormat))) {
       throw new ClaimFormatError("Claim not supported by the bridge");
     }
     this.bridgeEndPoint = options.leafBridge;
@@ -391,10 +392,12 @@ export class SATPBridgeExecutionLayerImpl implements SATPBridgeExecutionLayer {
     }
 
     const receipt = await bridgeEndPoint.getReceipt(response!.transactionId!);
+    const receiptParsed = JSON.parse(receipt);
 
     this.log.info(`${fnTag}, proof of ${op}: ${receipt}`);
 
-    const proof = await this.bridgeEndPoint.getProof(asset, this.claimType);
+    const proof = await this.bridgeEndPoint.getProof(asset, this.claimType, receiptParsed.hash, op);
+    console.log(proof);
 
     return {
       transactionReceipt: {

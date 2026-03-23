@@ -225,6 +225,7 @@ enum ClaimFormat {
     CLAIM_FORMAT_UNSPECIFIED = 0;
     CLAIM_FORMAT_DEFAULT = 1;
     CLAIM_FORMAT_BUNGEE = 2;
+    CLAIM_FORMAT_ZK = 3;
 }
 message WrapAssertionClaimFormat {
     ClaimFormat format = 1;

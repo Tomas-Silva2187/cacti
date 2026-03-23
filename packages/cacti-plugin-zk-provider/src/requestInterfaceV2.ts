@@ -12,20 +12,29 @@ function expectInput(query: string): Promise<string> {
 }
 
 try {
-  const pcuClient = new ServerClient(12801, "localhost");
-  const pcu2Client = new ServerClient(12802, "localhost");
-  let vk;
-  let keypair;
-  let proof;
+  const ethClient = new ServerClient(12801, "localhost");
+  const besuClient = new ServerClient(12802, "localhost");
+  let besu_vk;
+  let eth_vk;
+  let besu_keypair;
+  let eth_keypair;
+  let besu_proof;
+  let eth_proof;
   while (true) {
     console.log("======Client Services:======");
-    console.log("1. OWNER->BesuPCU - Compile Circuit");
-    console.log("2. OWNER->EthCred - Upload pub key");
-    console.log("3. OWNER->ExtServ - Upload vk");
-    console.log("4. EthPCU->ExtServ - Load vk");
-    console.log("5. BesuPCU - Generate Proof");
-    console.log("6. EthPCU - Verify Proof");
-    console.log("7. Exit");
+    console.log("1. OWNER2->BesuPCU - Compile Circuit");
+    console.log("2. OWNER1->EthPCU - Compile Circuit");
+    console.log("3. OWNER2->BesuCred - Upload pub key");
+    console.log("4. OWNER1->EthCred - Upload pub key");
+    console.log("5. OWNER2->ExtServ - Upload besu_vk");
+    console.log("6. OWNER1->ExtServ - Upload eth_vk");
+    console.log("7. EthPCU->ExtServ - Load besu_vk");
+    console.log("8. BesuPCU->ExtServ - Load eth_vk");
+    console.log("9. BesuPCU - Generate Proof");
+    console.log("10. EthPCU - Generate Proof");
+    console.log("11. BesuPCU - Verify Eth Proof");
+    console.log("12. EthPCU - Verify Besu Proof");
+    console.log("13. Exit");
 
     const in1 = await expectInput("Select Service: ");
     switch (in1) {
@@ -33,42 +42,92 @@ try {
         const selection = await expectInput(
           "Enter Circuit (e.g., <circuit name>.zok): ",
         );
-        vk = await pcu2Client.compileCircuit(selection);
-        console.log(vk);
+        besu_vk = await besuClient.compileCircuit(selection);
+        console.log(besu_vk);
         break;
       case "2":
-        const ethCredClient = new ServerClient(12804, "localhost");
-        keypair = Secp256k1Keys.generateKeyPairsBuffer();
-        await ethCredClient.postCredential(
-          keypair.publicKey.toString(),
-          "1",
-          "ETH",
+        const selection2 = await expectInput(
+          "Enter Circuit (e.g., <circuit name>.zok): ",
         );
+        eth_vk = await ethClient.compileCircuit(selection2);
+        console.log(eth_vk);
         break;
       case "3":
-        const extClient = new ServerClient(12803, "localhost");
-        const signer = new JsObjectSigner({
-          privateKey: keypair.privateKey,
-        });
-        const signature = signer.sign(JSON.stringify(vk));
-        await extClient.postVerificationKey(
-          JSON.stringify(vk),
+        const besuCredClient = new ServerClient(12805, "localhost");
+        besu_keypair = Secp256k1Keys.generateKeyPairsBuffer();
+        await besuCredClient.postCredential(
+          besu_keypair.publicKey.toString(),
           "1",
-          "ETH",
-          signature.toString(),
+          "BESU_2X",
         );
         break;
       case "4":
-        await pcuClient.loadVerificationKey("1", "ETH");
+        const ethCredClient = new ServerClient(12804, "localhost");
+        eth_keypair = Secp256k1Keys.generateKeyPairsBuffer();
+        await ethCredClient.postCredential(
+          eth_keypair.publicKey.toString(),
+          "1",
+          "ETHEREUM",
+        );
         break;
       case "5":
-        proof = await pcu2Client.generateZkSnark(["2", "4"], "MOCKSESSION");
+        const extClient1 = new ServerClient(12803, "localhost");
+        const signer1 = new JsObjectSigner({
+          privateKey: besu_keypair.privateKey,
+        });
+        const signature1 = signer1.sign(JSON.stringify(besu_vk));
+        await extClient1.postVerificationKey(
+          JSON.stringify(besu_vk),
+          "1",
+          "BESU_2X",
+          signature1.toString(),
+        );
         break;
       case "6":
-        const v = await pcuClient.verifyZkSnark(proof, "ETH", "1");
-        console.log(v);
+        const extClient2 = new ServerClient(12803, "localhost");
+        const signer2 = new JsObjectSigner({
+          privateKey: eth_keypair.privateKey,
+        });
+        const signature2 = signer2.sign(JSON.stringify(eth_vk));
+        await extClient2.postVerificationKey(
+          JSON.stringify(eth_vk),
+          "1",
+          "ETHEREUM",
+          signature2.toString(),
+        );
         break;
       case "7":
+        await ethClient.loadVerificationKey("1", "BESU_2X");
+        break;
+      case "8":
+        await besuClient.loadVerificationKey("1", "ETHEREUM");
+        break;
+      case "9":
+        besu_proof = await besuClient.generateZkSnark(
+          ["2", "4"],
+          "MOCKSESSION",
+        );
+        break;
+      case "10":
+        eth_proof = await ethClient.generateZkSnark(["3", "9"], "MOCKSESSION");
+        break;
+      case "11":
+        const eth_v = await besuClient.verifyZkSnark(
+          eth_proof,
+          "ETHEREUM",
+          "1",
+        );
+        console.log(eth_v);
+        break;
+      case "12":
+        const besu_v = await ethClient.verifyZkSnark(
+          besu_proof,
+          "BESU_2X",
+          "1",
+        );
+        console.log(besu_v);
+        break;
+      case "13":
         console.log("Exiting...");
         input.close();
         process.exit(0);

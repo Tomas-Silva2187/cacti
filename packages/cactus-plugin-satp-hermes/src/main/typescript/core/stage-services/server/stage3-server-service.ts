@@ -54,6 +54,8 @@ import { create } from "@bufbuild/protobuf";
 import { type BridgeManagerClientInterface } from "../../../cross-chain-mechanisms/bridge/interfaces/bridge-manager-client-interface";
 import { context, SpanStatusCode } from "@opentelemetry/api";
 import { buildAndCheckAsset, SessionSide } from "../../satp-utils";
+import { ServerClient } from "../ServerClient";
+import { getZKServicePort } from "../service-utils";
 
 export class Stage3ServerService extends SATPService {
   public static readonly SATP_STAGE = "3";
@@ -501,7 +503,7 @@ export class Stage3ServerService extends SATPService {
     const stepTag = `checkCommitFinalAssertionRequest()`;
     const fnTag = `${this.getServiceIdentifier()}#${stepTag}`;
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
-    await context.with(ctx, () => {
+    await context.with(ctx, async () => {
       try {
         this.Log.debug(`${fnTag}, checkCommitFinalAssertionRequest...`);
 
@@ -531,13 +533,27 @@ export class Stage3ServerService extends SATPService {
 
         sessionData.burnAssertionClaim = request.burnAssertionClaim;
 
+        let proofValidity = true;
+
         if (request.burnAssertionClaimFormat != undefined) {
           this.Log.info(
             `${fnTag}, optional variable loaded: burnAssertionClaimFormat`,
           );
-          sessionData.burnAssertionClaimFormat =
-            request.burnAssertionClaimFormat;
+
+          if(request.burnAssertionClaimFormat.format == 3 && request.burnAssertionClaim.proof != "DEFAULT_ZKSNARK") {
+            const clientPort = getZKServicePort(sessionData.receiverAsset!.networkId!.type);
+            const client = new ServerClient(clientPort, "localhost");
+            const proof = request.burnAssertionClaim.proof;
+            proofValidity = await client.verifyZkSnark(proof, sessionData.senderAsset!.networkId!.type, "1");
+          }
         }
+
+        if(!proofValidity) {
+          throw new Error("Burn Proof Invalid");
+        }
+
+        sessionData.burnAssertionClaimFormat =
+          request.burnAssertionClaimFormat;
 
         if (
           sessionData.clientTransferNumber != undefined &&

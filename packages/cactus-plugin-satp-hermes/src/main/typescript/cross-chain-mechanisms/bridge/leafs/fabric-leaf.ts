@@ -422,6 +422,14 @@ export class FabricLeaf
     });
   }
 
+  public getConnectorHttp() {
+    return "";
+  }
+
+  public getConnectorWs() {
+    return "";
+  }
+
   /**
    * Retrieves the approve address for a specified asset type.
    *

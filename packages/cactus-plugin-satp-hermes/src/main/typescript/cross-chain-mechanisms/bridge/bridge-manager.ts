@@ -186,6 +186,7 @@ export class BridgeManager
               );
               const besuNetworkOptions =
                 leafNetworkOptions as unknown as IBesuLeafNeworkOptions;
+              besuNetworkOptions.claimFormats?.concat(ClaimFormat.ZK);
               if (!this.ontologyManager) {
                 throw new Error(`${fnTag}, Ontology Manager is not defined`);
               }
@@ -216,6 +217,7 @@ export class BridgeManager
               );
               const ethereumNetworkOptions =
                 leafNetworkOptions as unknown as IEthereumLeafNeworkOptions;
+              ethereumNetworkOptions.claimFormats?.concat(ClaimFormat.ZK);
               if (!this.ontologyManager) {
                 throw new Error(`${fnTag}, Ontology Manager is not defined`);
               }
@@ -362,9 +364,11 @@ export class BridgeManager
             `${fnTag}, Bridge endpoint not available for network: ${safeStableStringify(id)}`,
           );
         }
-
+        
         for (const leaf of leafs.values()) {
           if (leaf.getSupportedClaimFormats().includes(claimFormat)) {
+            return leaf;
+          } else {
             return leaf;
           }
         }

@@ -284,6 +284,7 @@ export class ServerWithDB {
         this.app.post(Endpoints.GET_CREDENTIAL, async (req, res) => {
           try {
             if (req.body.chainId && req.body.v) {
+              console.log("RECEIVED A REQUEST TO GET A PK");
               const dbClient = await this.dedicatedDatabases?.get(
                 this.mainDBPort!,
               );
@@ -317,7 +318,9 @@ export class ServerWithDB {
           this.app.post(Endpoints.VK_LOAD, async (req, res) => {
             try {
               console.log("\n\n\nRECEIVED THE VK LOAD REQUEST");
+              console.log(req.body);
               if (req.body.chainId && req.body.v) {
+                console.log(req);
                 const client = this.webServerClients.get("EXTERNAL0");
                 const client1 = this.webServerClients.get(
                   req.body.chainId + "OWNER0",
@@ -328,6 +331,8 @@ export class ServerWithDB {
                   req.body.chainAction,
                 );
                 console.log("THE VK:", vk);
+                console.log(client1);
+                console.log(client1 == undefined);
                 const credential = await client1?.getCredential(
                   req.body.v,
                   req.body.chainId,
@@ -388,6 +393,8 @@ export class ServerWithDB {
           });
           this.app.post(Endpoints.COMPILE, async (req, res) => {
             try {
+              console.log("\n\n\nRECEIVED THE COMPILE CIRCUIT REQUEST");
+              console.log(req.body);
               if (req.body.circuitName) {
                 this.CIRCUIT_VERSION += 1;
                 const vk = (
@@ -404,6 +411,8 @@ export class ServerWithDB {
           });
           this.app.post(Endpoints.GEN_PROOF, async (req, res) => {
             try {
+              console.log("\n\n\nRECEIVED THE GENERATE PROOF REQUEST");
+              console.log(req.body);
               if (req.body.params && req.body.sessionId) {
                 const zkSnark = await this.zkHandler!.generateProof(
                   req.body.params,
@@ -412,7 +421,7 @@ export class ServerWithDB {
                 this.log.info(
                   `${this.CLASS_TAG}:${Endpoints.GEN_PROOF}[result]->${JSON.stringify(zkSnark)}`,
                 );
-                res.json({ result: JSON.stringify(zkSnark) });
+                res.json({ result: zkSnark });
               }
             } catch (error) {
               res.status(400).json({ error: error.message });
@@ -420,6 +429,8 @@ export class ServerWithDB {
           });
           this.app.post(Endpoints.GEN_CHAIN_PROOF, async (req, res) => {
             try {
+              console.log("\n\n\nRECEIVED THE GENERATE CHAIN PROOF REQUEST");
+              console.log(req.body);
               if (
                 req.body.txHash &&
                 req.body.sessionId &&
@@ -428,7 +439,7 @@ export class ServerWithDB {
                 req.body.port
               ) {
                 this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.GEN_CHAIN_PROOF}Received new Request and using url ${req.body.ext}:${req.body.ip}:${req.body.port}`,
+                  `${this.CLASS_TAG}:${Endpoints.GEN_CHAIN_PROOF} from ledger at ${req.body.ext}://${req.body.ip}:${req.body.port}`,
                 );
                 const zkSnark = await this.zkHandler!.generateChainProof(
                   req.body.txHash,
@@ -438,14 +449,21 @@ export class ServerWithDB {
                   req.body.port,
                 );
                 this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.GEN_PROOF}[result]->${JSON.stringify(zkSnark)}`,
+                  `${this.CLASS_TAG}:${Endpoints.GEN_CHAIN_PROOF}[result]->${JSON.stringify(zkSnark)}`,
                 );
                 res.json({ result: zkSnark });
-              } else {
+              } else if (req.body.txHash && req.body.sessionId) {
                 this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.GEN_PROOF}SOMETHING WRONG`,
+                  `${this.CLASS_TAG}:${Endpoints.GEN_CHAIN_PROOF} from ledger at predefined address`,
                 );
-                res.json({ result: "WRONG" });
+                const zkSnark = await this.zkHandler!.generateChainProof(
+                  req.body.txHash,
+                  req.body.sessionId,
+                );
+                this.log.info(
+                  `${this.CLASS_TAG}:${Endpoints.GEN_CHAIN_PROOF}[result]->${JSON.stringify(zkSnark)}`,
+                );
+                res.json({ result: zkSnark });
               }
             } catch (error) {
               console.log(error);
@@ -454,6 +472,8 @@ export class ServerWithDB {
           });
           this.app.post(Endpoints.VRF_PROOF, async (req, res) => {
             try {
+              console.log("\n\n\nRECEIVED THE VERIFY PROOF REQUEST");
+              console.log(req.body);
               if (req.body.proof && req.body.chainId && req.body.v) {
                 const chainAction = req.body.chainAction ?? "";
                 const dbClient = await this.dedicatedDatabases?.get(

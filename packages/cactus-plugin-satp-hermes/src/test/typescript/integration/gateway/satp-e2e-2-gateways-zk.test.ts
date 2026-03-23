@@ -127,7 +127,7 @@ beforeAll(async () => {
     );
     log.info("Besu Ledger started successfully");
 
-    await besuEnv.deployAndSetupContracts(ClaimFormat.BUNGEE);
+    await besuEnv.deployAndSetupContracts(ClaimFormat.ZK);
   }
   {
     const erc20TokenContract = "SATPContract";
@@ -148,7 +148,7 @@ beforeAll(async () => {
       ],
     );
     log.info("Ethereum Ledger started successfully");
-    await ethereumEnv.deployAndSetupContracts(ClaimFormat.BUNGEE);
+    await ethereumEnv.deployAndSetupContracts(ClaimFormat.ZK);
   }
 }, TIMEOUT);
 
@@ -240,7 +240,8 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
     console.log("ETHEREUM OPTIONS: ", ethereumNetworkOptions);
     console.log("BESU OPTIONS: ", besuNetworkOptions);
 
-    await fs.writeFile("besu.txt", JSON.stringify(besuNetworkOptions));
+    //await fs.writeFile("BESU_2X.txt", JSON.stringify(besuNetworkOptions));
+    //await fs.writeFile("ETH.txt", JSON.stringify(ethereumNetworkOptions));
 
     const ontologiesPath = path.join(__dirname, "../../../ontologies");
 
@@ -256,6 +257,7 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
       pluginRegistry: new PluginRegistry({ plugins: [] }),
       ontologyPath: ontologiesPath,
       monitorService: monitorService,
+      claimFormat: "ZK",
     };
 
     const options2: SATPGatewayConfig = {
@@ -270,6 +272,7 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
       pluginRegistry: new PluginRegistry({ plugins: [] }),
       ontologyPath: ontologiesPath,
       monitorService: monitorService,
+      claimFormat: "ZK",
     };
 
     gateway1 = await factory.create(options1);

@@ -59,6 +59,7 @@ import { getUint8Key } from "./leafs-utils";
 import { isWeb3SigningCredentialNone } from "../../common/utils";
 import { MonitorService } from "../../../services/monitoring/monitor";
 import { context, SpanStatusCode } from "@opentelemetry/api";
+import { ServerClient } from "../../../core/stage-services/ServerClient";
 
 export interface IBesuLeafNeworkOptions extends INetworkOptions {
   signingCredential: Web3SigningCredential;
@@ -255,6 +256,9 @@ export class BesuLeaf
 
   public readonly monitorService: MonitorService;
 
+  private urlHttp: any;
+  private urlWs: any;
+
   /**
    * Constructs a new instance of the `BesuLeaf` class.
    *
@@ -317,6 +321,18 @@ export class BesuLeaf
       options.connectorOptions as IPluginLedgerConnectorBesuOptions,
     );
 
+    const connectorHttp = options.connectorOptions.rpcApiHttpHost ?? "";
+    const connectorWs = options.connectorOptions.rpcApiWsHost ?? "";
+
+    if (connectorHttp != "") {
+      this.urlHttp = new URL(connectorHttp);
+      this.urlHttp.hostname = "172.17.0.1";
+    }
+    if(connectorWs != "") {
+      this.urlWs = new URL(connectorWs);
+      this.urlWs.hostname = "172.17.0.1";
+    }
+
     this.ontologyManager = ontologyManager;
 
     if (isWeb3SigningCredentialNone(options.signingCredential)) {
@@ -349,6 +365,7 @@ export class BesuLeaf
               }
               break;
             case ClaimFormat.DEFAULT:
+            case ClaimFormat.ZK:
               break;
             default:
               throw new ClaimFormatError(
@@ -383,6 +400,14 @@ export class BesuLeaf
         span.end();
       }
     });
+  }
+
+  public getConnectorHttp() {
+    return this.urlHttp ?? undefined;
+  }
+
+  public getConnectorWs() {
+    return this.urlWs ?? undefined;
   }
 
   /**
@@ -1285,6 +1310,8 @@ export class BesuLeaf
   public async getProof(
     asset: Asset,
     claimFormat: ClaimFormat,
+    txHash?: string,
+    satpStageOperation?: string,
   ): Promise<string> {
     const fnTag = `${BesuLeaf.CLASS_NAME}}#runTransaction`;
     const { span, context: ctx } = this.monitorService.startSpan(fnTag);
@@ -1303,6 +1330,19 @@ export class BesuLeaf
               );
           case ClaimFormat.DEFAULT:
             return "";
+          case ClaimFormat.ZK:
+            let chainUrl = this.getConnectorHttp();
+            if(chainUrl == "") {
+              chainUrl = this.getConnectorWs();
+            }
+            const client = new ServerClient(12802, "localhost");
+            if(satpStageOperation?.includes("lock") || satpStageOperation?.includes("mint") || satpStageOperation?.includes("burn") || satpStageOperation?.includes("assign")) {
+              const proof = await client.generateChainZkSnark(txHash!, "SESSIONID", chainUrl.protocol.replace(":", ""), chainUrl.hostname, chainUrl.port);
+              //const proof = await client.generateZkSnark(["3", "9"], "MOCK-SESSION-ETHEREUM");
+              return JSON.stringify(proof);
+            } else {
+              return "DEFAULT_ZKSNARK";
+            }
           default:
             throw new ProofError(`Claim format not supported: ${claimFormat}`);
         }
@@ -1314,6 +1354,18 @@ export class BesuLeaf
         span.end();
       }
     });
+  }
+
+  private getSatpStageOperationId(stageOperation: string){
+    if(stageOperation.includes("lock")) {
+      return "LOCK";
+    } else if (stageOperation.includes("mint")) {
+      return "MINT";
+    } else if (stageOperation.includes("burn")) {
+      return "BURN";
+    } else if (stageOperation.includes("assign")) {
+      return "ASSIGN";
+    }
   }
 
   private isFullPluginOptions = (

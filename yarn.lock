@@ -8376,7 +8376,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hyperledger/cacti-plugin-zk-provider@workspace:packages/cacti-plugin-zk-provider":
+"@hyperledger/cacti-plugin-zk-provider@workspace:^, @hyperledger/cacti-plugin-zk-provider@workspace:packages/cacti-plugin-zk-provider":
   version: 0.0.0-use.local
   resolution: "@hyperledger/cacti-plugin-zk-provider@workspace:packages/cacti-plugin-zk-provider"
   dependencies:
@@ -9992,6 +9992,7 @@ __metadata:
     "@foundry-rs/hardhat-forge": "npm:0.1.17"
     "@grpc/grpc-js": "npm:1.12.4"
     "@grpc/proto-loader": "npm:0.7.13"
+    "@hyperledger/cacti-plugin-zk-provider": "workspace:^"
     "@hyperledger/cactus-api-client": "npm:2.1.0"
     "@hyperledger/cactus-cmd-api-server": "npm:2.1.0"
     "@hyperledger/cactus-common": "npm:2.1.0"

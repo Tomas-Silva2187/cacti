@@ -396,6 +396,8 @@ export class SATPBridgeExecutionLayerImpl implements SATPBridgeExecutionLayer {
     const receipt = await bridgeEndPoint.getReceipt(response!.transactionId!);
     const receiptParsed = JSON.parse(receipt);
 
+    console.log(receiptParsed);
+
     this.log.info(`${fnTag}, proof of ${op}: ${receipt}`);
 
     let opCode;
@@ -412,41 +414,50 @@ export class SATPBridgeExecutionLayerImpl implements SATPBridgeExecutionLayer {
       opCode = "";
     }
 
-    if (instanceOfFungibleAsset(asset)) {
-      assetAmount = Number((asset as FungibleAsset).amount);
-    } else if (instanceOfNonFungibleAsset(asset)) {
-      assetAmount = Number((asset as NonFungibleAsset).uniqueDescriptor);
+    let proof;
+    if(opCode != "") {
+      if (instanceOfFungibleAsset(asset)) {
+        assetAmount = Number((asset as FungibleAsset).amount);
+      } else if (instanceOfNonFungibleAsset(asset)) {
+        assetAmount = Number((asset as NonFungibleAsset).uniqueDescriptor);
+      }
+        
+
+      const pSessionId = ("SessionId:" + opCode).padStart(55, "0");
+      const pWrapperAddress = receiptParsed.to.slice(-40).toLowerCase();
+      const pGatewayReqAddr = receiptParsed.from.slice(-40).toLowerCase();
+      const pTxHash = receiptParsed.hash;
+
+      const pTxStatus = (1).toString(16);
+      const pTxAmount = assetAmount!.toString(16).padStart(3, "0");
+      const pTxBlockNumber = receiptParsed.blockNumber.toString(16).padStart(3, "0");
+
+      const paramsHash = createHash("sha256")
+        .update(
+          pSessionId +
+          pWrapperAddress +
+          pGatewayReqAddr +
+          pTxHash,
+        )
+        .digest("hex");
+
+      const circuitParamsHash = createHash("sha256")
+        .update(pTxAmount + pTxBlockNumber + "1" + pTxStatus)
+        .digest("hex");
+
+      const fullData = paramsHash + circuitParamsHash;
+      const eddsaSigner = new EddsaSigner("../../../main/python/");
+
+      console.log("SIGNING MESSAGE: ", fullData);
+
+      const out = eddsaSigner.eddsaSign(fullData);
+      const circuitInputJson = JSON.parse(out);
+      console.log("\n\nSignature: ", circuitInputJson);
+      proof = await this.bridgeEndPoint.getProof(asset, this.claimType, receiptParsed.hash, JSON.stringify(circuitInputJson), pSessionId, op);
+    } else {
+      proof = await this.bridgeEndPoint.getProof(asset, this.claimType);
     }
-       
 
-    const pSessionId = (`SessionId:${opCode}`).padStart(55, "0");
-    const pWrapperAddress = receiptParsed.to.slice(-40);
-    const pGatewayReqAddr = receiptParsed.from.slice(-40);
-    const pTxHash = receiptParsed.hash.slice(-64);
-
-    const pTxStatus = receiptParsed.status.toString(16);
-    const pTxAmount = assetAmount!.toString(16).padStart(3, "0");
-    const pTxBlockNumber = receiptParsed.blockNumber.toString(16).padStart(3, "0");
-
-    const paramsHash = createHash("sha256")
-      .update(
-        pSessionId +
-        pWrapperAddress +
-        pGatewayReqAddr +
-        pTxHash,
-      )
-      .digest("hex");
-
-    const circuitParamsHash = createHash("sha256")
-      .update(pTxAmount + pTxBlockNumber + "1" + pTxStatus)
-      .digest("hex");
-
-    const fullData = paramsHash + circuitParamsHash;
-    const eddsaSigner = new EddsaSigner("../../../main/python/");
-    const out = eddsaSigner.eddsaSign(fullData);
-    const circuitInputJson = JSON.parse(out);
-
-    const proof = await this.bridgeEndPoint.getProof(asset, this.claimType, receiptParsed.hash, JSON.stringify(circuitInputJson), op);
     console.log(proof);
 
     return {

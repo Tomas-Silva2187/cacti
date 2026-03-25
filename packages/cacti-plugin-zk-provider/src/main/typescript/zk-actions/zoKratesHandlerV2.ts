@@ -356,8 +356,8 @@ export class ZeroKnowledgeHandlerV2 {
       .toString(16)
       .padStart(3, "0");
 
-    const txWrapperAddress = txReceipt.to.slice(-40);
-    const txGatewayReqAddress = txReceipt.from.slice(-40);
+    const txWrapperAddress = txReceipt.to.slice(-40).toLowerCase();
+    const txGatewayReqAddress = txReceipt.from.slice(-40).toLowerCase();
     const txSessionId = sessionId.padStart(55, "0");
 
     const publicHash = createHash("sha256")
@@ -372,7 +372,13 @@ export class ZeroKnowledgeHandlerV2 {
     const u8TxAmount = this.stringToU8Array(txAmount);
     const u32Hash = this.hexToU32Array(publicHash);
 
+    const privateHash = createHash("sha256")
+      .update(txAmount + txBlockNumber + "1" + txStatus)
+      .digest("hex");
+
     const eddsa_signature = JSON.parse(signature);
+    console.log(`\nSIGNED MSG ${publicHash}${privateHash}`);
+    console.log("\n\nRECEIVE SIGNATURE ", eddsa_signature);
 
     const proof = this.generateProof(
       [

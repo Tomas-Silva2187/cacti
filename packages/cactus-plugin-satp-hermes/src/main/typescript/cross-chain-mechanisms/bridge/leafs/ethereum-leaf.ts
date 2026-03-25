@@ -1892,6 +1892,8 @@ export class EthereumLeaf
     asset: Asset,
     claimFormat: ClaimFormat,
     txHash?: string,
+    signature?: string,
+    sessionId?: string,
     satpStageOperation?: string,
   ): Promise<string> {
     const fnTag = `${EthereumLeaf.CLASS_NAME}}#runTransaction`;
@@ -1918,8 +1920,8 @@ export class EthereumLeaf
             }
             const client = new ServerClient(12801, "localhost");
             if(satpStageOperation?.includes("lock") || satpStageOperation?.includes("mint") || satpStageOperation?.includes("burn") || satpStageOperation?.includes("assign")) {
-              const proof = await client.generateChainZkSnark(txHash!, "SESSIONID", chainUrl.protocol.replace(":", ""), chainUrl.hostname, chainUrl.port);
-              //const proof = await client.generateZkSnark(["2", "4"], "MOCK-SESSION-ETH");
+              //const proof = await client.generateChainZkSnark(txHash!, "SESSIONID", chainUrl.protocol.replace(":", ""), chainUrl.hostname, chainUrl.port);
+              const proof = await client.generateSignatureZkSnark(txHash!, sessionId!, signature!, chainUrl.protocol.replace(":", ""), chainUrl.hostname, chainUrl.port);
               return JSON.stringify(proof);
             } else {
               return "DEFAULT_ZKSNARK";

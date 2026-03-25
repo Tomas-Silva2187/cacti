@@ -1,0 +1,9 @@
+docker run -p 12802:12802 --name besupcu --network zknet zkserverv2 BESU_PCU
+
+docker run -p 12801:12801 --name ethpcu --network zknet zkserverv2 ETH_PCU
+
+docker run -p 12803:12803 --name extserver --network zknet zkserverv2 EXT
+
+docker run -p 12804:12804 --name ethcredserver --network zknet zkserverv2 ETH_CRED
+
+docker run -p 12805:12805 --name besucredserver --network zknet zkserverv2 BESU_CRED

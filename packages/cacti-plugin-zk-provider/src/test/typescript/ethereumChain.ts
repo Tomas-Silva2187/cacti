@@ -15,7 +15,7 @@ export class EthereumContractDeployer {
   private BYTECODE = erc20.bytecode;
   private TOKEN_CONTRACT_ADDRESS;
   constructor() {
-    this.provider = new ethers.JsonRpcProvider("http://localhost:32791");
+    this.provider = new ethers.JsonRpcProvider("http://localhost:8545");
   }
 
   async deployERC20Contract() {
@@ -23,8 +23,8 @@ export class EthereumContractDeployer {
     console.log("ACCOUNTS: ", this.accounts);
     this.deployerAddress = this.accounts[0].address;
     this.userAddress = this.accounts[1].address;
-    //this.user2Address = this.accounts[5].address;
-    //this.callerAddress = this.accounts[2].address;
+    this.user2Address = this.accounts[5].address;
+    this.callerAddress = this.accounts[2].address;
 
     this.deployerSignerAccount = await this.provider.getSigner(
       this.deployerAddress,
@@ -50,6 +50,7 @@ export class EthereumContractDeployer {
 
     await giveRoleTx.wait();
     this.TOKEN_CONTRACT_ADDRESS = await contractDeploymentTx.getAddress();
+    console.log(`TOKEN CONTRACT DEPLOYED AT: ${this.TOKEN_CONTRACT_ADDRESS}`);
   }
 
   async mintTokens(amount?: number) {
@@ -89,8 +90,9 @@ export class EthereumContractDeployer {
 
   async fetchTransactionReceipt(txHash: string) {
     const receipt = await this.provider.getTransactionReceipt(txHash);
-    console.log(`TX Receipt: `, receipt);
-    return receipt;
+    const stringify = JSON.stringify(receipt);
+    const json = JSON.parse(stringify);
+    return json;
   }
 
   async rlpEncodeReceipt(tx: any) {

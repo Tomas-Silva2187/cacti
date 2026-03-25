@@ -324,6 +324,74 @@ export class ZeroKnowledgeHandlerV2 {
     return proof;
   }
 
+  public async generateSignatureProof(
+    txHash: string,
+    sessionId: string,
+    signature: string,
+    ext?: string,
+    ip?: string,
+    port?: string,
+  ) {
+    const requestReceivalTimestamp = (Math.floor(Date.now() / 1000) % 1000)
+      .toString()
+      .padStart(3, "0");
+
+    let connector;
+    if (ext && ip && port) {
+      connector = this.getConnector(ext, ip, port);
+    } else {
+      connector = this.getConnector(
+        this.defaultChainProtocol,
+        this.defaultChainIp,
+        this.defaultChainPort,
+      );
+    }
+    const txReceipt = await connector.fetchTransactionReceipt(txHash);
+    const block = await connector.fetchBlock(txReceipt.blockNumber);
+
+    const txBlockNumber = txReceipt.blockNumber.toString(16).padStart(3, "0");
+    const txBlockTime = (block.timestamp % 1000).toString().padStart(3, "0");
+    const txStatus = txReceipt.status.toString(16);
+    const txAmount = parseInt(txReceipt.logs[0].data, 16)
+      .toString(16)
+      .padStart(3, "0");
+
+    const txWrapperAddress = txReceipt.to.slice(-40);
+    const txGatewayReqAddress = txReceipt.from.slice(-40);
+    const txSessionId = sessionId.padStart(55, "0");
+
+    const publicHash = createHash("sha256")
+      .update(txSessionId + txWrapperAddress + txGatewayReqAddress + txHash)
+      .digest("hex");
+
+    const u8SessionId = this.stringToU8Array(txSessionId);
+    const u8BlockTimestamp = this.stringToU8Array(txBlockTime);
+    const u8RequestTimestamp = this.stringToU8Array(requestReceivalTimestamp);
+    const u8TxStatus = this.stringToU8Array(txStatus);
+    const u8TxBlockNumber = this.stringToU8Array(txBlockNumber);
+    const u8TxAmount = this.stringToU8Array(txAmount);
+    const u32Hash = this.hexToU32Array(publicHash);
+
+    const eddsa_signature = JSON.parse(signature);
+
+    const proof = this.generateProof(
+      [
+        u8SessionId,
+        u32Hash,
+        u8BlockTimestamp,
+        u8RequestTimestamp,
+        u8TxStatus[0],
+        u8TxBlockNumber,
+        u8TxAmount,
+        eddsa_signature.R,
+        eddsa_signature.S,
+        eddsa_signature.A,
+      ],
+      sessionId,
+    );
+    return proof;
+  }
+
   private hexToU16Array(str: string): string[] {
     const bytes = Array.from(str).map((c) => c.charCodeAt(0));
     const arr: string[] = [];
@@ -350,5 +418,8 @@ export class ZeroKnowledgeHandlerV2 {
       arr.push(parseInt(chunk, 16).toString());
     }
     return arr;
+  }
+  private stringToU8Array(str: string): string[] {
+    return Array.from(str).map((c) => c.charCodeAt(0).toString());
   }
 }

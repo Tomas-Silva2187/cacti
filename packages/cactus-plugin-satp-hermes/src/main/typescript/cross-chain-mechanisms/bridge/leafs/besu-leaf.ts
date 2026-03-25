@@ -60,6 +60,8 @@ import { isWeb3SigningCredentialNone } from "../../common/utils";
 import { MonitorService } from "../../../services/monitoring/monitor";
 import { context, SpanStatusCode } from "@opentelemetry/api";
 import { ServerClient } from "../../../core/stage-services/ServerClient";
+import { createHash } from "crypto";
+import { EddsaSigner } from "../../../utils/eddsaSigner";
 
 export interface IBesuLeafNeworkOptions extends INetworkOptions {
   signingCredential: Web3SigningCredential;
@@ -1311,6 +1313,8 @@ export class BesuLeaf
     asset: Asset,
     claimFormat: ClaimFormat,
     txHash?: string,
+    signature?: string,
+    sessionId?: string,
     satpStageOperation?: string,
   ): Promise<string> {
     const fnTag = `${BesuLeaf.CLASS_NAME}}#runTransaction`;
@@ -1337,8 +1341,8 @@ export class BesuLeaf
             }
             const client = new ServerClient(12802, "localhost");
             if(satpStageOperation?.includes("lock") || satpStageOperation?.includes("mint") || satpStageOperation?.includes("burn") || satpStageOperation?.includes("assign")) {
-              const proof = await client.generateChainZkSnark(txHash!, "SESSIONID", chainUrl.protocol.replace(":", ""), chainUrl.hostname, chainUrl.port);
-              //const proof = await client.generateZkSnark(["3", "9"], "MOCK-SESSION-ETHEREUM");
+              //const proof = await client.generateChainZkSnark(txHash!, "SESSIONID", chainUrl.protocol.replace(":", ""), chainUrl.hostname, chainUrl.port);
+              const proof = await client.generateSignatureZkSnark(txHash!, sessionId!, signature!, chainUrl.protocol.replace(":", ""), chainUrl.hostname, chainUrl.port);
               return JSON.stringify(proof);
             } else {
               return "DEFAULT_ZKSNARK";

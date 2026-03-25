@@ -210,6 +210,8 @@ export abstract class BridgeLeaf {
     asset: Asset,
     claimFormat: ClaimFormat,
     txHash?: string,
+    signature?: string,
+    sessionId?: string,
     satpStageOperation?: string,
   ): Promise<string>;
 

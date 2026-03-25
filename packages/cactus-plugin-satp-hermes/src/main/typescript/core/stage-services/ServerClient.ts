@@ -12,6 +12,8 @@ export enum Endpoints {
   VRF_PROOF = "/verifyProof",
   VERSION = "/circuitVersion",
   GEN_CHAIN_PROOF = "/generateChainProof",
+  GEN_CHAIN_SIGNED_PROOF = "/generateChainSignedProof",
+  GEN_SIG_PROOF = "/generateSignatureProof",
 }
 
 export enum ComponentsPorts {
@@ -89,6 +91,35 @@ export class ServerClient {
       const requestBody = JSON.stringify({
         txHash: txHash,
         sessionId: sessionId,
+        chainAction: chainAction,
+        ext: ext,
+        ip: ip,
+        port: port,
+      });
+     
+      const request = await this.executeRequest(requestUrl, requestBody);
+      return request;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async generateSignatureZkSnark(
+    txHash: string,
+    sessionId: string,
+    signature: string,
+    ext?: string,
+    ip?: string,
+    port?: string,
+    chainAction?: string,
+  ) {
+    try {
+      const requestUrl = `${this.server_url}${Endpoints.GEN_SIG_PROOF}`;
+     
+      const requestBody = JSON.stringify({
+        txHash: txHash,
+        sessionId: sessionId,
+        signature: signature,
         chainAction: chainAction,
         ext: ext,
         ip: ip,

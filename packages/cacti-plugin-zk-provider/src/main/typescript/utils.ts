@@ -28,4 +28,5 @@ export enum Endpoints {
   VRF_PROOF = "/verifyProof",
   VERSION = "/circuitVersion",
   GEN_CHAIN_PROOF = "/generateChainProof",
+  GEN_SIG_PROOF = "/generateSignatureProof",
 }

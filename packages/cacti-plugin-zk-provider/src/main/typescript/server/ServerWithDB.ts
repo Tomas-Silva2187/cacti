@@ -470,6 +470,41 @@ export class ServerWithDB {
               res.status(400).json({ error: error.message });
             }
           });
+          this.app.post(Endpoints.GEN_SIG_PROOF, async (req, res) => {
+            try {
+              console.log(
+                "\n\n\nRECEIVED THE GENERATE SIGNATURE CHAIN PROOF REQUEST",
+              );
+              console.log(req.body);
+              if (
+                req.body.txHash &&
+                req.body.sessionId &&
+                req.body.signature &&
+                req.body.ext &&
+                req.body.ip &&
+                req.body.port
+              ) {
+                this.log.info(
+                  `${this.CLASS_TAG}:${Endpoints.GEN_SIG_PROOF} from ledger at ${req.body.ext}://${req.body.ip}:${req.body.port}`,
+                );
+                const zkSnark = await this.zkHandler!.generateSignatureProof(
+                  req.body.txHash,
+                  req.body.sessionId,
+                  req.body.signature,
+                  req.body.ext,
+                  req.body.ip,
+                  req.body.port,
+                );
+                this.log.info(
+                  `${this.CLASS_TAG}:${Endpoints.GEN_SIG_PROOF}[result]->${JSON.stringify(zkSnark)}`,
+                );
+                res.json({ result: zkSnark });
+              }
+            } catch (error) {
+              console.log(error);
+              res.status(400).json({ error: error.message });
+            }
+          });
           this.app.post(Endpoints.VRF_PROOF, async (req, res) => {
             try {
               console.log("\n\n\nRECEIVED THE VERIFY PROOF REQUEST");

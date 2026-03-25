@@ -1,0 +1,82 @@
+import "./stdlib/hashes/sha256/sha256Padded.zok" as sha256;
+import "./stdlib/utils/casts/u16_to_u8array.zok" as cast_u16_u8;
+import "./stdlib/utils/casts/field_to_u8.zok" as cast_field_u8;
+import "./stdlib/utils/casts/u8_to_field.zok" as cast_u8_field;
+import "./stdlib/signatures/verifyEddsa.zok" as check_babyjubjub_sign;
+import "./stdlib/ecc/babyjubjubParams.zok" as babyjubjubparams;
+from "./stdlib/ecc/babyjubjubParams.zok" import BabyJubJubParams;
+
+def u8_array_to_field(u8[3] arr) -> field {
+    field a0 = cast_u8_field(arr[0]);
+    field a1 = cast_u8_field(arr[1]);
+    field a2 = cast_u8_field(arr[2]);
+    return a0 * 100 + a1 * 10 + a2;
+}
+
+const field THRESHOLD = 240;
+
+const u8 VERSION = 49;
+
+/*def main(u8[55] sessionId, u8[40] wrapperAddress, u8[40] gatewayAddress, private u8[64] txHash, private u8[3] ethTimestamp, private u8[3] systemTimestamp, private u32[8] secondHash, field[2] signR, field signS, field[2] signA) -> bool{
+    field ethTime = u8_array_to_field(ethTimestamp);
+    field sysTime = u8_array_to_field(systemTimestamp);
+    
+    assert(sysTime - ethTime <= THRESHOLD);
+
+    u8[205] mut fullData = [0; 205];
+    for u32 i in 0..55 {
+        fullData[i] = sessionId[i];
+    }
+    for u32 j in 0..40 {
+        fullData[55 + j] = wrapperAddress[j];
+    }
+    for u32 m in 0..40 {
+        fullData[95 + m] = gatewayAddress[m];
+    }
+    for u32 k in 0..64 {
+        fullData[135 + k] = txHash[k];
+    }
+    for u32 l in 0..3 {
+        fullData[199 + l] = ethTimestamp[l];
+    }
+    for u32 n in 0..3 {
+        fullData[202 + n] = systemTimestamp[n];
+    }
+
+    u32[8] fullDataHash = sha256(fullData);
+
+    BabyJubJubParams context = babyjubjubparams();
+    bool signValidity = check_babyjubjub_sign(signR, signS, signA, fullDataHash, secondHash, context);
+    
+    return signValidity;
+}*/
+
+def main(u8[55] sessionId, u32[8] paramsHash, private u8[3] ethTimestamp, private u8[3] systemTimestamp, private u8 status, private u8[3] blockNumber, u8[3] amount, field[2] signR, field signS, field[2] signA) -> u8[55] {
+    field ethTime = u8_array_to_field(ethTimestamp);
+    field sysTime = u8_array_to_field(systemTimestamp);
+    field txAmount = u8_array_to_field(amount);
+    
+    bool case1 = (sysTime - ethTime) >= THRESHOLD;
+    bool case2 = (ethTime - sysTime) >= THRESHOLD;
+    assert(case1 || case2);
+    assert(status == 49);
+    assert(txAmount > 0);
+
+    u8[8] mut fullData = [0; 8];
+    for u32 m in 0..3 {
+        fullData[m] = amount[m];
+    }
+    for u32 n in 0..3 {
+        fullData[3 + n] = blockNumber[n];
+    }
+    fullData[6] = VERSION;
+    fullData[7] = status;
+
+    u32[8] fullDataHash = sha256(fullData);
+
+    BabyJubJubParams context = babyjubjubparams();
+    bool signValidity = check_babyjubjub_sign(signR, signS, signA, paramsHash, fullDataHash, context);
+    assert(signValidity == true);
+    
+    return sessionId;
+}

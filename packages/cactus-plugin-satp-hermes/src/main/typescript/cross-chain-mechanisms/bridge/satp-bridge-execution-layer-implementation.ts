@@ -94,6 +94,8 @@ import { BridgeLeaf } from "./bridge-leaf";
 import { MonitorService } from "../../services/monitoring/monitor";
 import { context, SpanStatusCode } from "@opentelemetry/api";
 import { TransactionResponse } from "./bridge-types";
+import { createHash } from "crypto";
+import { EddsaSigner } from "../../utils/eddsaSigner";
 
 /**
  * Configuration options for the SATP Bridge Execution Layer implementation.
@@ -396,7 +398,55 @@ export class SATPBridgeExecutionLayerImpl implements SATPBridgeExecutionLayer {
 
     this.log.info(`${fnTag}, proof of ${op}: ${receipt}`);
 
-    const proof = await this.bridgeEndPoint.getProof(asset, this.claimType, receiptParsed.hash, op);
+    let opCode;
+    let assetAmount;
+    if(op.includes("lock")) {
+      opCode = "lock";
+    } else if(op.includes("mint")) {
+      opCode = "mint";
+    } else if(op.includes("burn")) {
+      opCode = "burn";
+    } else if(op.includes("assign")) {
+      opCode = "assign";
+    } else {
+      opCode = "";
+    }
+
+    if (instanceOfFungibleAsset(asset)) {
+      assetAmount = Number((asset as FungibleAsset).amount);
+    } else if (instanceOfNonFungibleAsset(asset)) {
+      assetAmount = Number((asset as NonFungibleAsset).uniqueDescriptor);
+    }
+       
+
+    const pSessionId = (`SessionId:${opCode}`).padStart(55, "0");
+    const pWrapperAddress = receiptParsed.to.slice(-40);
+    const pGatewayReqAddr = receiptParsed.from.slice(-40);
+    const pTxHash = receiptParsed.hash.slice(-64);
+
+    const pTxStatus = receiptParsed.status.toString(16);
+    const pTxAmount = assetAmount!.toString(16).padStart(3, "0");
+    const pTxBlockNumber = receiptParsed.blockNumber.toString(16).padStart(3, "0");
+
+    const paramsHash = createHash("sha256")
+      .update(
+        pSessionId +
+        pWrapperAddress +
+        pGatewayReqAddr +
+        pTxHash,
+      )
+      .digest("hex");
+
+    const circuitParamsHash = createHash("sha256")
+      .update(pTxAmount + pTxBlockNumber + "1" + pTxStatus)
+      .digest("hex");
+
+    const fullData = paramsHash + circuitParamsHash;
+    const eddsaSigner = new EddsaSigner("../../../main/python/");
+    const out = eddsaSigner.eddsaSign(fullData);
+    const circuitInputJson = JSON.parse(out);
+
+    const proof = await this.bridgeEndPoint.getProof(asset, this.claimType, receiptParsed.hash, JSON.stringify(circuitInputJson), op);
     console.log(proof);
 
     return {

@@ -10,6 +10,7 @@ import { VerificationKey } from "zokrates-js";
 import { EthereumContractDeployer } from "../ethereumChain";
 import { execSync } from "child_process";
 import fs from "fs";
+import { EddsaSigner } from "../../../main/typescript/eddsaSigner";
 //import { Secp256k1Keys, JsObjectSigner } from "@hyperledger/cactus-common";
 /*import {
   derivePublicKey,
@@ -158,21 +159,8 @@ describe("On-chain Zero Knowledge", () => {
     }
     return arr;
   }
-  function hexToU16Array2(hex: string): string[] {
-    // Remove 0x prefix if present
-    if (hex.startsWith("0x") || hex.startsWith("0X")) {
-      hex = hex.slice(2);
-    }
-    // Pad with leading zero if odd length
-    if (hex.length % 4 !== 0) {
-      hex = hex.padStart(hex.length + (4 - (hex.length % 4)), "0");
-    }
-    const arr: string[] = [];
-    for (let i = 0; i < hex.length; i += 4) {
-      const chunk = hex.slice(i, i + 4);
-      arr.push(parseInt(chunk, 16).toString());
-    }
-    return arr;
+  function stringToU8Array(str: string): string[] {
+    return Array.from(str).map((c) => c.charCodeAt(0).toString());
   }
   function hexToU32Array(hex: string): string[] {
     if (hex.startsWith("0x") || hex.startsWith("0X")) {
@@ -223,12 +211,12 @@ describe("On-chain Zero Knowledge", () => {
       const array1 = hexToU16Array(zoKratesCompatString);
       const array2 = hexToU16Array(txBlockStringhex);
       const array3 = hexToU16Array(txAmountStringHex);
-      const a1 = hexToU16Array2(zoKratesCompatString);
+      /*const a1 = hexToU16Array2(zoKratesCompatString);
       const a2 = hexToU16Array2(txBlockStringhex);
       const a3 = hexToU16Array2(txAmountStringHex);
       console.log("\n\narray1 " + a1);
       console.log("\n\narray2 " + a2);
-      console.log("\n\narray3 " + a3);
+      console.log("\n\narray3 " + a3);*/
       await zkHandler.computeWitness([array1, array2[0], array3[0]]);
       const proof = await zkHandler.generateProof();
       expect(proof).toBeDefined();
@@ -307,25 +295,9 @@ describe("On-chain Zero Knowledge", () => {
       const val = hash1 + hash2;
 
       arr1 = hexToU16Array("dD2FD4581271e230360230F9337D5c0430Bf44C0");
-      const arr2 = hexToU32Array(hash2);
-      //console.log(arr1);
-      console.log(arr2);
-
-      const outputDir = path.resolve(__dirname, "../../../main/python/outputs");
-      console.log(outputDir);
-      const out = execSync(`python3 ../main.py ${val}`, { cwd: outputDir })
-        .toString()
-        .trim();
-      console.log(out);
-      const inputsFile = path.resolve(
-        __dirname,
-        "../../../main/python/outputs/inputs.json",
-      );
-      const circuitInputsJsonStr = fs.readFileSync(inputsFile, "utf8");
-      console.log(circuitInputsJsonStr);
-
-      circuitInputJson = JSON.parse(circuitInputsJsonStr);
-      console.log(circuitInputJson);
+      const eddsaSigner = new EddsaSigner("../../main/python/");
+      const out = eddsaSigner.eddsaSign(val);
+      circuitInputJson = JSON.parse(out);
 
       vk = await zkHandler.compileCircuit({
         circuitName: "verifySignature2.zok",
@@ -345,6 +317,119 @@ describe("On-chain Zero Knowledge", () => {
     }, 1500000);
     it("Should verify the proof", async () => {
       await zkHandler.verifyProof(proof, vk);
+    }, 1500000);
+  }, 1500000);
+
+  describe("Full Thesis Circuit", () => {
+    let zok_systemTime;
+    it("Should deploy ERC20 token and perform calls", async () => {
+      await mockContractDeployer.deployERC20Contract();
+      await mockContractDeployer.mintTokens(1000);
+      trfTx = await mockContractDeployer.transferTokens(400);
+    });
+    it("Should start a zkHandler class", async () => {
+      zkHandler = new ZeroKnowledgeHandler({
+        logLevel: "INFO",
+        zkcircuitPath: path.join(__dirname, "../../zokrates"),
+        chainPort: "8545",
+      } as ZeroKnowledgeHandlerOptions);
+      expect(zkHandler).toBeDefined();
+      await zkHandler.initializeZoKrates();
+
+      const txReceipt = await mockContractDeployer.fetchTransactionReceipt(
+        trfTx.hash,
+      );
+
+      const block = await mockContractDeployer.fetchBlock(trfTx.blockNumber);
+
+      /*for (let i = 0; i < txReceipt.logs.length; i++) {
+        if (txReceipt.logs[i].transactionHash == trfTx.hash) {
+          console.log(txReceipt.logs[i].transactionHash);
+          console.log(trfTx.hash);
+          console.log(txReceipt.logs[i].topics[2]);
+        }
+      }*/
+      const blockNumber = txReceipt.blockNumber;
+      const txStatus = txReceipt.status;
+      const blockTime = block.timestamp;
+      const receiptTxHash = txReceipt.hash;
+      const contractAddress = txReceipt.to;
+      const amount = parseInt(txReceipt.logs[0].data, 16);
+      const requesterAddress = txReceipt.from;
+      const sessionId =
+        "e8467330-d9e7-40bb-82c9-d5acea211c34-mockContext:assign";
+
+      const zok_blockNumber = blockNumber.toString(16).padStart(3, "0");
+      const zok_receiptTxHash = receiptTxHash.slice(-64);
+      const zok_contractAddress = contractAddress.slice(-40);
+      const zok_requesterAddress = requesterAddress.slice(-40);
+      const zok_sessionId = sessionId.padStart(55, "0");
+      const zok_amount = amount.toString(16).padStart(3, "0");
+      const zok_txStatus = txStatus.toString(16);
+      const zok_blockTime = (blockTime % 1000).toString().padStart(3, "0");
+
+      console.log("systime ", Math.floor(Date.now() / 1000));
+      console.log("blocktime ", blockTime);
+      zok_systemTime = (Math.floor(Date.now() / 1000) % 1000)
+        .toString()
+        .padStart(3, "0");
+
+      const paramsHash = createHash("sha256")
+        .update(
+          zok_sessionId +
+            zok_contractAddress +
+            zok_requesterAddress +
+            zok_receiptTxHash,
+        )
+        .digest("hex");
+
+      const circuitParamsHash = createHash("sha256")
+        .update(zok_amount + zok_blockNumber + "1" + zok_txStatus)
+        .digest("hex");
+
+      console.log("SYSTEM TIME: ", zok_systemTime);
+      console.log("BLOCK TIME ", zok_blockTime);
+      console.log("STATUS ", zok_txStatus);
+      console.log(circuitParamsHash);
+
+      const u8Amount = stringToU8Array(zok_amount);
+      const u8Status = stringToU8Array(zok_txStatus);
+      const u8ethtime = stringToU8Array(zok_blockTime);
+      const systemTime = stringToU8Array(zok_systemTime);
+      const u8BlockNumber = stringToU8Array(zok_blockNumber);
+
+      const val = paramsHash + circuitParamsHash;
+      const eddsaSigner = new EddsaSigner("../../main/python/");
+      const out = eddsaSigner.eddsaSign(val);
+      const circuitInputJson = JSON.parse(out);
+
+      const zokSessionId = stringToU8Array(zok_sessionId);
+      const zokParamsHash = hexToU32Array(paramsHash);
+
+      const vk = await zkHandler.compileCircuit({
+        circuitName: "unsigned8.zok",
+      } as CircuitLoadSetup);
+      console.log(zokSessionId);
+      console.log(zokParamsHash);
+      console.log(u8ethtime);
+      console.log(systemTime);
+      console.log(u8Status[0]);
+      console.log(u8Amount);
+      expect(vk).toBeDefined();
+      await zkHandler.computeWitness([
+        zokSessionId,
+        zokParamsHash,
+        u8ethtime,
+        systemTime,
+        u8Status[0],
+        u8BlockNumber,
+        u8Amount,
+        circuitInputJson.R,
+        circuitInputJson.S,
+        circuitInputJson.A,
+      ]);
+      const proof = await zkHandler.generateProof();
+      console.log(proof);
     }, 1500000);
   }, 1500000);
 });

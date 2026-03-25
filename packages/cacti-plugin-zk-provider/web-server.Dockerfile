@@ -18,6 +18,8 @@ COPY ./src/test/zokrates/stdlib /zk-server/zokrates/stdlib
 COPY ./src/test/zokrates/proveSquare.zok /zk-server/zokrates/proveSquare.zok
 COPY ./src/test/zokrates/proveSignature.zok /zk-server/zokrates/proveSignature.zok
 COPY ./src/test/zokrates/concatHash.zok /zk-server/zokrates/concatHash.zok
+COPY ./src/test/zokrates/verifySignature2.zok /zk-server/zokrates/verifySignature2.zok
+COPY ./src/test/zokrates/gatewayCommitmentBesu.zok /zk-server/zokrates/gatewayCommitmentBesu.zok
 
 EXPOSE 12801
 EXPOSE 12802

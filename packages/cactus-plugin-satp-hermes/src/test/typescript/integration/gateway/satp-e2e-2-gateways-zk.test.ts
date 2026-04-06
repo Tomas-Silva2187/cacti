@@ -347,7 +347,9 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
       "100",
     );
 
+    console.log("\n\n\nTransfer requested at: ", Date.now());
     const res = await dispatcher1?.Transact(req);
+    console.log("\n\n\nTransfer finished at: ", Date.now());
     log.info(res?.statusResponse);
 
     await besuEnv.checkBalance(

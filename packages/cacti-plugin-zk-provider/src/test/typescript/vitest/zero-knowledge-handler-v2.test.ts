@@ -5,6 +5,8 @@ import {
 import * as path from "path";
 import { describe, expect, it } from "vitest";
 import { EthereumContractDeployer } from "../ethereumChain";
+import { EddsaSigner } from "../../../main/typescript/eddsaSigner";
+import { createHash } from "crypto";
 //import { Secp256k1Keys, JsObjectSigner } from "@hyperledger/cactus-common";
 /*import {
   derivePublicKey,
@@ -365,26 +367,52 @@ describe(
           "Should deploy an ERC20 token contract on local chain",
           async () => {
             await mockContractDeployer.deployERC20Contract();
-            trfTx = await mockContractDeployer.mintTokens(1000);
-            //trfTx = await mockContractDeployer.transferTokens(200);
+            await mockContractDeployer.mintTokens(1000);
+            const trfTx1 = await mockContractDeployer.transferTokens(200);
+            trfTx = await mockContractDeployer.fetchTransactionReceipt(
+              trfTx1.hash,
+            );
+            console.log(trfTx);
           },
           TIMEOUT,
         );
         it(
           "Should allow the zkHandler to get data directly from the chain",
           async () => {
-            await zkHandler.compileCircuit("concatHash.zok");
-            const ok = await zkHandler.generateChainProof(
-              trfTx.hash,
-              "MOCKID",
-              "http",
-              "0.0.0.0",
-              "8545",
-            );
-            console.log(JSON.stringify(ok));
+            await zkHandler.compileCircuit("gatewayCommitmentBesu.zok");
           },
           TIMEOUT,
         );
+        it("Should compute proof", async () => {
+          const pSessionId =
+            "amockamockamockamockamockamockamockamockamockamoc1:lock";
+          const pToAddress = trfTx.to.slice(-40).toLowerCase();
+          const pFromAddress = trfTx.from.slice(-40).toLowerCase();
+          const pTxHash = trfTx.hash;
+          const pTxStatus = trfTx.status.toString(16);
+          const pTxAmount = (200).toString(16).padStart(3, "0");
+          const pTxBlockNumber = trfTx.blockNumber
+            .toString(16)
+            .padStart(3, "0");
+          const paramsHash = createHash("sha256")
+            .update(pSessionId + pToAddress + pFromAddress + pTxHash)
+            .digest("hex");
+
+          const circuitParamsHash = createHash("sha256")
+            .update(pTxAmount + pTxBlockNumber + "1" + pTxStatus)
+            .digest("hex");
+          const val = paramsHash + circuitParamsHash;
+          const eddsaSigner = new EddsaSigner("../../main/python/");
+          const out = eddsaSigner.eddsaSign(val);
+          await zkHandler.generateSignatureProof(
+            trfTx.hash,
+            pSessionId,
+            out,
+            "http",
+            "localhost",
+            "8545",
+          );
+        });
       },
       TIMEOUT,
     );

@@ -1,7 +1,9 @@
 import * as readline from "readline";
 import { ServerClient } from "./main/typescript/server/ServerClient.js";
 import { JsObjectSigner, Secp256k1Keys } from "@hyperledger/cactus-common";
-
+import { EthereumContractDeployer } from "./test/typescript/ethereumChain.js";
+import { createHash } from "crypto";
+import { EddsaSigner } from "./main/typescript/eddsaSigner.js";
 const input = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -11,15 +13,70 @@ function expectInput(query: string): Promise<string> {
   return new Promise((resolve) => input.question(query, resolve));
 }
 
+async function submitTransactionAndSignParams(
+  mockContractDeployer: EthereumContractDeployer,
+  pSessionId: string,
+) {
+  const trfTx1 = await mockContractDeployer.transferTokens(200);
+  const trfTx = await mockContractDeployer.fetchTransactionReceipt(trfTx1.hash);
+
+  const pToAddress = trfTx.to.slice(-40).toLowerCase();
+  const pFromAddress = trfTx.from.slice(-40).toLowerCase();
+  const pTxHash = trfTx.hash;
+  const pTxStatus = trfTx.status.toString(16);
+  const pTxAmount = (200).toString(16).padStart(3, "0");
+  const pTxBlockNumber = trfTx.blockNumber.toString(16).padStart(3, "0");
+  const paramsHash = createHash("sha256")
+    .update(pSessionId + pToAddress + pFromAddress + pTxHash)
+    .digest("hex");
+
+  const circuitParamsHash = createHash("sha256")
+    .update(pTxAmount + pTxBlockNumber + "1" + pTxStatus)
+    .digest("hex");
+  const val = paramsHash + circuitParamsHash;
+  const eddsaSigner = new EddsaSigner("../../../../src/main/python/");
+  const out = eddsaSigner.eddsaSign(val);
+  console.log("signing ", val);
+  return { signature: out, txHash: pTxHash };
+}
+
+async function issueTransactionAndProofGen(
+  mockContractDeployer: EthereumContractDeployer,
+  sessionId: string,
+  client: ServerClient,
+): Promise<string> {
+  await mockContractDeployer.deployERC20Contract();
+  await mockContractDeployer.mintTokens(1000);
+  const proofParams = await submitTransactionAndSignParams(
+    mockContractDeployer,
+    sessionId,
+  );
+  const new_proof = await client.generateSignatureZkSnark(
+    proofParams.txHash,
+    sessionId,
+    proofParams.signature,
+    "http",
+    "host.docker.internal",
+    "8545",
+  );
+  console.log("proof for ", sessionId, " is ", new_proof);
+  if (new_proof != undefined) {
+    return "OK";
+  }
+  return "NOK";
+}
+
 try {
   const ethClient = new ServerClient(12801, "localhost");
   const besuClient = new ServerClient(12802, "localhost");
+  const besuClient2 = new ServerClient(12802, "localhost");
   let besu_vk;
   let eth_vk;
   let besu_keypair;
   let eth_keypair;
   let besu_proof;
   let eth_proof;
+  const mockContractDeployer = new EthereumContractDeployer();
   while (true) {
     console.log("======Client Services:======");
     console.log("1. OWNER2->BesuPCU - Compile Circuit");
@@ -30,10 +87,10 @@ try {
     console.log("6. OWNER1->ExtServ - Upload eth_vk");
     console.log("7. EthPCU->ExtServ - Load besu_vk");
     console.log("8. BesuPCU->ExtServ - Load eth_vk");
-    console.log("9. BesuPCU - Generate Proof");
-    console.log("10. EthPCU - Generate Proof");
-    console.log("11. BesuPCU - Verify Eth Proof");
-    console.log("12. EthPCU - Verify Besu Proof");
+    console.log("9. BesuPCU - transact and generate proof");
+    console.log("10. BesuPCU - concurrent transact and proofs");
+    //console.log("11. BesuPCU - Verify Eth Proof");
+    //console.log("12. EthPCU - Verify Besu Proof");
     console.log("13. Exit");
 
     const in1 = await expectInput("Select Service: ");
@@ -103,13 +160,49 @@ try {
         await besuClient.loadVerificationKey("1", "ETHEREUM");
         break;
       case "9":
-        besu_proof = await besuClient.generateZkSnark(
-          ["2", "4"],
-          "MOCKSESSION",
+        await mockContractDeployer.deployERC20Contract();
+        await mockContractDeployer.mintTokens(1000);
+        const pSessionId =
+          "amockamockamockamockamockamockamockamockamockamoc1:lock";
+
+        /*const proofParams = await submitTransactionAndSignParams(
+          mockContractDeployer,
+          pSessionId,
         );
+        besu_proof = await besuClient.generateSignatureZkSnark(
+          proofParams.txHash,
+          pSessionId,
+          proofParams.signature,
+          "http",
+          "host.docker.internal",
+          "8545",
+        );*/
+        besu_proof = await issueTransactionAndProofGen(
+          mockContractDeployer,
+          pSessionId,
+          besuClient,
+        );
+        console.log(besu_proof);
         break;
       case "10":
-        eth_proof = await ethClient.generateZkSnark(["3", "9"], "MOCKSESSION");
+        const pSessionId1 =
+          "amockamockamockamockamockamockamockamockamockamoc1:lock";
+        const pSessionId2 =
+          "amockamockamockamockamockamockamockamockamockamoc2:lock";
+        const promise1 = issueTransactionAndProofGen(
+          new EthereumContractDeployer(),
+          pSessionId1,
+          besuClient,
+        );
+        const promise2 = issueTransactionAndProofGen(
+          new EthereumContractDeployer(),
+          pSessionId2,
+          besuClient2,
+        );
+        Promise.all([promise1, promise2]).then((values) => {
+          console.log("\n\nFINAL REQUEST RESULT ");
+          console.log(values);
+        });
         break;
       case "11":
         const eth_v = await besuClient.verifyZkSnark(

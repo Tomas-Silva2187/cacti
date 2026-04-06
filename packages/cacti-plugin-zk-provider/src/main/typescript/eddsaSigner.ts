@@ -1,9 +1,13 @@
 import { execSync } from "child_process";
 import path from "path";
 
+import { fileURLToPath } from "url";
+
 export class EddsaSigner {
   private pythonPluginPath;
   constructor(signerPluginPath: string) {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
     this.pythonPluginPath = path.resolve(__dirname, signerPluginPath);
   }
 

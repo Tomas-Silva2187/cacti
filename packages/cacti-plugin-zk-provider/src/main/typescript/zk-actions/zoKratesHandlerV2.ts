@@ -1,8 +1,8 @@
 import { LogLevelDesc } from "@hyperledger/cactus-common";
 import { Logger } from "@hyperledger/cactus-common";
 import { LoggerProvider } from "@hyperledger/cactus-common";
-import path from "path";
-import fs from "fs";
+import path, { dirname } from "path";
+//import fs from "fs";
 import {
   ZoKratesProvider,
   Backend,
@@ -23,6 +23,8 @@ import {
 } from "./errors/zk-errors.js";
 import { EVMConnectorSimple } from "./EVMConnectorSimple.js";
 import { createHash } from "crypto";
+import { Worker } from "worker_threads";
+import { fileURLToPath } from "url";
 
 export interface ZeroKnowledgeProviderOptions {
   // Library to use when computing zk steps
@@ -143,7 +145,7 @@ export class ZeroKnowledgeHandlerV2 {
         circuitFilename,
       );
 
-      const source = fs.readFileSync(circuitPath).toString();
+      /*const source = fs.readFileSync(circuitPath).toString();
       const options = {
         location: circuitPath, // location of the root module
         resolveCallback: (currentLocation, importLocation) => {
@@ -162,8 +164,41 @@ export class ZeroKnowledgeHandlerV2 {
           };
         },
       };
+      console.log("Starting Complation ", Date.now());
       const circuitCompilation = await this.provider.compile(source, options);
+      console.log("Finished Compilation ", Date.now());
+      console.log("KeyPair start ", Date.now());
       const keyPair = await this.generateProofKeyPair(circuitCompilation);
+      console.log("Keypair finished ", Date.now());*/
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname2 = dirname(__filename);
+      console.log("Server handler running ON ", __dirname2);
+      const compArtifacts = await new Promise<{
+        compilation: CompilationArtifacts;
+        keypair: SetupKeypair;
+      }>((resolve, reject) => {
+        const worker = new Worker(
+          path.resolve(__dirname2, "../build/compileWorker/index.js"),
+          {
+            workerData: { circuitPath: circuitPath },
+          },
+        );
+        worker.on("message", (result) =>
+          resolve(
+            result as {
+              compilation: CompilationArtifacts;
+              keypair: SetupKeypair;
+            },
+          ),
+        );
+        worker.on("error", reject);
+        worker.on("exit", (code) => {
+          if (code !== 0)
+            reject(new Error(`Worker stopped with exit code ${code}`));
+        });
+      });
+      const circuitCompilation = compArtifacts.compilation;
+      const keyPair = compArtifacts.keypair;
 
       //update version o circuit
       const chainActionId = chainAction?.toUpperCase() ?? chainActions.common;
@@ -199,9 +234,27 @@ export class ZeroKnowledgeHandlerV2 {
         this.circuitVersionList.get(chainActionId)!.toString();
       const circuitCompilation = this.compilationsList.get(circuitArtifactsId);
       if (circuitCompilation) {
-        const witness = this.provider.computeWitness(
+        /*const witness = await this.provider.computeWitness(
           circuitCompilation,
           inputs,
+        );*/
+        const witness = await new Promise<ComputationResult>(
+          (resolve, reject) => {
+            const worker = new Worker(
+              path.resolve(__dirname, "witnessWorker.js"),
+              {
+                workerData: { compilation: circuitCompilation, inputs: inputs },
+              },
+            );
+            worker.on("message", (result) =>
+              resolve(result as ComputationResult),
+            );
+            worker.on("error", reject);
+            worker.on("exit", (code) => {
+              if (code !== 0)
+                reject(new Error(`Worker stopped with exit code ${code}`));
+            });
+          },
         );
         return witness;
       } else {
@@ -236,7 +289,20 @@ export class ZeroKnowledgeHandlerV2 {
       throw new ZoKratesProviderNotInitializedError();
     }
     try {
+      console.log(
+        "\n\nFor sessionID ",
+        sessionId,
+        " Witness start at ",
+        Date.now(),
+      );
+      console.log(inputs);
       const witness = await this.computeWitness(inputs);
+      console.log(
+        "\n\nFor sessionID ",
+        sessionId,
+        "Witness end at ",
+        Date.now(),
+      );
       const chainActionId = chainAction?.toUpperCase() ?? chainActions.common;
       const circuitArtifactsId =
         chainActionId +
@@ -245,10 +311,22 @@ export class ZeroKnowledgeHandlerV2 {
       const circuitCompilation = this.compilationsList.get(circuitArtifactsId);
       const provingKey = this.provingKeysList.get(circuitArtifactsId);
       if (circuitCompilation && provingKey) {
+        console.log(
+          "\n\nFor sessionID ",
+          sessionId,
+          " Proof start at ",
+          Date.now(),
+        );
         const p = await this.provider.generateProof(
           circuitCompilation.program,
           witness.witness,
           provingKey,
+        );
+        console.log(
+          "\n\nFor sessionID ",
+          sessionId,
+          " Proof end at ",
+          Date.now(),
         );
         this.proofsList.set(`${sessionId}:${chainAction}`, p);
         return p;
@@ -379,8 +457,10 @@ export class ZeroKnowledgeHandlerV2 {
     const eddsa_signature = JSON.parse(signature);
     console.log(`\nSIGNED MSG ${publicHash}${privateHash}`);
     console.log("\n\nRECEIVE SIGNATURE ", eddsa_signature);
+    console.log("Block timestamp is ", txBlockTime);
+    console.log("Request timestamp is ", requestReceivalTimestamp);
 
-    const proof = this.generateProof(
+    const proof = await this.generateProof(
       [
         u8SessionId,
         u32Hash,

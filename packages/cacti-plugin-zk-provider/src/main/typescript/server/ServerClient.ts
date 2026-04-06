@@ -12,6 +12,13 @@ export enum Endpoints {
   VRF_PROOF = "/verifyProof",
   VERSION = "/circuitVersion",
   GEN_CHAIN_PROOF = "/generateChainProof",
+  GEN_CHAIN_SIGNED_PROOF = "/generateChainSignedProof",
+  GEN_SIG_PROOF = "/generateSignatureProof",
+}
+
+export enum ComponentsPorts {
+  clientPCU = 12802,
+  serverPCU = 12801,
 }
 
 export class ServerClient {
@@ -73,32 +80,52 @@ export class ServerClient {
   public async generateChainZkSnark(
     txHash: string,
     sessionId: string,
-    ext: string,
-    ip: string,
-    port: string,
+    ext?: string,
+    ip?: string,
+    port?: string,
     chainAction?: string,
   ) {
     try {
-      const requestUrl = `${this.server_url}${Endpoints.GEN_PROOF}`;
-      let requestBody;
-      if (chainAction) {
-        requestBody = JSON.stringify({
-          txHash: txHash,
-          sessionId: sessionId,
-          chainAction: chainAction,
-          ext: ext,
-          ip: ip,
-          port: port,
-        });
-      } else {
-        requestBody = JSON.stringify({
-          txHash: txHash,
-          sessionId: sessionId,
-          ext: ext,
-          ip: ip,
-          port: port,
-        });
-      }
+      const requestUrl = `${this.server_url}${Endpoints.GEN_CHAIN_PROOF}`;
+
+      const requestBody = JSON.stringify({
+        txHash: txHash,
+        sessionId: sessionId,
+        chainAction: chainAction,
+        ext: ext,
+        ip: ip,
+        port: port,
+      });
+
+      const request = await this.executeRequest(requestUrl, requestBody);
+      return request;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async generateSignatureZkSnark(
+    txHash: string,
+    sessionId: string,
+    signature: string,
+    ext?: string,
+    ip?: string,
+    port?: string,
+    chainAction?: string,
+  ) {
+    try {
+      const requestUrl = `${this.server_url}${Endpoints.GEN_SIG_PROOF}`;
+
+      const requestBody = JSON.stringify({
+        txHash: txHash,
+        sessionId: sessionId,
+        signature: signature,
+        chainAction: chainAction,
+        ext: ext,
+        ip: ip,
+        port: port,
+      });
+
       const request = await this.executeRequest(requestUrl, requestBody);
       return request;
     } catch (error) {
@@ -319,10 +346,13 @@ export class ServerClient {
       body: requestBody,
     });
     const responseContent = await response.json();
+    //const responseContent = await response;
+    //console.log(response);
     if (responseContent.error) {
       throw new Error(responseContent.error);
     }
     return responseContent.result;
+    //return responseContent;
   }
 
   public async blindRequest(endpointName: string, inputs: any[]) {

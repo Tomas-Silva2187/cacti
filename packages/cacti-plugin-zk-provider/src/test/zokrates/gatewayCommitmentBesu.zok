@@ -21,8 +21,8 @@ def main(u8[55] sessionId, private u32[8] paramsHash, private u8[3] ethTimestamp
     field sysTime = u8_array_to_field(systemTimestamp);
     field txAmount = u8_array_to_field(amount);
     
-    bool case1 = (sysTime - ethTime) >= THRESHOLD;
-    bool case2 = (ethTime - sysTime) >= THRESHOLD;
+    bool case1 = (sysTime - ethTime) <= THRESHOLD;
+    bool case2 = (ethTime - sysTime) <= THRESHOLD;
     assert(case1 || case2);
     assert(status == 49);
     assert(txAmount > 0);

@@ -402,7 +402,7 @@ export class SATPBridgeExecutionLayerImpl implements SATPBridgeExecutionLayer {
 
     let opCode;
     let assetAmount;
-    if(op.includes("lock")) {
+    /*if(op.includes("lock")) {
       opCode = "lock";
     } else if(op.includes("mint")) {
       opCode = "mint";
@@ -412,7 +412,12 @@ export class SATPBridgeExecutionLayerImpl implements SATPBridgeExecutionLayer {
       opCode = "assign";
     } else {
       opCode = "";
-    }
+    }*/
+   if(op.includes("lock")) {
+    opCode = "lock";
+   } else {
+     opCode = "";
+   }
 
     let proof;
     if(opCode != "") {

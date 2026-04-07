@@ -360,7 +360,6 @@ describe(
           zkcircuitPath: path.join(__dirname, "../../zokrates"),
         } as ZeroKnowledgeHandlerOptions);
         expect(zkHandler).toBeDefined();
-        await zkHandler.initializeZoKrates();
         let trfTx;
 
         it(

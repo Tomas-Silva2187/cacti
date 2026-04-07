@@ -182,7 +182,6 @@ export class ServerClient {
         chainId: chainId,
       });
     }
-    console.log("\n\n\nRequest: ", requestBody);
     const request = await this.executeRequest(requestUrl, requestBody);
     console.log(request);
     return request;

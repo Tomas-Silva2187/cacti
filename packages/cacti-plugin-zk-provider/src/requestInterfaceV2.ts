@@ -69,7 +69,6 @@ async function issueTransactionAndProofGen(
 try {
   const ethClient = new ServerClient(12801, "localhost");
   const besuClient = new ServerClient(12802, "localhost");
-  const besuClient2 = new ServerClient(12802, "localhost");
   let besu_vk;
   let eth_vk;
   let besu_keypair;
@@ -164,19 +163,6 @@ try {
         await mockContractDeployer.mintTokens(1000);
         const pSessionId =
           "amockamockamockamockamockamockamockamockamockamoc1:lock";
-
-        /*const proofParams = await submitTransactionAndSignParams(
-          mockContractDeployer,
-          pSessionId,
-        );
-        besu_proof = await besuClient.generateSignatureZkSnark(
-          proofParams.txHash,
-          pSessionId,
-          proofParams.signature,
-          "http",
-          "host.docker.internal",
-          "8545",
-        );*/
         besu_proof = await issueTransactionAndProofGen(
           mockContractDeployer,
           pSessionId,
@@ -185,23 +171,24 @@ try {
         console.log(besu_proof);
         break;
       case "10":
-        const pSessionId1 =
-          "amockamockamockamockamockamockamockamockamockamoc1:lock";
-        const pSessionId2 =
-          "amockamockamockamockamockamockamockamockamockamoc2:lock";
-        const promise1 = issueTransactionAndProofGen(
-          new EthereumContractDeployer(),
-          pSessionId1,
-          besuClient,
+        const threadSelection = await expectInput(
+          "Enter number of concurrent threads: ",
         );
-        const promise2 = issueTransactionAndProofGen(
-          new EthereumContractDeployer(),
-          pSessionId2,
-          besuClient2,
-        );
-        Promise.all([promise1, promise2]).then((values) => {
-          console.log("\n\nFINAL REQUEST RESULT ");
+        const threadNumber = Number(threadSelection);
+        const promiseArray: Promise<string>[] = [];
+        for (let i = 0; i < threadNumber; i++) {
+          const sessionId =
+            "amockamockamockamockamockamockamockamockamockamoc" + i + ":lock";
+          const promise = issueTransactionAndProofGen(
+            new EthereumContractDeployer(),
+            sessionId,
+            new ServerClient(12802, "localhost"),
+          );
+          promiseArray.push(promise);
+        }
+        Promise.all(promiseArray).then((values) => {
           console.log(values);
+          return;
         });
         break;
       case "11":

@@ -22,8 +22,6 @@ import {
 } from "../zk-actions/zoKratesHandlerV2.js";
 import { ServerClient } from "./ServerClient.js";
 
-//import { createHash } from "crypto";
-
 export enum VerificationMethod {
   HASH = "HASH",
   SIGNATURE = "SIGNATURE",
@@ -393,15 +391,16 @@ export class ServerWithDB {
           });
           this.app.post(Endpoints.COMPILE, async (req, res) => {
             try {
-              console.log("\n\n\nRECEIVED THE COMPILE CIRCUIT REQUEST");
-              console.log(req.body);
               if (req.body.circuitName) {
+                this.log.info(
+                  `${this.CLASS_TAG}:${Endpoints.COMPILE} -> Compiling ${req.body.circuitName}`,
+                );
                 this.CIRCUIT_VERSION += 1;
                 const vk = (
                   await this.zkHandler!.compileCircuit(req.body.circuitName)
                 ).vk;
                 this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.COMPILE}[result]->${JSON.stringify(vk)}`,
+                  `${this.CLASS_TAG}:${Endpoints.COMPILE} -> Verification key generation ${vk != undefined}`,
                 );
                 res.json({ result: vk });
               }
@@ -409,73 +408,8 @@ export class ServerWithDB {
               res.status(400).json({ error: error.message });
             }
           });
-          this.app.post(Endpoints.GEN_PROOF, async (req, res) => {
-            try {
-              console.log("\n\n\nRECEIVED THE GENERATE PROOF REQUEST");
-              console.log(req.body);
-              if (req.body.params && req.body.sessionId) {
-                const zkSnark = await this.zkHandler!.generateProof(
-                  req.body.params,
-                  req.body.sessionId,
-                );
-                this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.GEN_PROOF}[result]->${JSON.stringify(zkSnark)}`,
-                );
-                res.json({ result: zkSnark });
-              }
-            } catch (error) {
-              res.status(400).json({ error: error.message });
-            }
-          });
-          this.app.post(Endpoints.GEN_CHAIN_PROOF, async (req, res) => {
-            try {
-              console.log("\n\n\nRECEIVED THE GENERATE CHAIN PROOF REQUEST");
-              console.log(req.body);
-              if (
-                req.body.txHash &&
-                req.body.sessionId &&
-                req.body.ext &&
-                req.body.ip &&
-                req.body.port
-              ) {
-                this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.GEN_CHAIN_PROOF} from ledger at ${req.body.ext}://${req.body.ip}:${req.body.port}`,
-                );
-                const zkSnark = await this.zkHandler!.generateChainProof(
-                  req.body.txHash,
-                  req.body.sessionId,
-                  req.body.ext,
-                  req.body.ip,
-                  req.body.port,
-                );
-                this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.GEN_CHAIN_PROOF}[result]->${JSON.stringify(zkSnark)}`,
-                );
-                res.json({ result: zkSnark });
-              } else if (req.body.txHash && req.body.sessionId) {
-                this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.GEN_CHAIN_PROOF} from ledger at predefined address`,
-                );
-                const zkSnark = await this.zkHandler!.generateChainProof(
-                  req.body.txHash,
-                  req.body.sessionId,
-                );
-                this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.GEN_CHAIN_PROOF}[result]->${JSON.stringify(zkSnark)}`,
-                );
-                res.json({ result: zkSnark });
-              }
-            } catch (error) {
-              console.log(error);
-              res.status(400).json({ error: error.message });
-            }
-          });
           this.app.post(Endpoints.GEN_SIG_PROOF, async (req, res) => {
             try {
-              console.log(
-                "\n\n\nRECEIVED THE GENERATE SIGNATURE CHAIN PROOF REQUEST",
-              );
-              console.log(req.body);
               if (
                 req.body.txHash &&
                 req.body.sessionId &&
@@ -485,7 +419,7 @@ export class ServerWithDB {
                 req.body.port
               ) {
                 this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.GEN_SIG_PROOF} from ledger at ${req.body.ext}://${req.body.ip}:${req.body.port}`,
+                  `${this.CLASS_TAG}:${Endpoints.GEN_SIG_PROOF} -> session ${req.body.sessionId}`,
                 );
                 const zkSnark = await this.zkHandler!.generateSignatureProof(
                   req.body.txHash,
@@ -496,7 +430,7 @@ export class ServerWithDB {
                   req.body.port,
                 );
                 this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.GEN_SIG_PROOF}[result]->${JSON.stringify(zkSnark)}`,
+                  `${this.CLASS_TAG}:${Endpoints.GEN_SIG_PROOF} proof generation result for session ${req.body.sessionId} -> ${zkSnark != undefined}`,
                 );
                 res.json({ result: zkSnark });
               }
@@ -507,9 +441,10 @@ export class ServerWithDB {
           });
           this.app.post(Endpoints.VRF_PROOF, async (req, res) => {
             try {
-              console.log("\n\n\nRECEIVED THE VERIFY PROOF REQUEST");
-              console.log(req.body);
               if (req.body.proof && req.body.chainId && req.body.v) {
+                this.log.info(
+                  `${this.CLASS_TAG}:${Endpoints.VRF_PROOF} -> session ${req.body.sessionId}`,
+                );
                 const chainAction = req.body.chainAction ?? "";
                 const dbClient = await this.dedicatedDatabases?.get(
                   this.mainDBPort!,
@@ -582,9 +517,6 @@ export class ServerWithDB {
           zkcircuitPath: this.zkHandlerOptions.zkcircuitPath,
           providerOptions: this.zkHandlerOptions.providerOptions,
         });
-        await this.zkHandler.initializeZoKrates(
-          this.zkHandlerOptions.providerOptions,
-        );
       }
     } catch (error) {
       throw error;

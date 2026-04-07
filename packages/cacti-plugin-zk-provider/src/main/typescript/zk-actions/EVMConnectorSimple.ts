@@ -56,7 +56,6 @@ export class EVMConnectorSimple {
     const receiptFormated = JSON.parse(
       JSON.stringify(receipt),
     ) as TransactionReceipt;
-    console.log(receiptFormated);
     return receiptFormated;
   }
 }

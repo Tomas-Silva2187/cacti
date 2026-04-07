@@ -1,14 +1,9 @@
-import { fileURLToPath } from "url";
 import { parentPort, workerData } from "worker_threads";
 import { initialize } from "zokrates-js";
 import fs from "fs";
-import path, { dirname } from "path";
+import path from "path";
 (async () => {
   const { circuitPath } = workerData;
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
-  console.log("LAUNCHING WORKER ON ", __dirname);
-  console.log(circuitPath);
   const source = fs.readFileSync(circuitPath).toString();
   const options = {
     location: circuitPath, // location of the root module
@@ -27,7 +22,11 @@ import path, { dirname } from "path";
     },
   };
   const provider = await initialize();
+  console.log("Compilation start at ", Date.now());
   const compilation = provider.compile(source, options);
+  console.log("Compilation end at ", Date.now());
+  console.log("Keypair gen start at ", Date.now());
   const keyPair = provider.setup(compilation.program);
+  console.log("Keypair gen end at ", Date.now());
   parentPort?.postMessage({ compilation: compilation, keypair: keyPair });
 })();

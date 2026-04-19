@@ -1,5 +1,5 @@
 import "jest-extended";
-import { LogLevelDesc, LoggerProvider } from "@hyperledger/cactus-common";
+import { JsObjectSigner, LogLevelDesc, LoggerProvider, Secp256k1Keys } from "@hyperledger/cactus-common";
 import {
   pruneDockerAllIfGithubAction,
   Containers,
@@ -43,6 +43,7 @@ import { TokenType as TokenTypeMain } from "../../../../main/typescript/generate
 import { SupportedContractTypes as SupportedEthereumContractTypes } from "../../environments/ethereum-test-environment";
 import { SupportedContractTypes as SupportedBesuContractTypes } from "../../environments/ethereum-test-environment";
 import { promises as fs } from "fs";
+import { ServerClient } from "../../../../main/typescript/core/stage-services/ServerClient";
 
 const logLevel: LogLevelDesc = "DEBUG";
 const log = LoggerProvider.getOrCreate({
@@ -69,7 +70,7 @@ async function shutdownGateways() {
   }
 }
 
-const TIMEOUT = 900000; // 15 minutes
+const TIMEOUT = 9000000; // 15 minutes
 afterAll(async () => {
   if (gateway1) {
     if (knexSourceRemoteClient) {
@@ -165,6 +166,52 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
         besuEnv.getTestOwnerSigningCredential(),
     );
   });
+  /*it("should pre-compile circuit and load all verification keys", async () => {
+    const ethClient = new ServerClient(12801, "localhost");
+    const besuClient = new ServerClient(12802, "localhost");
+    const besu_vk = await besuClient.compileCircuit("gatewayCommitmentBesu.zok");
+    const eth_vk = await ethClient.compileCircuit("gatewayCommitmentBesu.zok");
+    const besuCredClient0 = new ServerClient(12805, "localhost");
+    const besu_keypair = Secp256k1Keys.generateKeyPairsBuffer();
+    await besuCredClient0.postCredential(
+      besu_keypair.publicKey.toString(),
+      "1",
+      "BESU_2X",
+    );
+    const ethCredClient0 = new ServerClient(12804, "localhost");
+    const eth_keypair = Secp256k1Keys.generateKeyPairsBuffer();
+    await ethCredClient0.postCredential(
+      eth_keypair.publicKey.toString(),
+      "1",
+      "ETHEREUM",
+    );
+    const extClient0 = new ServerClient(12803, "localhost");
+    const signer0 = new JsObjectSigner({
+      // @ts-ignore
+      privateKey: besu_keypair.privateKey,
+    });
+    const signature0 = signer0.sign(JSON.stringify(besu_vk));
+    await extClient0.postVerificationKey(
+      JSON.stringify(besu_vk),
+      "1",
+      "BESU_2X",
+      signature0.toString(),
+    );
+    const extClient02 = new ServerClient(12803, "localhost");
+    const signer02 = new JsObjectSigner({
+      // @ts-ignore
+      privateKey: eth_keypair.privateKey,
+    });
+    const signature02 = signer02.sign(JSON.stringify(eth_vk));
+    await extClient02.postVerificationKey(
+      JSON.stringify(eth_vk),
+      "1",
+      "ETHEREUM",
+      signature02.toString(),
+    );
+    await ethClient.loadVerificationKey("1", "BESU_2X");
+    await besuClient.loadVerificationKey("1", "ETHEREUM");
+  });*/
   it("should realize a transfer", async () => {
     //setup satp gateway
     const factoryOptions: IPluginFactoryOptions = {
@@ -257,7 +304,7 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
       pluginRegistry: new PluginRegistry({ plugins: [] }),
       ontologyPath: ontologiesPath,
       monitorService: monitorService,
-      claimFormat: "ZK",
+      //claimFormat: "ZK",
     };
 
     const options2: SATPGatewayConfig = {
@@ -272,7 +319,7 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
       pluginRegistry: new PluginRegistry({ plugins: [] }),
       ontologyPath: ontologiesPath,
       monitorService: monitorService,
-      claimFormat: "ZK",
+      //claimFormat: "ZK",
     };
 
     gateway1 = await factory.create(options1);
@@ -343,14 +390,23 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
       "mockContext",
       besuEnv,
       ethereumEnv,
-      "100",
-      "100",
+      "10",
+      "10",
     );
-
-    console.log("\n\n\nTransfer requested at: ", Date.now());
-    const res = await dispatcher1?.Transact(req);
-    console.log("\n\n\nTransfer finished at: ", Date.now());
-    log.info(res?.statusResponse);
+    let repeat = 10;
+    const exec_times = [];
+    while (repeat != 0) {
+      const transferStart = Date.now();
+      const res = await dispatcher1?.Transact(req);
+      const transferStop = Date.now();
+      //console.log("\n\n\n\ntransfer took to finish ", transferStop / 1000 - transferStart / 1000);
+      const transferTime = transferStop / 1000 - transferStart / 1000;
+      exec_times.push(transferTime);
+      log.info(res?.statusResponse);
+      await fs.appendFile("transfer_times.txt", `${transferTime}\n`);
+      repeat -= 1;
+    }
+    
 
     await besuEnv.checkBalance(
       besuEnv.getTestFungibleContractName(),
@@ -391,6 +447,12 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
       ethereumEnv.getTestOwnerSigningCredential(),
     );
     log.info("Amount was transfer correctly to the Owner account");
+
+    let times = 0;
+    while(times != 10) {
+      console.log("time: ", exec_times[times]);
+      times += 1;
+    }
 
     await shutdownGateways();
   });

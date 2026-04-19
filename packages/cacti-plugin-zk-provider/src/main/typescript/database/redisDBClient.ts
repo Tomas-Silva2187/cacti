@@ -76,6 +76,7 @@ export class RedisDBClient extends ZKDatabaseClient {
     newElementLabel: REDISNewElementLabel,
   ) {
     const on_chain_action = keyElements.chainAction ?? "";
+    console.log(keyElements);
     switch (newElementLabel) {
       case REDISNewElementLabel.VerificationKey:
         if (keyElements.chainId && keyElements.circuitVersion) {
@@ -111,13 +112,12 @@ export class RedisDBClient extends ZKDatabaseClient {
         if (
           keyElements.chainId &&
           keyElements.sessionId &&
-          keyElements.chainAction &&
           keyElements.circuitVersion
         ) {
           return (
             keyElements.sessionId +
             ":" +
-            keyElements.chainAction +
+            on_chain_action +
             ":" +
             keyElements.circuitVersion
           );

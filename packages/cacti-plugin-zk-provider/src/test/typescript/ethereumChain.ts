@@ -1,5 +1,6 @@
 import { ethers, keccak256 } from "ethers";
 import erc20 from "../solidity/generated/CustomERC20.sol/CustomERC20.json" assert { type: "json" };
+import mmrcheck from "../../main/solidity/generated/MMRChecker.sol/MMRChecker.json" assert { type: "json" };
 import { RLP } from "@ethereumjs/rlp";
 import { Trie } from "@ethereumjs/trie";
 import { bytesToHex } from "@ethereumjs/util";
@@ -13,7 +14,10 @@ export class EthereumContractDeployer {
   private deployerSignerAccount;
   private ABI = erc20.abi;
   private BYTECODE = erc20.bytecode;
+  private MMR_ABI = mmrcheck.abi;
+  private MMR_BYTECODE = mmrcheck.bytecode;
   private TOKEN_CONTRACT_ADDRESS;
+  private MMR_CONTRACT_ADDRESS;
   constructor() {
     this.provider = new ethers.JsonRpcProvider("http://localhost:8545");
   }
@@ -53,6 +57,58 @@ export class EthereumContractDeployer {
     console.log(`TOKEN CONTRACT DEPLOYED AT: ${this.TOKEN_CONTRACT_ADDRESS}`);
   }
 
+  async deployMMRContract() {
+    console.log("Deploying an MMR contract");
+    const ContractFactory = new ethers.ContractFactory(
+      this.MMR_ABI,
+      this.MMR_BYTECODE,
+      this.deployerSignerAccount,
+    );
+
+    const contractDeploymentTx = await ContractFactory.deploy();
+    await contractDeploymentTx.waitForDeployment();
+
+    this.MMR_CONTRACT_ADDRESS = await contractDeploymentTx.getAddress();
+    console.log(`MMR CONTRACT DEPLOYED AT: ${this.MMR_CONTRACT_ADDRESS}`);
+  }
+
+  async appendElement(
+    element: string,
+    newRoot: any,
+    newPeaks: any,
+    elsCount: any,
+  ) {
+    const contract = new ethers.Contract(
+      this.MMR_CONTRACT_ADDRESS,
+      this.MMR_ABI,
+      this.deployerSignerAccount,
+    );
+    const validity = await contract.rootUpdate.staticCall(
+      element,
+      newRoot,
+      newPeaks,
+      elsCount,
+    );
+    await contract.rootUpdate(element, newRoot, newPeaks, elsCount);
+
+    console.log(validity);
+
+    // Use staticCall to read the return values before sending the state-changing tx
+    /*const [nextElementsCount, nextRootHash, nextPeaks] =
+      await contract.append.staticCall(element);
+
+    console.log("Elements count:", nextElementsCount.toString());
+    console.log("Root hash:", nextRootHash);
+    console.log("Peaks:", nextPeaks);*/
+
+    // Now actually send the transaction to persist state on-chain
+    //const addTx = await contract.appendAndGetResult(element);
+    //await addTx.wait();
+    //console.log(`Appended element in tx: ${addTx.hash}`);
+
+    return { validity };
+  }
+
   async mintTokens(amount?: number) {
     const mintTx = await new ethers.Contract(
       this.TOKEN_CONTRACT_ADDRESS,
@@ -62,6 +118,17 @@ export class EthereumContractDeployer {
     await mintTx.wait();
     console.log(`Minted tokens in tx: ${JSON.stringify(mintTx)}`);
     return mintTx;
+  }
+
+  async burnTokens(amount?: number) {
+    const burnTx = await new ethers.Contract(
+      this.TOKEN_CONTRACT_ADDRESS,
+      this.ABI,
+      this.deployerSignerAccount,
+    ).burn(this.userAddress, amount ?? 1000);
+    await burnTx.wait();
+    console.log(`Burned tokens in tx: ${JSON.stringify(burnTx)}`);
+    return burnTx;
   }
 
   async transferTokens(amount: number, receiverAddr?: any) {

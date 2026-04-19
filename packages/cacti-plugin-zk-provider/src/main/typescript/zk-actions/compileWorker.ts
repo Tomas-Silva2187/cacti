@@ -22,11 +22,34 @@ import path from "path";
     },
   };
   const provider = await initialize();
-  console.log("Compilation start at ", Date.now());
+
+  const comptime = new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+  console.log("compilation start:", comptime);
+  //console.log("Compilation start at ", Date.now());
+  const compilationStart = Date.now();
   const compilation = provider.compile(source, options);
-  console.log("Compilation end at ", Date.now());
-  console.log("Keypair gen start at ", Date.now());
+  //console.log("Compilation end at ", Date.now());
+  //console.log("Keypair gen start at ", Date.now());
+  const compilationEnd = Date.now();
+  const keytime = new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+  console.log("keytime start: ", keytime);
+  const keyPairStart = Date.now();
   const keyPair = provider.setup(compilation.program);
-  console.log("Keypair gen end at ", Date.now());
+  const keyPairEnd = Date.now();
+  console.log(
+    "Compilation took ",
+    compilationEnd / 1000 - compilationStart / 1000,
+  );
+  console.log("Keypair took ", keyPairEnd / 1000 - keyPairStart / 1000);
   parentPort?.postMessage({ compilation: compilation, keypair: keyPair });
 })();

@@ -256,6 +256,7 @@ export class Stage2ServerService extends SATPService {
         if (request.lockAssertionClaimFormat == undefined) {
           throw new LockAssertionClaimFormatError(fnTag);
         } else if (request.lockAssertionClaimFormat.format == 3 && request.lockAssertionClaim.proof != "DEFAULT_ZKSNARK") {
+          console.log("\n\n\nVerifying a lock proof");
           const clientPort = getZKServicePort(sessionData.receiverAsset!.networkId!.type);
           const client = new ServerClient(clientPort, "localhost");
           const proof = request.lockAssertionClaim.proof;

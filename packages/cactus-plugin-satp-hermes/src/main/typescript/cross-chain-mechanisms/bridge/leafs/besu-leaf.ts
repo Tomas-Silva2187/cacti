@@ -1341,6 +1341,7 @@ export class BesuLeaf
             }
             const client = new ServerClient(12802, "localhost");
             if(satpStageOperation?.includes("lock") || satpStageOperation?.includes("mint") || satpStageOperation?.includes("burn") || satpStageOperation?.includes("assign")) {
+            //if(satpStageOperation?.includes("nothing")) {
               //const proof = await client.generateChainZkSnark(txHash!, "SESSIONID", chainUrl.protocol.replace(":", ""), chainUrl.hostname, chainUrl.port);
               const proof = await client.generateSignatureZkSnark(txHash!, sessionId!, signature!, chainUrl.protocol.replace(":", ""), chainUrl.hostname, chainUrl.port);
               return JSON.stringify(proof);

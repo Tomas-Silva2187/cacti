@@ -74,8 +74,10 @@ try {
   let besu_keypair;
   let eth_keypair;
   let besu_proof;
-  let eth_proof;
+  //let eth_proof;
   const mockContractDeployer = new EthereumContractDeployer();
+  let ACCOUNTS = false;
+  let MMRCON = false;
   while (true) {
     console.log("======Client Services:======");
     console.log("1. OWNER2->BesuPCU - Compile Circuit");
@@ -88,12 +90,58 @@ try {
     console.log("8. BesuPCU->ExtServ - Load eth_vk");
     console.log("9. BesuPCU - transact and generate proof");
     console.log("10. BesuPCU - concurrent transact and proofs");
-    //console.log("11. BesuPCU - Verify Eth Proof");
+    console.log("11. Do transactions on local ledger");
     //console.log("12. EthPCU - Verify Besu Proof");
-    console.log("13. Exit");
+    console.log("13. Test MMR");
+    console.log("14. Exit");
 
     const in1 = await expectInput("Select Service: ");
     switch (in1) {
+      case "0":
+        const selection0 = await expectInput(
+          "Enter Circuit (e.g., <circuit name>.zok): ",
+        );
+        besu_vk = await besuClient.compileCircuit(selection0);
+        eth_vk = await ethClient.compileCircuit(selection0);
+        const besuCredClient0 = new ServerClient(12805, "localhost");
+        besu_keypair = Secp256k1Keys.generateKeyPairsBuffer();
+        await besuCredClient0.postCredential(
+          besu_keypair.publicKey.toString(),
+          "1",
+          "BESU_2X",
+        );
+        const ethCredClient0 = new ServerClient(12804, "localhost");
+        eth_keypair = Secp256k1Keys.generateKeyPairsBuffer();
+        await ethCredClient0.postCredential(
+          eth_keypair.publicKey.toString(),
+          "1",
+          "ETHEREUM",
+        );
+        const extClient0 = new ServerClient(12803, "localhost");
+        const signer0 = new JsObjectSigner({
+          privateKey: besu_keypair.privateKey,
+        });
+        const signature0 = signer0.sign(JSON.stringify(besu_vk));
+        await extClient0.postVerificationKey(
+          JSON.stringify(besu_vk),
+          "1",
+          "BESU_2X",
+          signature0.toString(),
+        );
+        const extClient02 = new ServerClient(12803, "localhost");
+        const signer02 = new JsObjectSigner({
+          privateKey: eth_keypair.privateKey,
+        });
+        const signature02 = signer02.sign(JSON.stringify(eth_vk));
+        await extClient02.postVerificationKey(
+          JSON.stringify(eth_vk),
+          "1",
+          "ETHEREUM",
+          signature02.toString(),
+        );
+        await ethClient.loadVerificationKey("1", "BESU_2X");
+        await besuClient.loadVerificationKey("1", "ETHEREUM");
+        break;
       case "1":
         const selection = await expectInput(
           "Enter Circuit (e.g., <circuit name>.zok): ",
@@ -186,18 +234,36 @@ try {
           );
           promiseArray.push(promise);
         }
-        Promise.all(promiseArray).then((values) => {
-          console.log(values);
-          return;
-        });
+        const values = await Promise.all(promiseArray);
+        console.log(values);
         break;
-      case "11":
+      /*case "11":
         const eth_v = await besuClient.verifyZkSnark(
           eth_proof,
           "ETHEREUM",
           "1",
         );
         console.log(eth_v);
+        break;*/
+      case "11":
+        await mockContractDeployer.deployERC20Contract();
+        const mintTx = await mockContractDeployer.mintTokens(1000);
+        const mintReceipt = await mockContractDeployer.fetchTransactionReceipt(
+          mintTx.hash,
+        );
+        console.log(mintReceipt);
+        console.log("Topics ", mintReceipt.logs[0].topics);
+        const transferTx = await mockContractDeployer.transferTokens(500);
+        const transferReceipt =
+          await mockContractDeployer.fetchTransactionReceipt(transferTx.hash);
+        console.log(transferReceipt);
+        console.log("Topics ", transferReceipt.logs[0].topics);
+        const burnTx = await mockContractDeployer.burnTokens(100);
+        const burnReceipt = await mockContractDeployer.fetchTransactionReceipt(
+          burnTx.hash,
+        );
+        console.log(burnReceipt);
+        console.log("Topics ", burnReceipt.logs[0].topics);
         break;
       case "12":
         const besu_v = await ethClient.verifyZkSnark(
@@ -208,6 +274,46 @@ try {
         console.log(besu_v);
         break;
       case "13":
+        const extClient = new ServerClient(12803, "localhost");
+        const pSessionId13 =
+          "amockamockamockamockamockamockamockamockamockamoc1";
+        /*const besu_proof13 = await issueTransactionAndProofGen(
+          mockContractDeployer,
+          pSessionId13,
+          besuClient,
+        );*/
+        const save = await extClient.postProof(
+          "THISISJUSTAFAKEPROOF",
+          "1",
+          pSessionId13,
+          "BESU_2X",
+          "mint",
+        );
+        const rehash1 = createHash("sha256")
+          .update("THISISJUSTAFAKEPROOF")
+          .digest("hex");
+        const rehash2 = createHash("sha256").update(rehash1).digest("hex");
+        console.log(save);
+        const res = JSON.parse(save);
+        const res2 = JSON.parse(res.mmrData);
+        if (!ACCOUNTS) {
+          await mockContractDeployer.deployERC20Contract();
+          ACCOUNTS = true;
+        }
+        if (!MMRCON) {
+          await mockContractDeployer.deployMMRContract();
+          MMRCON = true;
+        }
+
+        const append = await mockContractDeployer.appendElement(
+          "0x" + rehash2,
+          res2.rootHash,
+          res2.peaks,
+          res2.elementsCount.elementsCount,
+        );
+        console.log(append);
+        break;
+      case "14":
         console.log("Exiting...");
         input.close();
         process.exit(0);

@@ -21,6 +21,8 @@ import {
   ZeroKnowledgeHandlerOptions,
 } from "../zk-actions/zoKratesHandlerV2.js";
 import { ServerClient } from "./ServerClient.js";
+import { MmrManager } from "../mmrManager.js";
+import { createHash } from "crypto";
 
 export enum VerificationMethod {
   HASH = "HASH",
@@ -64,6 +66,7 @@ export class ServerWithDB {
   private OWNER_counter = 0;
   private keypair: any;
   private objectSigner: JsObjectSigner;
+  private mmrManager: MmrManager | undefined;
 
   constructor(setupOptions: ServerSetup) {
     try {
@@ -81,6 +84,9 @@ export class ServerWithDB {
       this.objectSigner = new JsObjectSigner({
         privateKey: this.keypair.privateKey,
       });
+      if (this.serverType == ServerType.EXTERNAL) {
+        this.mmrManager = new MmrManager();
+      }
       if (setupOptions.counterServers) {
         setupOptions.counterServers.forEach(
           (serverConn: { serverUrl: ServerUrl; serverType: ServerType }) => {
@@ -155,8 +161,31 @@ export class ServerWithDB {
                 } as REDISKeyComponents,
                 REDISNewElementLabel.ZKSNARK,
               );
-              //SHOULD COMPUTE NEW MMR ROOT AND RETURN ROOT AND CONSISTENCY PROOF
-              res.json({ result: newDBKey });
+              const proofHash = createHash("sha256")
+                .update(req.body.proof)
+                .digest("hex");
+              const mmrAddResult = await this.mmrManager?.addElementsToMMR([
+                proofHash,
+              ]);
+              const rehash = createHash("sha256")
+                .update(proofHash)
+                .digest("hex");
+              const valid = await this.mmrManager?.verifyProof(
+                mmrAddResult?.proof,
+                "0x" + rehash,
+              );
+              console.log("VALIDITY OF MMR PROOF - ", valid);
+              const solidityParams = await this.mmrManager?.getSolidityParams(
+                mmrAddResult?.leafIndex,
+                mmrAddResult?.proof,
+                "0x" + rehash,
+              );
+              console.log(solidityParams);
+              const solidityP = JSON.stringify(solidityParams);
+              console.log(solidityP);
+              const fullResult = { newDBKey: newDBKey, mmrData: solidityP };
+              const fullRes = JSON.stringify(fullResult);
+              res.json({ result: fullRes });
             }
           } catch (error) {
             res.status(400).json({ error: error.message });

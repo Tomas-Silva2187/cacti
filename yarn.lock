@@ -48,6 +48,46 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@accumulators/core@npm:^4.2.3":
+  version: 4.2.3
+  resolution: "@accumulators/core@npm:4.2.3"
+  checksum: 10/a2b3f88a9b96bc208845c66f8147ae75d1ac3f62890746bf66f090cb5394dd1f350fd86142d0033e310e72c0a697d3faf94aaab2dd5e2f146ac1853b459b3676
+  languageName: node
+  linkType: hard
+
+"@accumulators/hashers@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "@accumulators/hashers@npm:4.3.0"
+  dependencies:
+    "@accumulators/core": "npm:^4.2.3"
+    "@ethersproject/solidity": "npm:^5.7.0"
+    "@zkpassport/poseidon2": "npm:^0.6.2"
+    circomlibjs: "npm:^0.1.7"
+    ethers: "npm:6.6.0"
+    micro-starknet: "npm:^0.2.3"
+  checksum: 10/d0ca09bfe75306396b743c5e464f82e34bcb768897c8e42da54dba70122aa81a1bf21385f0985bd5fb4f74d9d6c6af43d6ec63532a3ff832ec57431422708707
+  languageName: node
+  linkType: hard
+
+"@accumulators/memory@npm:^4.2.3":
+  version: 4.2.3
+  resolution: "@accumulators/memory@npm:4.2.3"
+  dependencies:
+    "@accumulators/core": "npm:^4.2.3"
+  checksum: 10/36ca7830b9adb5a35f3704d2063ebfcc047eed2196bab7c6b6341684ce783d40e19461f5f20a8f1d3a3caf353e820cce99d1bf8a02ffc2b5f9ce763e51075fe3
+  languageName: node
+  linkType: hard
+
+"@accumulators/merkle-mountain-range@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "@accumulators/merkle-mountain-range@npm:4.3.0"
+  dependencies:
+    "@accumulators/core": "npm:^4.2.3"
+    ulid: "npm:^2.3.0"
+  checksum: 10/e73690be531c46e4b81368bac08abb3216b91215b506eb49641b5f992e844ec6a7bc3cddc9986370921e68658d6728d674189c0d445089ae8a4d6134d38f59de
+  languageName: node
+  linkType: hard
+
 "@adobe/css-tools@npm:^4.0.1":
   version: 4.4.4
   resolution: "@adobe/css-tools@npm:4.4.4"
@@ -66,6 +106,13 @@ __metadata:
   version: 1.10.1
   resolution: "@adraffy/ens-normalize@npm:1.10.1"
   checksum: 10/4cb938c4abb88a346d50cb0ea44243ab3574330c81d4f5aaaf9dfee584b96189d0faa404de0fcbef5a1b73909ea4ebc3e63d84bd23f9949e5c8d4085207a5091
+  languageName: node
+  linkType: hard
+
+"@adraffy/ens-normalize@npm:1.9.2":
+  version: 1.9.2
+  resolution: "@adraffy/ens-normalize@npm:1.9.2"
+  checksum: 10/5f33f6570d6e4017b9afdf0dd8ff64af05f7e1cc09c9b30a17460451b9ec2655a979e272148470fabdd8cbad9fb4b750a216387b4f87ae2389023b7e3f9d8ad7
   languageName: node
   linkType: hard
 
@@ -7738,7 +7785,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethersproject/solidity@npm:5.8.0":
+"@ethersproject/solidity@npm:5.8.0, @ethersproject/solidity@npm:^5.7.0":
   version: 5.8.0
   resolution: "@ethersproject/solidity@npm:5.8.0"
   dependencies:
@@ -8796,6 +8843,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hyperledger/cacti-plugin-zk-provider@workspace:packages/cacti-plugin-zk-provider"
   dependencies:
+    "@accumulators/hashers": "npm:^4.3.0"
+    "@accumulators/memory": "npm:^4.2.3"
+    "@accumulators/merkle-mountain-range": "npm:^4.3.0"
     "@ethereumjs/rlp": "npm:^10.1.1"
     "@ethereumjs/trie": "npm:^6.2.1"
     "@ethereumjs/util": "npm:^10.1.1"
@@ -8808,6 +8858,7 @@ __metadata:
     "@vercel/ncc": "npm:^0.38.4"
     "@zk-kit/eddsa-poseidon": "npm:^1.1.0"
     "@zkpassport/poseidon2": "npm:^0.6.2"
+    accumulators: "npm:^1.0.0"
     ethers: "npm:^6.16.0"
     express: "npm:^5.2.1"
     ganache: "npm:^7.9.2"
@@ -13146,6 +13197,13 @@ __metadata:
   version: 1.7.5
   resolution: "@noble/ed25519@npm:1.7.5"
   checksum: 10/d763f97ae721eab307f0c873ec4d2e22b0a50c06bf64ff7bcf0423b8139e826705c18609c1c163a2ca3c7c9ea166be18f21020b934ab47960676b49355d7b69d
+  languageName: node
+  linkType: hard
+
+"@noble/hashes@npm:1.1.2":
+  version: 1.1.2
+  resolution: "@noble/hashes@npm:1.1.2"
+  checksum: 10/2826c94ea30b8d2447fda549f4ffa97a637a480eeef5c96702a2f932c305038465f7436caf5b2bad41eb43c08c270b921e101488b18165feebe3854091b56d91
   languageName: node
   linkType: hard
 
@@ -21418,6 +21476,13 @@ __metadata:
     mime-types: "npm:^3.0.0"
     negotiator: "npm:^1.0.0"
   checksum: 10/ea1343992b40b2bfb3a3113fa9c3c2f918ba0f9197ae565c48d3f84d44b174f6b1d5cd9989decd7655963eb03a272abc36968cc439c2907f999bd5ef8653d5a7
+  languageName: node
+  linkType: hard
+
+"accumulators@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "accumulators@npm:1.0.0"
+  checksum: 10/edb2523760ad2610d21c1bf40b32998e1104e393b81f6f6378170b78a6eaae474977fcf21ba5bd8932102bc0ff3ff1a8e44910e214d59803e2c510d192bd500c
   languageName: node
   linkType: hard
 
@@ -31804,6 +31869,21 @@ __metadata:
     tslib: "npm:2.4.0"
     ws: "npm:8.17.1"
   checksum: 10/efc3e8d4d13101cad01823ba524dad797a23f60088ca9f8677bd6dbfad5087e4187ede121e43aa0758d704525976f935860c5d5d27183a4247deaccf7cf19950
+  languageName: node
+  linkType: hard
+
+"ethers@npm:6.6.0":
+  version: 6.6.0
+  resolution: "ethers@npm:6.6.0"
+  dependencies:
+    "@adraffy/ens-normalize": "npm:1.9.2"
+    "@noble/hashes": "npm:1.1.2"
+    "@noble/secp256k1": "npm:1.7.1"
+    "@types/node": "npm:18.15.13"
+    aes-js: "npm:4.0.0-beta.5"
+    tslib: "npm:2.4.0"
+    ws: "npm:8.5.0"
+  checksum: 10/1b45ca617c54ffc9fb0fa241e4fabb08ee8b3e6e28f12be3e05825229746c577077e52a85191da93a3f50ad5d4e9db78b4584c8d01281c815ad6f445d7cc2786
   languageName: node
   linkType: hard
 
@@ -56397,6 +56477,15 @@ __metadata:
   dependencies:
     multiformats: "npm:^13.0.0"
   checksum: 10/6c9cd1c1519cdf20d4c4e3715b4ee1acf730636409528ea54e77c4d9aa6e7f70aacd86d735f7c8a9902a9181cc3b37fa048590978e2fb90a98fa1dc39465c1af
+  languageName: node
+  linkType: hard
+
+"ulid@npm:^2.3.0":
+  version: 2.4.0
+  resolution: "ulid@npm:2.4.0"
+  bin:
+    ulid: bin/cli.js
+  checksum: 10/409ad0a703ea9f25d2a35cf790b767030a2c7b5ca0df6acb73669628156ab63bb97925a3fd7aaaf0b2384d39bd3ed2f7cd2c2de9f1171df6bc79b8c097865d92
   languageName: node
   linkType: hard
 

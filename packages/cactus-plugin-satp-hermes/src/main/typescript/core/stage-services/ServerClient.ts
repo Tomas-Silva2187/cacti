@@ -87,7 +87,7 @@ export class ServerClient {
   ) {
     try {
       const requestUrl = `${this.server_url}${Endpoints.GEN_CHAIN_PROOF}`;
-     
+
       const requestBody = JSON.stringify({
         txHash: txHash,
         sessionId: sessionId,
@@ -96,7 +96,7 @@ export class ServerClient {
         ip: ip,
         port: port,
       });
-     
+
       const request = await this.executeRequest(requestUrl, requestBody);
       return request;
     } catch (error) {
@@ -115,7 +115,7 @@ export class ServerClient {
   ) {
     try {
       const requestUrl = `${this.server_url}${Endpoints.GEN_SIG_PROOF}`;
-     
+
       const requestBody = JSON.stringify({
         txHash: txHash,
         sessionId: sessionId,
@@ -125,7 +125,7 @@ export class ServerClient {
         ip: ip,
         port: port,
       });
-     
+
       const request = await this.executeRequest(requestUrl, requestBody);
       return request;
     } catch (error) {
@@ -182,7 +182,6 @@ export class ServerClient {
         chainId: chainId,
       });
     }
-    console.log("\n\n\nRequest: ", requestBody);
     const request = await this.executeRequest(requestUrl, requestBody);
     console.log(request);
     return request;

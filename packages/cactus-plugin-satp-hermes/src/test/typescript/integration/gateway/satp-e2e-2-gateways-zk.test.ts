@@ -304,7 +304,7 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
       pluginRegistry: new PluginRegistry({ plugins: [] }),
       ontologyPath: ontologiesPath,
       monitorService: monitorService,
-      //claimFormat: "ZK",
+      claimFormat: "ZK",
     };
 
     const options2: SATPGatewayConfig = {
@@ -319,7 +319,7 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
       pluginRegistry: new PluginRegistry({ plugins: [] }),
       ontologyPath: ontologiesPath,
       monitorService: monitorService,
-      //claimFormat: "ZK",
+      claimFormat: "ZK",
     };
 
     gateway1 = await factory.create(options1);
@@ -390,22 +390,22 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
       "mockContext",
       besuEnv,
       ethereumEnv,
-      "10",
-      "10",
+      "100",
+      "100",
     );
-    let repeat = 10;
-    const exec_times = [];
-    while (repeat != 0) {
-      const transferStart = Date.now();
-      const res = await dispatcher1?.Transact(req);
-      const transferStop = Date.now();
+    //let repeat = 10;
+    //const exec_times = [];
+    //while (repeat != 0) {
+      //const transferStart = Date.now();
+    await dispatcher1?.Transact(req);
+      //const transferStop = Date.now();
       //console.log("\n\n\n\ntransfer took to finish ", transferStop / 1000 - transferStart / 1000);
-      const transferTime = transferStop / 1000 - transferStart / 1000;
-      exec_times.push(transferTime);
-      log.info(res?.statusResponse);
-      await fs.appendFile("transfer_times.txt", `${transferTime}\n`);
-      repeat -= 1;
-    }
+      //const transferTime = transferStop / 1000 - transferStart / 1000;
+      //exec_times.push(transferTime);
+      //log.info(res?.statusResponse);
+      //await fs.appendFile("transfer_times.txt", `${transferTime}\n`);
+      //repeat -= 1;
+    //}
     
 
     await besuEnv.checkBalance(
@@ -448,11 +448,11 @@ describe("2 SATPGateways sending a token from Besu to Ethereum", () => {
     );
     log.info("Amount was transfer correctly to the Owner account");
 
-    let times = 0;
+    /*let times = 0;
     while(times != 10) {
       console.log("time: ", exec_times[times]);
       times += 1;
-    }
+    }*/
 
     await shutdownGateways();
   });

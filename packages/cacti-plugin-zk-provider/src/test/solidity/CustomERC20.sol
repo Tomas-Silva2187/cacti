@@ -14,6 +14,8 @@ error noPermission(address adr);
  */
 contract CustomERC20 is AccessControl, ERC20 {
 
+    event Mint(string tokenId);
+
     bytes32 public constant BRIDGE_ROLE = keccak256("BRIDGE_ROLE");
     bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
 
@@ -30,6 +32,7 @@ contract CustomERC20 is AccessControl, ERC20 {
      */
     function mint(address account, uint256 amount) external onlyRole(BRIDGE_ROLE) returns (bool success) {
         _mint(account, amount);
+        emit Mint("emit");
         return true;
     }
 

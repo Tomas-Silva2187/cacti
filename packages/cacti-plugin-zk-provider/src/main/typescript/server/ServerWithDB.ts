@@ -458,9 +458,9 @@ export class ServerWithDB {
                   req.body.ip,
                   req.body.port,
                 );
-                this.log.info(
+                /*this.log.info(
                   `${this.CLASS_TAG}:${Endpoints.GEN_SIG_PROOF} proof generation result for session ${req.body.sessionId} -> ${zkSnark != undefined}`,
-                );
+                );*/
                 res.json({ result: zkSnark });
               }
             } catch (error) {

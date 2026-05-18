@@ -224,18 +224,22 @@ try {
         );
         const threadNumber = Number(threadSelection);
         const promiseArray: Promise<string>[] = [];
-        for (let i = 0; i < threadNumber; i++) {
-          const sessionId =
-            "amockamockamockamockamockamockamockamockamockamoc" + i + ":lock";
-          const promise = issueTransactionAndProofGen(
-            new EthereumContractDeployer(),
-            sessionId,
-            new ServerClient(12802, "localhost"),
-          );
-          promiseArray.push(promise);
+        const r = 0;
+        while (r < 2) {
+          for (let i = 0; i < threadNumber; i++) {
+            const sessionId =
+              "amockamockamockamockamockamockamockamockamockamoc" + i + ":lock";
+            const promise = issueTransactionAndProofGen(
+              new EthereumContractDeployer(),
+              sessionId,
+              new ServerClient(12802, "localhost"),
+            );
+            promiseArray.push(promise);
+          }
+          const values = await Promise.all(promiseArray);
+          console.log(values);
         }
-        const values = await Promise.all(promiseArray);
-        console.log(values);
+
         break;
       /*case "11":
         const eth_v = await besuClient.verifyZkSnark(
@@ -321,6 +325,7 @@ try {
         console.log("Invalid selection. Please try again.");
     }
     console.log("=====================");
+    await new Promise((resolve) => setTimeout(resolve, 5000));
   }
 } catch (error) {
   throw error;

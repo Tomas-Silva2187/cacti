@@ -170,19 +170,19 @@ export class ServerWithDB {
               const rehash = createHash("sha256")
                 .update(proofHash)
                 .digest("hex");
-              const valid = await this.mmrManager?.verifyProof(
+              /*const valid = await this.mmrManager?.verifyProof(
                 mmrAddResult?.proof,
                 "0x" + rehash,
-              );
-              console.log("VALIDITY OF MMR PROOF - ", valid);
+              );*/
+              //console.log("VALIDITY OF MMR PROOF - ", valid);
               const solidityParams = await this.mmrManager?.getSolidityParams(
                 mmrAddResult?.leafIndex,
                 mmrAddResult?.proof,
                 "0x" + rehash,
               );
-              console.log(solidityParams);
+              //console.log(solidityParams);
               const solidityP = JSON.stringify(solidityParams);
-              console.log(solidityP);
+              //console.log(solidityP);
               const fullResult = { newDBKey: newDBKey, mmrData: solidityP };
               const fullRes = JSON.stringify(fullResult);
               res.json({ result: fullRes });
@@ -213,7 +213,7 @@ export class ServerWithDB {
                 req.body.cred,
               );
               this.log.info(
-                `${this.CLASS_TAG}:${Endpoints.POST_VK} stored new zkSNARK vk with key ${newDBKey}`,
+                `${this.CLASS_TAG}:${Endpoints.POST_VK} stored new zkSNARK vk`,
               );
               res.json({ result: newDBKey });
             }
@@ -244,7 +244,7 @@ export class ServerWithDB {
               }
               const vk = await dbClient?.getElement(vkDBKey);
               this.log.info(
-                `${this.CLASS_TAG}:${Endpoints.GET_VK} requested zkSNARK vk for ${vkDBKey}`,
+                `${this.CLASS_TAG}:${Endpoints.GET_VK} requested zkSNARK vk`,
               );
               res.json({ result: vk });
             }
@@ -273,7 +273,7 @@ export class ServerWithDB {
                   req.body.chainAction,
               );
               this.log.info(
-                `${this.CLASS_TAG}:${Endpoints.GET_VK} requested zkSNARK for ${req.body.chainId} ${req.body.chainAction} ${req.body.sessionId}`,
+                `${this.CLASS_TAG}:${Endpoints.GET_VK} requested zkSNARK for ${req.body.chainId} ${req.body.chainAction}`,
               );
               res.json({ result: zkSNARK?.artifact });
             }
@@ -300,7 +300,7 @@ export class ServerWithDB {
                 REDISNewElementLabel.OwnerVerificationCredential,
               );
               this.log.info(
-                `${this.CLASS_TAG}:${Endpoints.POST_CREDENTIAL} new verification credential stored with key ${newDBKey}`,
+                `${this.CLASS_TAG}:${Endpoints.POST_CREDENTIAL} new verification credential stored`,
               );
               res.json({ result: newDBKey });
             }
@@ -311,7 +311,7 @@ export class ServerWithDB {
         this.app.post(Endpoints.GET_CREDENTIAL, async (req, res) => {
           try {
             if (req.body.chainId && req.body.v) {
-              console.log("RECEIVED A REQUEST TO GET A PK");
+              //console.log("RECEIVED A REQUEST TO GET A PK");
               const dbClient = await this.dedicatedDatabases?.get(
                 this.mainDBPort!,
               );
@@ -331,7 +331,7 @@ export class ServerWithDB {
               }
               const credential = await dbClient?.getElement(credentialDBKey);
               this.log.info(
-                `${this.CLASS_TAG}:${Endpoints.POST_CREDENTIAL} fetching credential with key ${credentialDBKey}`,
+                `${this.CLASS_TAG}:${Endpoints.POST_CREDENTIAL} fetching credential`,
               );
               res.json({ result: credential });
             }
@@ -344,10 +344,10 @@ export class ServerWithDB {
         if (this.zkHandler != undefined) {
           this.app.post(Endpoints.VK_LOAD, async (req, res) => {
             try {
-              console.log("\n\n\nRECEIVED THE VK LOAD REQUEST");
-              console.log(req.body);
+              //console.log("\n\n\nRECEIVED THE VK LOAD REQUEST");
+              //console.log(req.body);
               if (req.body.chainId && req.body.v) {
-                console.log(req);
+                //console.log(req);
                 const client = this.webServerClients.get("EXTERNAL0");
                 const client1 = this.webServerClients.get(
                   req.body.chainId + "OWNER0",
@@ -357,23 +357,23 @@ export class ServerWithDB {
                   req.body.chainId,
                   req.body.chainAction,
                 );
-                console.log("THE VK:", vk);
-                console.log(client1);
-                console.log(client1 == undefined);
+                //console.log("THE VK:", vk);
+                //console.log(client1);
+                //console.log(client1 == undefined);
                 const credential = await client1?.getCredential(
                   req.body.v,
                   req.body.chainId,
                   req.body.chainAction,
                 );
-                console.log("The Public Key ", credential);
+                //console.log("The Public Key ", credential);
                 if (!credential || !vk) {
                   throw new Error(
                     "Verification Key or Owner Credential not published",
                   );
                 }
-                console.log("the verification key is ", typeof vk);
+                //console.log("the verification key is ", typeof vk);
                 const vkObj = JSON.parse(vk.artifact);
-                console.log(vkObj);
+                //console.log(vkObj);
                 //const cleaned = vkObj.artifact.replace(/\\/g, "");
                 const hash = this.objectSigner.dataHash(vk.artifact);
                 //const credentialObj = JSON.parse(credential.artifact);
@@ -383,15 +383,15 @@ export class ServerWithDB {
                   Uint8Array.from(vk.certificate.split(",").map(Number)),
                   Uint8Array.from(credential.artifact.split(",").map(Number)),
                 );
-                console.log("validity was ", vkValidity);
-                let newDBKey;
+                //console.log("validity was ", vkValidity);
+                //let newDBKey;
                 vkValidity = true;
 
                 if (vkValidity) {
                   const dbClient = await this.dedicatedDatabases?.get(
                     this.mainDBPort!,
                   );
-                  newDBKey = await dbClient?.storeElement(
+                  await dbClient?.storeElement(
                     JSON.stringify(vkObj),
                     {
                       chainId: req.body.chainId,
@@ -402,7 +402,7 @@ export class ServerWithDB {
                   );
                 }
                 this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.VK_LOAD}[result]->${JSON.stringify(vkValidity)} stored locally with key ${newDBKey}`,
+                  `${this.CLASS_TAG}:${Endpoints.VK_LOAD} vk stored locally`,
                 );
                 res.json({ result: vkValidity });
               }
@@ -429,7 +429,7 @@ export class ServerWithDB {
                   await this.zkHandler!.compileCircuit(req.body.circuitName)
                 ).vk;
                 this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.COMPILE} -> Verification key generation ${vk != undefined}`,
+                  `${this.CLASS_TAG}:${Endpoints.COMPILE} -> Key pair generation`,
                 );
                 res.json({ result: vk });
               }
@@ -447,9 +447,7 @@ export class ServerWithDB {
                 req.body.ip &&
                 req.body.port
               ) {
-                this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.GEN_SIG_PROOF} -> session ${req.body.sessionId}`,
-                );
+                this.log.info(`${this.CLASS_TAG}:${Endpoints.GEN_SIG_PROOF}`);
                 const zkSnark = await this.zkHandler!.generateSignatureProof(
                   req.body.txHash,
                   req.body.sessionId,
@@ -471,9 +469,7 @@ export class ServerWithDB {
           this.app.post(Endpoints.VRF_PROOF, async (req, res) => {
             try {
               if (req.body.proof && req.body.chainId && req.body.v) {
-                this.log.info(
-                  `${this.CLASS_TAG}:${Endpoints.VRF_PROOF} -> session ${req.body.sessionId}`,
-                );
+                this.log.info(`${this.CLASS_TAG}:${Endpoints.VRF_PROOF}`);
                 const chainAction = req.body.chainAction ?? "";
                 const dbClient = await this.dedicatedDatabases?.get(
                   this.mainDBPort!,

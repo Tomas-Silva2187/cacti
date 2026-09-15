@@ -1,8 +1,8 @@
 import { parentPort, workerData } from "worker_threads";
 import { initialize } from "zokrates-js";
-import { cpus } from "os";
+//import { cpus } from "os";
 
-const NUM_CORES = cpus().length;
+/*const NUM_CORES = cpus().length;
 
 function sampleResources(): {
   mem: NodeJS.MemoryUsage;
@@ -14,7 +14,7 @@ function sampleResources(): {
     cpu: process.cpuUsage(),
     ts: Date.now(),
   };
-}
+}*/
 
 /*function trackPeakMemory(intervalMs = 50): {
   stop: () => { peakRssMB: number; peakHeapMB: number };
@@ -37,7 +37,7 @@ function sampleResources(): {
   };
 }*/
 
-function logResourceDelta(
+/*function logResourceDelta(
   label: string,
   sessionId: string,
   before: ReturnType<typeof sampleResources>,
@@ -56,45 +56,49 @@ function logResourceDelta(
     : "";
   console.log(
     `[${sessionId}] ${label} | wall: ${wallMs}ms | CPU user: ${cpuUserMs.toFixed(1)}ms sys: ${cpuSysMs.toFixed(1)}ms util: ${cpuUtilPct.toFixed(1)}% (across ${NUM_CORES} cores) | heap Δ: ${heapDeltaMB.toFixed(2)} MB | rss Δ: ${rssDeltaMB.toFixed(2)} MB${peakStr}`,
-  );*/
+  );
   return { elapsedTime: wallMs, cpu: cpuUtilPct.toFixed(1) };
-}
+}*/
 (async () => {
   const { compilation, inputs, provingKey, sessionId } = workerData;
 
   const provider = await initialize();
 
+  if (sessionId) {
+    console.log(" ");
+  }
+
   //const witnessMemTracker = trackPeakMemory();
-  const beforeWitness = sampleResources();
+  //const beforeWitness = sampleResources();
   const witness = await provider.computeWitness(compilation, inputs);
-  const afterWitness = sampleResources();
+  //const afterWitness = sampleResources();
   //const witnessPeak = witnessMemTracker.stop();
-  const witnessStats = logResourceDelta(
+  /*const witnessStats = logResourceDelta(
     "computeWitness",
     sessionId,
     beforeWitness,
     afterWitness,
-  );
+  );*/
 
   //const proofMemTracker = trackPeakMemory();
-  const beforeProof = sampleResources();
+  //const beforeProof = sampleResources();
   const proof = await provider.generateProof(
     compilation.program,
     witness.witness,
     provingKey,
   );
-  const afterProof = sampleResources();
+  //const afterProof = sampleResources();
   //const proofPeak = proofMemTracker.stop();
-  const proofStats = logResourceDelta(
+  /*const proofStats = logResourceDelta(
     "generateProof ",
     sessionId,
     beforeProof,
     afterProof,
     //proofPeak,
-  );
+  );*/
 
-  console.log("Witness ", sessionId, " elapsedTime ", witnessStats.elapsedTime);
-  console.log("Proof ", sessionId, " elapsedTime", proofStats.elapsedTime);
+  //console.log("Witness ", sessionId, " elapsedTime ", witnessStats.elapsedTime);
+  //console.log("Proof ", sessionId, " elapsedTime", proofStats.elapsedTime);
 
   parentPort?.postMessage({
     proof: proof,

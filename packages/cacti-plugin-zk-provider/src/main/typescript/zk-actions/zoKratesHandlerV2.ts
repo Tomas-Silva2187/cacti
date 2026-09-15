@@ -210,8 +210,8 @@ export class ZeroKnowledgeHandlerV2 {
     try {
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = dirname(__filename);
-      console.log("SENDING TO WORKER", proof);
-      console.log("Verification Key", vk);
+      //console.log("SENDING TO WORKER", proof);
+      //console.log("Verification Key", vk);
       const validity = await new Promise<boolean>((resolve, reject) => {
         const worker = new Worker(
           path.resolve(__dirname, "../build/verifyWorker/index.js"),

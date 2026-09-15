@@ -131,14 +131,14 @@ export class RedisDBClient extends ZKDatabaseClient {
    * Stores a data object in Redis with hash as key, and returns the key.
    */
   async storeObject(objectToStore: string) {
-    const fnTag = `${this.CLASS_NAME}#storeObject()`;
+    //const fnTag = `${this.CLASS_NAME}#storeObject()`;
     try {
       const key = createHash("sha256").update(objectToStore).digest("hex");
-      this.log.info(`${fnTag}: Storing operation result with key ${key}...`);
+      //this.log.info(`${fnTag}: Storing operation result with key ${key}...`);
       await this.client.hSet(`sha256: ${key}`, {
         result: objectToStore,
       });
-      this.log.info(`${fnTag}: Operation result stored successfully.`);
+      //this.log.info(`${fnTag}: Operation result stored successfully.`);
       return key;
     } catch (error) {
       throw error;
@@ -151,25 +151,25 @@ export class RedisDBClient extends ZKDatabaseClient {
     newElementLabel: REDISNewElementLabel,
     certificate?: string,
   ) {
-    const fnTag = `${this.CLASS_NAME}#storeElement()`;
+    //const fnTag = `${this.CLASS_NAME}#storeElement()`;
 
     try {
       const newElementStorageKey = this.generateNewElementKey(
         keyComponents,
         newElementLabel,
       );
-      this.log.info(
-        `${fnTag}: Storing Verification Key for ${newElementStorageKey}`,
-      );
+      //this.log.info(
+      //  `${fnTag}: Storing Verification Key for ${newElementStorageKey}`,
+      //);
       if (!certificate) {
-        this.log.info(`${fnTag}: Storing ${element}`);
+        //this.log.info(`${fnTag}: Storing ${element}`);
         await this.client.hSet(newElementStorageKey, { artifact: element });
       } else {
         await this.client.hSet(newElementStorageKey, {
           artifact: element,
           credential: certificate,
         });
-        this.log.info(`${fnTag}: Storing ${element} with ${certificate}`);
+        //this.log.info(`${fnTag}: Storing ${element} with ${certificate}`);
       }
       return newElementStorageKey;
     } catch (error) {
@@ -178,10 +178,10 @@ export class RedisDBClient extends ZKDatabaseClient {
   }
 
   async getElement(dbKey: string) {
-    const fnTag = `${this.CLASS_NAME}#getElement()`;
-    this.log.info(
-      `${fnTag}: Fetching element ${dbKey} from ${this.ipAddress}:${this.port}`,
-    );
+    //const fnTag = `${this.CLASS_NAME}#getElement()`;
+    //this.log.info(
+    //  `${fnTag}: Fetching element ${dbKey} from ${this.ipAddress}:${this.port}`,
+    //);
     try {
       const element = await this.client.hGet(dbKey, "artifact");
       const certificate = await this.client.hGet(dbKey, "credential");
@@ -195,8 +195,8 @@ export class RedisDBClient extends ZKDatabaseClient {
    * Retrieves a data object from Redis using the provided key.
    */
   async getObject(key: string): Promise<string | null> {
-    const fnTag = `${this.CLASS_NAME}#getObject()`;
-    this.log.info(`${fnTag}: Fetching data with key: ${key}`);
+    //const fnTag = `${this.CLASS_NAME}#getObject()`;
+    //this.log.info(`${fnTag}: Fetching data with key: ${key}`);
     try {
       const data = await this.client.hGet(`sha256: ${key}`, "result");
       return data ?? null;
@@ -206,8 +206,8 @@ export class RedisDBClient extends ZKDatabaseClient {
   }
 
   async getCircuit(key: string): Promise<ZKSnarkCircuit> {
-    const fnTag = `${this.CLASS_NAME}#getCircuit()`;
-    this.log.info(`${fnTag}: Fetching data with key: ${key}`);
+    //const fnTag = `${this.CLASS_NAME}#getCircuit()`;
+    //this.log.info(`${fnTag}: Fetching data with key: ${key}`);
     try {
       const data = await this.client.hGetAll(key);
       if (!data || !data.circuitCode || !data.circuitCredentials) {

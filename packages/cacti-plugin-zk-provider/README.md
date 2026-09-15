@@ -102,7 +102,7 @@ Open another console window and run the command below. This compiles the
 ZK circuits for both the Besu PCU and the Ethereum PCU, generates the required proving and verification keys, publishes the signed verification keys on the external server, along with the public keys of the signatures in the credential servers, and requests the PCU nodes to load and verify the verification keys:
 
 ```bash
-node packages/cacti-plugin-zk-provider/dist/lib/requestInterfaceV2.js
+node packages/cacti-plugin-zk-provider/dist/lib/zkCompilationValidation.js
 ```
 
 Wait for this process to end before starting the SATP transfer test.
@@ -114,6 +114,29 @@ a token from Besu to Ethereum:
 
 ```bash
 node packages/cactus-plugin-satp-hermes/node_modules/jest/bin/jest.js packages/cactus-plugin-satp-hermes/src/test/typescript/integration/gateway/satp-e2e-2-gateways-zk\.test\.ts -t '^2 SATPGateways sending a token from Besu to Ethereum(\s.*)?$'
+```
+
+## MMR maintainability test
+
+The script MMRconstruction.ts showcases MMR maintainability between the external server and an
+EVM-compatible blockchain, using transaction hashes as the elements, as an example.
+
+First, run the external server:
+
+```bash
+docker run -p 12803:12803 --name extserver --network zknet zkserverv2 EXT
+```
+
+Install Hardhat if necessary, then start a Hardhat EVM ledger on port 8545:
+
+```bash
+npx hardhat node --hostname 0.0.0.0 --port 8545
+```
+
+Finally, execute the MMR construction test from the repository root:
+
+```bash
+node packages/cacti-plugin-zk-provider/dist/lib/MMRconstruction.js
 ```
 
 ## Troubleshooting
@@ -155,3 +178,8 @@ Repeat this process for any other affected service, using the matching
 container name, port, and service argument from the commands above.
 
 If any component fails while the SATP test is running, restart from Step 4.
+
+## Video demonstration
+
+Watch a demonstration of a full transfer:
+https://youtu.be/F5Cevdun8mU
